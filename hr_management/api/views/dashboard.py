@@ -130,7 +130,7 @@ class MyTodoSummaryAPIView(views.APIView):
 
 
 class AttendanceTrendAPIView(views.APIView):
-    """考勤趋势统计"""
+    """考勤趋势统计 - 只统计当前用户自己的考勤"""
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
@@ -145,7 +145,15 @@ class AttendanceTrendAPIView(views.APIView):
             d = start + timezone.timedelta(days=i)
             stats[d] = {'total': 0, 'late': 0, 'absent': 0}
         
+        # 只统计当前用户自己的考勤
         qs = Attendance.objects.filter(date__gte=start, date__lte=today)
+        try:
+            employee = Employee.objects.get(user=request.user)
+            qs = qs.filter(employee=employee)
+        except Employee.DoesNotExist:
+            # 用户没有关联员工，返回空数据
+            pass
+        
         for att in qs.values('date', 'attendance_type'):
             rec = stats.get(att['date'])
             if rec:

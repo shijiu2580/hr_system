@@ -66,7 +66,13 @@ def check_location_in_range(latitude, longitude, employee=None):
 
 
 class AttendanceListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
-    """考勤列表与创建"""
+    """考勤列表与创建
+    
+    权限控制：
+    - 管理员/人事(is_staff): 查看所有人的考勤
+    - 部门主管: 查看自己部门下所有人的考勤
+    - 普通员工: 只能查看自己的考勤
+    """
     serializer_class = AttendanceSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '考勤'
@@ -80,12 +86,18 @@ class AttendanceListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     def get_queryset(self):
         qs = Attendance.objects.select_related('employee', 'employee__department').all().order_by('-date')
         user = self.request.user
-        if not user.is_staff:
-            # 部门经理可看本部门所有员工考勤，普通员工只能看自己
+        
+        # 管理员/人事可看所有
+        if user.is_staff or user.is_superuser:
+            pass  # 不做过滤
+        else:
+            # 检查是否是部门主管
             managed_dept_ids = get_managed_department_ids(user)
             if managed_dept_ids:
-                qs = qs.filter(Q(employee__user=user) | Q(employee__department_id__in=managed_dept_ids))
+                # 部门主管：可看自己部门下所有人的考勤
+                qs = qs.filter(employee__department_id__in=managed_dept_ids)
             else:
+                # 普通员工：只能看自己的考勤
                 qs = qs.filter(employee__user=user)
         
         emp = self.request.query_params.get('employee')

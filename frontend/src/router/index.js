@@ -64,8 +64,8 @@ const router = createRouter({
     // 考勤与请假
     { path: '/attendance', redirect: '/attendance/records' },
     { path: '/attendance/records', component: AttendanceRecords, meta: { requiresAuth: true } },
-    { path: '/attendance/manage', component: AttendanceManage, meta: { requiresAuth: true, permissions: [Permissions.ATTENDANCE_VIEW_ALL] } },
-    { path: '/attendance/alerts', component: AttendanceAlerts, meta: { requiresAuth: true, permissions: [Permissions.ATTENDANCE_VIEW_ALL] } },
+    { path: '/attendance/manage', component: AttendanceManage, meta: { requiresAuth: true } },
+    { path: '/attendance/alerts', component: AttendanceAlerts, meta: { requiresAuth: true } },
     { path: '/attendance/approval', component: AttendanceApproval, meta: { requiresAuth: true, permissions: [Permissions.ATTENDANCE_APPROVE] } },
     { path: '/attendance/locations', component: AttendanceLocations, meta: { requiresAuth: true, permissions: [Permissions.ATTENDANCE_LOCATION] } },
     { path: '/attendance/create', component: AttendanceForm, meta: { requiresAuth: true } },

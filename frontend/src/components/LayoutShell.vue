@@ -49,10 +49,10 @@
           <RouterLink to="/attendance/records" class="submenu-item">
             <span>考勤记录</span>
           </RouterLink>
-          <RouterLink to="/attendance/manage" class="submenu-item" v-if="canViewAllAttendance">
+          <RouterLink to="/attendance/manage" class="submenu-item">
             <span>考勤管理</span>
           </RouterLink>
-          <RouterLink to="/attendance/alerts" class="submenu-item" v-if="canViewAllAttendance">
+          <RouterLink to="/attendance/alerts" class="submenu-item">
             <span>异常提醒</span>
           </RouterLink>
           <RouterLink to="/attendance/locations" class="submenu-item" v-if="canManageLocations">
