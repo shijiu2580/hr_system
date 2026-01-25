@@ -114,8 +114,8 @@
             <th class="col-employee">员工姓名</th>
             <th class="col-period sortable" @click="toggleSort('year')">
               <span class="th-text">薪资周期</span>
-              <span class="sort-icon" :class="{ active: sortField === 'year' }">
-                {{ sortField === 'year' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+              <span class="sort-icon" :class="{ active: sortField === 'year', desc: sortField === 'year' && sortOrder === 'desc' }">
+                <img src="/icons/up_down.svg" />
               </span>
             </th>
             <th class="col-base">基本工资</th>
@@ -125,13 +125,15 @@
             <th class="col-status">状态</th>
             <th class="col-paid-at sortable" @click="toggleSort('paid_at')">
               <span class="th-text">发放时间</span>
-              <span class="sort-icon" :class="{ active: sortField === 'paid_at' }">
-                {{ sortField === 'paid_at' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+              <span class="sort-icon" :class="{ active: sortField === 'paid_at', desc: sortField === 'paid_at' && sortOrder === 'desc' }">
+                <img src="/icons/up_down.svg" />
               </span>
             </th>
             <th class="col-actions">
-              <span>操作</span>
-              <span class="settings-icon">⚙</span>
+              <div class="action-header">
+                <span>操作</span>
+                <img src="/icons/setting.svg" class="settings-icon" alt="设置" />
+              </div>
             </th>
           </tr>
         </thead>
@@ -1035,23 +1037,32 @@ function resetFilters() {
 }
 
 .data-table th .sort-icon {
-  font-size: 12px;
-  color: #9ca3af;
-  transition: color 0.2s;
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s;
 }
 
-.data-table th .sort-icon.active {
-  color: #2563eb;
+.data-table th .sort-icon img {
+  width: 100%;
+  height: 100%;
 }
 
-.data-table th.sortable:hover .sort-icon {
-  color: #6b7280;
+.data-table th .sort-icon.desc {
+  transform: rotate(180deg);
 }
 
 .data-table th .settings-icon {
-  margin-left: 0.5rem;
+  width: 18px;
+  height: 18px;
   color: #9ca3af;
   cursor: pointer;
+}
+
+.action-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .data-table td {
@@ -1499,7 +1510,9 @@ function resetFilters() {
 
 .employee-search-input {
   width: 100%;
-  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  padding: 0 2rem 0 0.75rem;
+  height: 36px;
+  line-height: normal;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 4px;
   font-size: 14px;
@@ -1668,13 +1681,14 @@ function resetFilters() {
 
 .edit-input {
   flex: 1;
-  height: 38px;
+  height: 36px;
   padding: 0 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s, box-shadow 0.2s;
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .edit-input::-webkit-outer-spin-button,

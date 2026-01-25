@@ -122,7 +122,7 @@
                 <th class="col-location">考勤地点</th>
                 <th class="col-hire">入职日期</th>
                 <th class="col-status">状态</th>
-                <th class="col-actions"><span class="settings-icon">⚙</span></th>
+                <th class="col-actions"><img src="/icons/setting.svg" class="settings-icon" alt="设置" /></th>
               </tr>
             </thead>
             <tbody v-if="!loading && employees.length">
@@ -679,7 +679,7 @@ onMounted(async () => {
   background: #fff;
   font-size: 14px;
   width: 180px;
-  height: 38px;
+  height: 36px;
   box-sizing: border-box;
   outline: none;
   transition: all 0.2s ease;
@@ -946,8 +946,11 @@ onMounted(async () => {
 }
 
 .settings-icon {
+  width: 18px;
+  height: 18px;
   color: #9ca3af;
   cursor: default;
+  vertical-align: middle;
 }
 
 .row-actions {

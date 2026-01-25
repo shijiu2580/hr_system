@@ -49,7 +49,7 @@ html[data-theme='dark'] select {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 
-body { background: var(--color-bg); font-family: var(--font-base); color: var(--color-text); margin:0; }
+body { background: var(--color-bg); font-family: var(--font-base); color: var(--color-text); margin:0; zoom: 0.9; }
 a { text-decoration: none; color: var(--color-primary); transition: var(--transition); }
 a:hover { color: var(--color-primary-hover); }
 
@@ -85,8 +85,9 @@ table thead th { text-align:left; background: var(--color-surface-alt); padding:
 table tbody td { padding:.5rem .6rem; border-bottom:1px solid var(--color-border); }
 table tbody tr:hover { background: var(--color-surface-alt); }
 
-input, select, textarea { width:100%; border:1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding:.55rem .65rem; font-size:14px; border-radius: var(--radius-md); outline:none; transition: var(--transition); }
+input, select, textarea { width:100%; border:1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding:0 0.65rem; height: 36px; box-sizing: border-box; font-size:14px; border-radius: var(--radius-md); outline:none; transition: var(--transition); }
 input:focus, select:focus, textarea:focus { border-color: var(--color-primary); box-shadow: none; }
+textarea { height: auto; padding: 0.55rem 0.65rem; }
 
 /* checkbox样式 - 去除focus渐变色 */
 input[type="checkbox"],

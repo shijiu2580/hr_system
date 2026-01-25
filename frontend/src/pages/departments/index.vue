@@ -56,7 +56,12 @@
             <th class="col-desc">描述</th>
             <th class="col-supervisors">主管</th>
             <th class="col-employees">员工数</th>
-            <th class="col-actions">操作</th>
+            <th class="col-actions">
+              <div class="action-header">
+                <span>操作</span>
+                <img src="/icons/setting.svg" class="settings-icon" alt="设置" />
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody v-if="!loading && treeData.length">
@@ -96,10 +101,20 @@
                 <span class="employee-count">{{ item.employee_count || 0 }}人</span>
               </td>
               <td class="col-actions">
-                <a href="javascript:;" class="action-link" @click="openEdit(item)">编辑</a>
-                <a href="javascript:;" class="action-link" @click="showAssignSupervisor(item)">设置主管</a>
-                <a href="javascript:;" class="action-link" @click="openAddChild(item)">添加子部门</a>
-                <a href="javascript:;" class="action-link danger" @click="remove(item)">删除</a>
+                <div class="action-buttons">
+                  <button class="btn-icon" title="编辑" @click="openEdit(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="btn-icon" title="设置主管" @click="showAssignSupervisor(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </button>
+                  <button class="btn-icon" title="添加子部门" @click="openAddChild(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  <button class="btn-icon danger" title="删除" @click="remove(item)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
               </td>
             </tr>
             <!-- 子部门（展开时显示） -->
@@ -140,10 +155,20 @@
                     <span class="employee-count">{{ child.employee_count || 0 }}人</span>
                   </td>
                   <td class="col-actions">
-                    <a href="javascript:;" class="action-link" @click="openEdit(child)">编辑</a>
-                    <a href="javascript:;" class="action-link" @click="showAssignSupervisor(child)">设置主管</a>
-                    <a href="javascript:;" class="action-link" @click="openAddChild(child)">添加子部门</a>
-                    <a href="javascript:;" class="action-link danger" @click="remove(child)">删除</a>
+                    <div class="action-buttons">
+                      <button class="btn-icon" title="编辑" @click="openEdit(child)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button class="btn-icon" title="设置主管" @click="showAssignSupervisor(child)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      </button>
+                      <button class="btn-icon" title="添加子部门" @click="openAddChild(child)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                      <button class="btn-icon danger" title="删除" @click="remove(child)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 <!-- 第三级子部门 -->
@@ -171,9 +196,17 @@
                       <span class="employee-count">{{ grandChild.employee_count || 0 }}人</span>
                     </td>
                     <td class="col-actions">
-                      <a href="javascript:;" class="action-link" @click="openEdit(grandChild)">编辑</a>
-                      <a href="javascript:;" class="action-link" @click="showAssignSupervisor(grandChild)">设置主管</a>
-                      <a href="javascript:;" class="action-link danger" @click="remove(grandChild)">删除</a>
+                      <div class="action-buttons">
+                        <button class="btn-icon" title="编辑" @click="openEdit(grandChild)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="btn-icon" title="设置主管" @click="showAssignSupervisor(grandChild)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </button>
+                        <button class="btn-icon danger" title="删除" @click="remove(grandChild)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 </template>
@@ -895,12 +928,14 @@ onMounted(loadData)
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0 0.75rem;
   background: #fff;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
   flex: 1;
   max-width: 300px;
+  height: 36px;
+  box-sizing: border-box;
 }
 
 .search-box svg {
@@ -915,6 +950,8 @@ onMounted(loadData)
   font-size: 14px;
   flex: 1;
   background: transparent;
+  height: 100%;
+  padding: 0;
 }
 
 /* 表格容器 */
@@ -1434,10 +1471,19 @@ onMounted(loadData)
   color: #ef4444;
 }
 
-.form-row input,
+.form-row input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
 .form-row textarea {
   width: 100%;
-  padding: 0.6rem 0.75rem;
+  padding: 8px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 14px;
@@ -1708,4 +1754,55 @@ onMounted(loadData)
     min-width: 800px;
   }
 }
+.action-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.data-table th .settings-icon {
+  width: 18px;
+  height: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+  border-color: #cbd5e1;
+}
+
+.btn-icon.danger:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 </style>

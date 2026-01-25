@@ -282,7 +282,8 @@ async function submit() {
 
 .form-input {
   width: 100%;
-  padding: 12px 14px;
+  height: 36px;
+  padding: 0 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
@@ -302,12 +303,15 @@ async function submit() {
 }
 
 .form-select :deep(.select-trigger) {
-  padding: 12px 14px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
   padding-right: 36px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
-  min-height: 46px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -343,7 +347,8 @@ async function submit() {
 .form-date-input :deep(.date-input-wrapper) {
   position: relative;
 }
-
+height: 36px;
+  padding: 0 12
 .form-date-input :deep(.date-input) {
   width: 100%;
   padding: 12px 14px;
@@ -362,7 +367,10 @@ async function submit() {
   box-shadow: none;
 }
 
-.duration-display {
+.dheight: 36px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center
   padding: 12px 14px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
@@ -371,7 +379,7 @@ async function submit() {
   color: #1f2937;
   font-weight: 500;
 }
-
+8px 12
 .form-textarea {
   width: 100%;
   padding: 12px 14px;

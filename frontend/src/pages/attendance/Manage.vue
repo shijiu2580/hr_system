@@ -67,7 +67,7 @@
                 <th class="col-absent">缺勤时长</th>
                 <th class="col-status">考勤状态</th>
                 <th class="col-reason">异常原因</th>
-                <th class="col-settings"><span class="settings-icon">⚙</span></th>
+                <th class="col-settings"><img src="/icons/setting.svg" class="settings-icon" alt="设置" /></th>
               </tr>
             </thead>
             <tbody v-if="!loading && paginatedData.length">
@@ -1158,8 +1158,11 @@ async function handleApprove(id, action) {
 }
 
 .settings-icon {
+  width: 18px;
+  height: 18px;
   color: #9ca3af;
   cursor: pointer;
+  vertical-align: middle;
 }
 
 .date-link {

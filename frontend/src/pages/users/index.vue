@@ -519,7 +519,7 @@ onMounted(async () => {
 
 .filter-input {
   width: 100%;
-  height: 38px;
+  height: 36px;
   padding: 0 12px;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 8px;
@@ -553,7 +553,7 @@ onMounted(async () => {
 .btn-query {
   flex-shrink: 0;
   padding: 0 16px;
-  height: 38px;
+  height: 36px;
   background: #4f46e5;
   color: #fff;
   border: none;
@@ -575,7 +575,7 @@ onMounted(async () => {
 
 .btn-reset {
   padding: 0 16px;
-  height: 38px;
+  height: 36px;
   background: #fff;
   color: #475569;
   border: 1px solid rgba(148, 163, 184, 0.4);

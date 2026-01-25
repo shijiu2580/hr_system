@@ -81,21 +81,25 @@ const filteredOptions = computed(() => {
 function updateDropdownPosition() {
   if (!selectRef.value) return;
   const rect = selectRef.value.getBoundingClientRect();
+  const scrollX = window.scrollX || window.pageXOffset;
+  const scrollY = window.scrollY || window.pageYOffset;
+
   if (props.dropUp) {
     // 向上展开
     dropdownStyle.value = {
-      position: 'fixed',
-      bottom: `${window.innerHeight - rect.top + 4}px`,
-      left: `${rect.left}px`,
+      position: 'absolute',
+      top: `${rect.top + scrollY - 4}px`,
+      left: `${rect.left + scrollX}px`,
       width: `${rect.width}px`,
-      zIndex: 9999
+      zIndex: 9999,
+      transform: 'translateY(-100%)'
     };
   } else {
     // 默认向下展开
     dropdownStyle.value = {
-      position: 'fixed',
-      top: `${rect.bottom + 4}px`,
-      left: `${rect.left}px`,
+      position: 'absolute',
+      top: `${rect.bottom + scrollY + 4}px`,
+      left: `${rect.left + scrollX}px`,
       width: `${rect.width}px`,
       zIndex: 9999
     };
@@ -179,7 +183,9 @@ function onKeydown(e) {
 
 function onClickOutside(e) {
   if (selectRef.value && !selectRef.value.contains(e.target)) {
-    isOpen.value = false;
+    if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+      isOpen.value = false;
+    }
   }
 }
 
@@ -205,29 +211,30 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: 0 0.75rem;
   padding-right: 2.2rem;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   background: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
-  height: 38px;
+  height: 36px;
+  min-height: 36px;
   box-sizing: border-box;
 }
 
 .select-trigger:hover {
-  border-color: rgba(148, 163, 184, 0.6);
-  background: #f8fafc;
+  border-color: #9ca3af;
+  background: #f9fafb;
 }
 
 .select-trigger:focus {
   outline: none;
-  border-color: rgba(148, 163, 184, 0.6);
-  background: #f8fafc;
+  border-color: #2563eb;
+  background: #fff;
 }
 
 .custom-select.open .select-trigger {
-  border-color: rgba(148, 163, 184, 0.6);
-  background: #f8fafc;
+  border-color: #2563eb;
+  background: #fff;
 }
 
 .custom-select.disabled .select-trigger {
@@ -241,7 +248,7 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #1f2937;
+  color: #374151;
 }
 
 .select-arrow {
@@ -281,7 +288,6 @@ onUnmounted(() => {
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 0.35rem 0;
-  overflow: hidden;
 }
 
 .select-dropdown .search-box {
@@ -303,8 +309,9 @@ onUnmounted(() => {
 }
 
 .select-dropdown .options-list {
-  max-height: 200px;
+  max-height: 280px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .select-dropdown .no-results {

@@ -1,25 +1,48 @@
-Django==4.2.7
-Pillow==10.1.0
-python-decouple==3.8
-django-extensions==3.2.3
-djangorestframework==3.14.0
-django-cors-headers==4.3.1
+# ============================================
+# Django HR Management System - Dependencies
+# ============================================
+# Python 3.10+ required
+# Install: pip install -r requirements.txt
+# ============================================
 
-# JWT 支持用于前后端完全分离的无状态认证
-djangorestframework-simplejwt==5.3.1
+# === Core Framework ===
+Django==4.2.7                       # Web 框架
+djangorestframework==3.14.0         # RESTful API 框架
+django-cors-headers==4.3.1          # CORS 跨域支持
 
-# API 文档
-drf-spectacular==0.27.0
+# === Authentication ===
+djangorestframework-simplejwt==5.3.1  # JWT Token 认证
 
-# Excel 导出
-openpyxl==3.1.2
+# === Database ===
+dj-database-url==2.1.0              # 数据库 URL 解析（生产环境 PostgreSQL）
+# psycopg2-binary==2.9.9            # PostgreSQL 驱动（生产环境启用）
 
-# 生产部署
-gunicorn==21.2.0
-whitenoise==6.6.0
+# === API Documentation ===
+drf-spectacular==0.27.0             # OpenAPI 3.0 文档生成
+drf-spectacular-sidecar==2024.1.1   # Swagger UI 静态文件
 
-# 系统监控
-psutil==5.9.8
+# === File Processing ===
+Pillow==10.1.0                      # 图片处理（头像、文档等）
+openpyxl==3.1.2                     # Excel 文件读写（导入/导出）
 
-# HTTP 请求（节假日 API）
-requests==2.31.0
+# === Configuration ===
+python-decouple==3.8                # 环境变量管理
+
+# === Production Server ===
+gunicorn==21.2.0                    # WSGI HTTP 服务器
+whitenoise==6.6.0                   # 静态文件服务
+
+# === System Monitoring ===
+psutil==5.9.8                       # 系统资源监控（CPU、内存等）
+
+# === HTTP Client ===
+requests==2.31.0                    # HTTP 请求库（节假日 API 等）
+
+# === Development Tools ===
+django-extensions==3.2.3            # Django 开发扩展工具
+
+# === Optional Dependencies ===
+# redis==5.0.1                      # Redis 缓存/消息队列
+# celery==5.3.4                     # 异步任务队列
+# django-redis==5.4.0               # Django Redis 缓存后端
+# sentry-sdk==1.38.0                # 错误监控（生产环境）

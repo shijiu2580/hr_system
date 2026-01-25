@@ -528,22 +528,24 @@ onMounted(loadData)
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .filter-dropdown {
-  min-width: 140px;
+  width: 180px;
 }
 
 .search-box {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0 0.75rem;
   background: #fff;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
-  flex: 1;
   max-width: 300px;
+  height: 36px;
+  box-sizing: border-box;
 }
 
 .search-box svg {
@@ -558,6 +560,8 @@ onMounted(loadData)
   font-size: 14px;
   flex: 1;
   background: transparent;
+  height: 100%;
+  padding: 0;
 }
 
 /* 表格容器 */

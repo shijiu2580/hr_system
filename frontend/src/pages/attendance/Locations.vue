@@ -717,7 +717,7 @@ h2 {
 .form-row input[type="number"],
 .form-row select {
   flex: 1;
-  height: 38px;
+  height: 36px;
   padding: 0 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;

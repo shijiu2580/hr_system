@@ -159,7 +159,7 @@ const PAGE_GROUP_CONFIG = [
     keys: []
   },
   {
-    name: '⚙️ 系统管理',
+    name: '系统管理',
     icon: '/icons/system.svg',
     prefixes: ['system.'],
     keys: []

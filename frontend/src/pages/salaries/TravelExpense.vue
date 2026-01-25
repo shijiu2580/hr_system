@@ -66,15 +66,17 @@
             <th class="col-trip">关联出差</th>
             <th class="col-date sortable" @click="toggleSort('created_at')">
               <span class="th-text">申请时间</span>
-              <span class="sort-icon" :class="{ active: sortField === 'created_at' }">
-                {{ sortField === 'created_at' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+              <span class="sort-icon" :class="{ active: sortField === 'created_at', desc: sortField === 'created_at' && sortOrder === 'desc' }">
+                <img src="/icons/up_down.svg" />
               </span>
             </th>
             <th class="col-reason">报销事由</th>
             <th class="col-status">状态</th>
             <th class="col-actions">
-              <span>操作</span>
-              <span class="settings-icon">⚙</span>
+              <div class="action-header">
+                <span>操作</span>
+                <img src="/icons/setting.svg" class="settings-icon" alt="设置" />
+              </div>
             </th>
           </tr>
         </thead>
@@ -775,23 +777,32 @@ onMounted(() => {
 }
 
 .data-table th .sort-icon {
-  font-size: 12px;
-  color: #9ca3af;
-  transition: color 0.2s;
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s;
 }
 
-.data-table th .sort-icon.active {
-  color: #2563eb;
+.data-table th .sort-icon img {
+  width: 100%;
+  height: 100%;
 }
 
-.data-table th.sortable:hover .sort-icon {
-  color: #6b7280;
+.data-table th .sort-icon.desc {
+  transform: rotate(180deg);
 }
 
 .data-table th .settings-icon {
-  margin-left: 0.5rem;
+  width: 18px;
+  height: 18px;
   color: #9ca3af;
   cursor: pointer;
+}
+
+.action-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .data-table td {

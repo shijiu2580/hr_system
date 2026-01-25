@@ -494,7 +494,7 @@ onMounted(() => loadDocuments())
 
 .search-input {
 	width: 100%;
-	height: 38px;
+	height: 36px;
 	padding: 0 1rem 0 2.5rem;
 	border: 1px solid rgba(148, 163, 184, 0.4);
 	border-radius: 10px;

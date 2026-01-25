@@ -772,7 +772,7 @@ async function confirmDelete() {
   outline: none;
   transition: all 0.2s ease;
   box-sizing: border-box;
-  height: 38px;
+  height: 36px;
 }
 
 .filter-input::placeholder {
@@ -1351,7 +1351,7 @@ async function confirmDelete() {
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 14px;
@@ -1394,7 +1394,7 @@ async function confirmDelete() {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #fff;
-  height: 42px;
+  height: 36px;
   display: flex;
   align-items: center;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -1460,7 +1460,7 @@ async function confirmDelete() {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #fff;
-  height: 42px;
+  height: 36px;
   display: flex;
   align-items: center;
   transition: border-color 0.2s, box-shadow 0.2s;

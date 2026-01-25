@@ -1,6 +1,7 @@
 <template>
   <div class="page-grid approval-page">
     <div class="card approval-card">
+      <h2 style="margin: 0 0 1.25rem 0; font-size: 18px; font-weight: 600; color: #1e293b;">审批流程</h2>
       <!-- 筛选栏 -->
       <div class="filters-bar">
         <CustomSelect
@@ -59,14 +60,14 @@
               <th class="col-type">项目类型</th>
               <th class="col-time sortable" @click="toggleSort('start_date')">
                 开始时间
-                <span class="sort-icon" :class="{ active: sortField === 'start_date' }">
-                  {{ sortField === 'start_date' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+                <span class="sort-icon" :class="{ active: sortField === 'start_date', desc: sortField === 'start_date' && sortOrder === 'desc' }">
+                  <img src="/icons/up_down.svg" />
                 </span>
               </th>
               <th class="col-time sortable" @click="toggleSort('end_date')">
                 结束时间
-                <span class="sort-icon" :class="{ active: sortField === 'end_date' }">
-                  {{ sortField === 'end_date' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+                <span class="sort-icon" :class="{ active: sortField === 'end_date', desc: sortField === 'end_date' && sortOrder === 'desc' }">
+                  <img src="/icons/up_down.svg" />
                 </span>
               </th>
               <th class="col-days">时长</th>
@@ -643,13 +644,20 @@ onMounted(() => {
 }
 
 .sort-icon {
-  font-size: 12px;
-  color: #9ca3af;
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
   margin-left: 0.25rem;
+  transition: transform 0.2s;
 }
 
-.sort-icon.active {
-  color: #2563eb;
+.sort-icon img {
+  width: 100%;
+  height: 100%;
+}
+
+.sort-icon.desc {
+  transform: rotate(180deg);
 }
 
 .data-table td {

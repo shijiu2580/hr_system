@@ -414,10 +414,22 @@ onMounted(fetchData);
   color: #ef4444;
 }
 
-.form-input,
+.form-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1f2937;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
 .form-textarea {
   width: 100%;
-  padding: 0.625rem 0.875rem;
+  padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 0.875rem;

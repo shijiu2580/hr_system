@@ -252,40 +252,153 @@ function validate(mark){
 }
 </script>
 <style scoped>
-.emp-form{display:flex;flex-direction:column;gap:1.2rem;}
-.fieldset{border:1px solid var(--color-border,#e5e7eb);padding:.85rem 1rem;border-radius:8px;background:var(--color-surface,#fff);}
-.fieldset legend{font-size:13px;font-weight:600;padding:0 .4rem;}
-.legend-tip{font-size:11px;font-weight:400;color:#6b7280;}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:.9rem;
-  width:100%;
+.emp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
 }
-@media (max-width:960px){
-  .grid{grid-template-columns:repeat(2,1fr);}
+
+.fieldset {
+  border: 1px solid var(--color-border, #e5e7eb);
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: var(--color-surface, #fff);
 }
-@media (max-width:640px){
-  .grid{grid-template-columns:1fr;gap:.75rem;}
+
+.fieldset legend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 0.4rem;
 }
-label{display:flex;flex-direction:column;font-size:12px;color:#374151;gap:4px;}
-input,select{border:1px solid #d1d5db;padding:.5rem .65rem;border-radius:10px;font-size:13px;background:#fff;width:100%;box-sizing:border-box;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;}
-select{appearance:none;cursor:pointer;padding-right:2.2rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;}
-select:hover:not(:disabled){border-color:rgba(99,102,241,.5);background-color:rgba(248,250,252,.98);}
-input:focus,select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
-.actions{display:flex;align-items:center;gap:.75rem;}
-button{background:#2563eb;color:#fff;border:0;padding:.55rem 1.15rem;border-radius:4px;font-size:14px;cursor:pointer;transition:.15s background;}
-button:hover:not(:disabled){background:#1d4ed8;}
-button:disabled{opacity:.55;cursor:not-allowed;}
-button[type=button]{background:#6b7280;}
-.error{color:#dc2626;font-size:12px;}
-.field-error{color:#dc2626;font-size:11px;margin-top:3px;}
-.dirty-tip{font-size:11px;color:#6b7280;}
-.checkbox-inline{display:flex;align-items:center;gap:.4rem;font-size:12px;color:#374151;}
+
+.legend-tip {
+  font-size: 11px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+  width: 100%;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: #374151;
+  gap: 4px;
+}
+
+input,
+select {
+  border: 1px solid #d1d5db;
+  height: 36px;
+  padding: 0 0.65rem;
+  border-radius: 10px;
+  font-size: 13px;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+select:hover:not(:disabled) {
+  border-color: rgba(99, 102, 241, 0.5);
+  background-color: rgba(248, 250, 252, 0.98);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+button {
+  background: #2563eb;
+  color: #fff;
+  border: 0;
+  padding: 0.55rem 1.15rem;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s background;
+}
+
+button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button[type="button"] {
+  background: #6b7280;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.dirty-tip {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 12px;
+  color: #374151;
+}
 
 /* CustomSelect 统一样式 */
 :deep(.custom-select .select-trigger) {
-  padding: 0.5rem 0.65rem;
+  height: 36px;
+  padding: 0 0.65rem;
+  display: flex;
+  align-items: center;
   padding-right: 2rem;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
@@ -293,39 +406,47 @@ button[type=button]{background:#6b7280;}
   font-size: 13px;
   transition: all 0.2s ease;
 }
+
 :deep(.custom-select .select-trigger:hover) {
   border-color: rgba(148, 163, 184, 0.6);
   background: #f8fafc;
 }
+
 :deep(.custom-select.open .select-trigger),
 :deep(.custom-select .select-trigger:focus) {
   border-color: rgba(148, 163, 184, 0.6);
   background: #f8fafc;
 }
+
 :deep(.custom-select .select-value) {
   font-size: 13px;
   color: #1e293b;
 }
+
 :deep(.custom-select .select-arrow) {
   color: #64748b;
 }
+
 :deep(.custom-select .select-dropdown) {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 0.35rem 0;
 }
+
 :deep(.custom-select .select-option) {
   padding: 0.5rem 0.75rem;
   font-size: 13px;
   color: #374151;
   transition: background 0.15s;
 }
+
 :deep(.custom-select .select-option:hover),
 :deep(.custom-select .select-option.highlighted) {
   background: #f1f5f9;
   color: #1e293b;
 }
+
 :deep(.custom-select .select-option.selected) {
   background: #eff6ff;
   color: #2563eb;
@@ -333,21 +454,93 @@ button[type=button]{background:#6b7280;}
 }
 
 /* 考勤地点样式 */
-.location-list{display:flex;flex-direction:column;gap:8px;}
-.location-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;transition:all .2s;}
-.location-item:hover{background:#f8fafc;border-color:#cbd5e1;}
-.location-item input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:#2563eb;outline:none;}
-.location-item input[type="checkbox"]:focus{outline:none;box-shadow:none;}
-.location-info{flex:1;display:flex;flex-direction:column;gap:2px;}
-.location-name{font-size:13px;font-weight:500;color:#1f2937;}
-.location-addr{font-size:12px;color:#6b7280;}
-.location-status{font-size:11px;padding:2px 8px;border-radius:999px;}
-.location-status.active{background:#dcfce7;color:#166534;}
-.location-status.inactive{background:#f1f5f9;color:#64748b;}
-.no-locations{font-size:13px;color:#6b7280;text-align:center;padding:16px;}
+.location-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.location-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.location-item:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.location-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2563eb;
+  outline: none;
+}
+
+.location-item input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.location-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.location-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.location-addr {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.location-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.location-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.location-status.inactive {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.no-locations {
+  font-size: 13px;
+  color: #6b7280;
+  text-align: center;
+  padding: 16px;
+}
 </style>
+
 <style scoped>
 /* 内联组件样式（FormField） */
-.form-field{display:flex;flex-direction:column;}
-.form-field.invalid input,.form-field.invalid select{border-color:#dc2626;background:#fef2f2;}
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field.invalid input,
+.form-field.invalid select {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
 </style>

@@ -244,7 +244,8 @@ async function handleSubmit() {
 
 .form-input {
   width: 100%;
-  padding: 10px 12px;
+  height: 36px;
+  padding: 0 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
@@ -269,7 +270,10 @@ async function handleSubmit() {
 }
 
 .form-select :deep(.select-trigger) {
-  padding: 10px 12px;
+  height: 36px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
@@ -286,7 +290,10 @@ async function handleSubmit() {
 }
 
 .form-date :deep(.date-display) {
-  padding: 10px 12px;
+  height: 36px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
@@ -297,7 +304,7 @@ async function handleSubmit() {
   border-color: #3b82f6;
   box-shadow: none;
 }
-
+8
 .form-textarea {
   width: 100%;
   padding: 10px 12px;

@@ -59,8 +59,8 @@
             <th class="col-phone">联系电话</th>
             <th class="col-hire-date sortable" @click="toggleSort('hire_date')">
               <span class="th-text">入职日期</span>
-              <span class="sort-icon" :class="{ active: sortField === 'hire_date' }">
-                {{ sortField === 'hire_date' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+              <span class="sort-icon" :class="{ active: sortField === 'hire_date', desc: sortField === 'hire_date' && sortOrder === 'desc' }">
+                <img src="/icons/up_down.svg" />
               </span>
             </th>
             <th class="col-status">状态</th>
@@ -408,7 +408,7 @@ onMounted(loadData)
 
 .filter-input {
   width: 100%;
-  padding: 0.55rem 0.75rem;
+  padding: 0 0.75rem;
   padding-right: 2.2rem;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
@@ -418,7 +418,7 @@ onMounted(loadData)
   outline: none;
   transition: all 0.2s ease;
   box-sizing: border-box;
-  height: 38px;
+  height: 36px;
 }
 
 .filter-input::placeholder {
@@ -527,8 +527,20 @@ onMounted(loadData)
 }
 
 .sort-icon {
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
   color: #cbd5e1;
-  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.sort-icon img {
+  width: 100%;
+  height: 100%;
+}
+
+.sort-icon.desc {
+  transform: rotate(180deg);
 }
 
 .sort-icon.active {

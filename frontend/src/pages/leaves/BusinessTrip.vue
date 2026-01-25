@@ -57,22 +57,24 @@
             </th>
             <th class="col-time sortable" @click="toggleSort('start_date')">
               <span class="th-text">开始时间</span>
-              <span class="sort-icon" :class="{ active: sortField === 'start_date' }">
-                {{ sortField === 'start_date' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+              <span class="sort-icon" :class="{ active: sortField === 'start_date', desc: sortField === 'start_date' && sortOrder === 'desc' }">
+                <img src="/icons/up_down.svg" />
               </span>
             </th>
             <th class="col-time sortable" @click="toggleSort('end_date')">
               <span class="th-text">结束时间</span>
-              <span class="sort-icon" :class="{ active: sortField === 'end_date' }">
-                {{ sortField === 'end_date' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅' }}
+              <span class="sort-icon" :class="{ active: sortField === 'end_date', desc: sortField === 'end_date' && sortOrder === 'desc' }">
+                <img src="/icons/up_down.svg" />
               </span>
             </th>
             <th class="col-duration">时长</th>
             <th class="col-reason">出差事由</th>
             <th class="col-status">状态</th>
             <th class="col-actions">
-              <span>操作</span>
-              <span class="settings-icon">⚙</span>
+              <div class="action-header">
+                <span>操作</span>
+                <img src="/icons/setting.svg" class="settings-icon" alt="设置" />
+              </div>
             </th>
           </tr>
         </thead>
@@ -625,23 +627,32 @@ onMounted(() => load())
 }
 
 .data-table th .sort-icon {
-  font-size: 12px;
-  color: #9ca3af;
-  transition: color 0.2s;
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s;
 }
 
-.data-table th .sort-icon.active {
-  color: #2563eb;
+.data-table th .sort-icon img {
+  width: 100%;
+  height: 100%;
 }
 
-.data-table th.sortable:hover .sort-icon {
-  color: #6b7280;
+.data-table th .sort-icon.desc {
+  transform: rotate(180deg);
 }
 
 .data-table th .settings-icon {
-  margin-left: 0.5rem;
+  width: 18px;
+  height: 18px;
   color: #9ca3af;
   cursor: pointer;
+}
+
+.action-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .data-table td {
@@ -1082,7 +1093,8 @@ onMounted(() => load())
 
 .form-input {
   width: 100%;
-  padding: 10px 12px;
+  height: 36px;
+  padding: 0 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
@@ -1100,7 +1112,7 @@ onMounted(() => load())
 
 .form-textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;

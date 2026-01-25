@@ -1073,12 +1073,24 @@ onMounted(refreshData)
   position: relative;
 }
 
-.resign-form input,
+.resign-form input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  transition: all 0.2s;
+  color: #1e293b;
+}
+
 .resign-form textarea {
   width: 100%;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   font-size: 14px;
   font-family: inherit;
   background: #fff;
