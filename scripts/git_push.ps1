@@ -25,17 +25,17 @@ Write-Host ""
 # Push to private repo
 if ($Target -eq "private" -or $Target -eq "both") {
     Write-Host "[INFO] Pushing to private repo (origin)..." -ForegroundColor Cyan
-    
+
     git add -A
     foreach ($file in $SensitiveFiles) {
         if (Test-Path $file) {
             git add -f $file 2>$null
         }
     }
-    
+
     git commit -m $Message 2>$null
     git push origin main
-    
+
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] Private repo pushed" -ForegroundColor Green
     } else {
@@ -47,7 +47,7 @@ if ($Target -eq "private" -or $Target -eq "both") {
 # Push to public repo
 if ($Target -eq "public" -or $Target -eq "both") {
     Write-Host "[INFO] Pushing to public repo (public)..." -ForegroundColor Cyan
-    
+
     # Remove sensitive files from tracking
     $removedFiles = @()
     foreach ($file in $SensitiveFiles) {
@@ -56,20 +56,20 @@ if ($Target -eq "public" -or $Target -eq "both") {
             $removedFiles += $file
         }
     }
-    
+
     if ($removedFiles.Count -gt 0) {
         Write-Host "  Excluded: $($removedFiles -join ', ')" -ForegroundColor Gray
         git commit -m "chore: exclude sensitive files" 2>$null
     }
-    
+
     git push public main
-    
+
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] Public repo pushed" -ForegroundColor Green
     } else {
         Write-Host "[WARN] Public repo push failed" -ForegroundColor Yellow
     }
-    
+
     # Restore sensitive files for private repo
     if ($removedFiles.Count -gt 0 -and $Target -eq "both") {
         foreach ($file in $removedFiles) {
