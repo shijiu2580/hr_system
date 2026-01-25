@@ -270,7 +270,7 @@
               @change="reloadLogs"
             />
           </div>
-          <div class="filter-field filter-field-grow">
+          <div class="filter-field">
             <span class="filter-label">关键字搜索</span>
             <div class="search-input-wrapper">
               <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -596,15 +596,15 @@ onMounted(()=>{ loadBackups(); reloadLogs(); loadHealth(); });
 .btn-danger:not(:disabled):hover{background:#b91c1c;}
 .filter-grid{display:flex;flex-wrap:wrap;gap:1rem;}
 .filter-bar{background:#f8fafc;border:1px solid rgba(148,163,184,.3);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;}
-.filter-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;}
-.filter-field{display:flex;flex-direction:column;gap:.4rem;min-width:160px;}
-.filter-field-grow{flex:1;min-width:200px;}
+.filter-row{display:flex;gap:1rem;align-items:end;}
+.filter-field{display:flex;flex-direction:column;gap:.4rem;width:200px;}
 .filter-label{font-size:12px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.03em;}
-.filter-field input,.filter-field select{border:1px solid rgba(148,163,184,.4);border-radius:10px;padding:.6rem .8rem;font-size:13px;background:#fff;height:38px;transition:border-color .2s ease,background .2s ease;}
+.filter-field input,.filter-field select{border:1px solid rgba(148,163,184,.4);border-radius:10px;padding:.55rem .8rem;font-size:13px;background:#fff;height:44px;transition:border-color .2s ease,background .2s ease;}
 .filter-field input:focus,.filter-field select:focus{outline:none;border-color:rgba(14,165,233,.5);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
-.search-input-wrapper{position:relative;display:flex;align-items:center;}
+.search-input-wrapper{position:relative;display:flex;align-items:center;height:44px;}
 .search-icon{position:absolute;left:.75rem;width:16px;height:16px;color:#94a3b8;pointer-events:none;}
-.search-input{width:100%;padding-left:2.25rem !important;}
+.search-input{width:100%;height:100%;padding-left:2.25rem !important;border:1px solid rgba(148,163,184,.4);border-radius:10px;font-size:13px;background:#fff;line-height:1;}
+.search-input:focus{outline:none;border-color:rgba(14,165,233,.5);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
 .filter-summary{display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;padding-top:.85rem;border-top:1px dashed rgba(148,163,184,.4);}
 .summary-text{font-size:12px;color:#64748b;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
 .filter-tag{display:inline-flex;align-items:center;gap:.3rem;background:#e0f2fe;color:#0369a1;padding:.25rem .6rem;border-radius:6px;font-size:12px;font-weight:500;}
