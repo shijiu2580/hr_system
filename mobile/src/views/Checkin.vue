@@ -18,14 +18,14 @@
       <!-- 休息日显示 -->
       <div v-if="!isWorkday && !hasCheckedIn" class="rest-day">
         <div class="rest-image">
-          <van-icon name="smile-o" size="80" color="#a0cfff" />
+          <svg-icon name="leaves" size="80" color="#a0cfff" />
         </div>
         <div class="rest-text">今日休息</div>
         <div class="rest-hint">{{ holidayName || '周末愉快' }}</div>
-        <van-button 
-          type="primary" 
-          plain 
-          round 
+        <van-button
+          type="primary"
+          plain
+          round
           size="small"
           style="margin-top: 20px;"
           @click="showOvertimeConfirm"
@@ -37,15 +37,19 @@
       <!-- 工作日打卡（或已加班打卡）-->
       <template v-else-if="isWorkday || hasCheckedIn">
       <div class="checkin-button-wrapper">
-        <div 
+        <div class="checkin-halo" :class="buttonStatusClass"></div>
+        <div
           class="checkin-button"
-          :class="{ 'checked': hasCheckedIn && hasCheckedOut }"
+          :class="buttonStatusClass"
           @click="handleCheckin"
         >
           <van-loading v-if="loading" color="#fff" size="32" />
           <template v-else>
-            <van-icon :name="buttonIcon" size="40" />
-            <span>{{ buttonText }}</span>
+            <div class="button-inner">
+              <svg-icon :name="buttonIcon" size="48" color="#fff" />
+              <span class="button-text">{{ buttonText }}</span>
+              <span class="button-time">{{ currentTime.slice(0, 5) }}</span>
+            </div>
           </template>
         </div>
       </div>
@@ -73,7 +77,7 @@
 
       <!-- 位置信息 -->
       <div class="location-info card">
-        <van-icon name="location-o" color="#1989fa" />
+        <svg-icon name="attendance" color="#1989fa" />
         <span v-if="locationLoading">正在获取位置...</span>
         <span v-else-if="locationError" class="error">{{ locationError }}</span>
         <span v-else>{{ locationName || '已获取位置' }}</span>
@@ -97,9 +101,24 @@
 
     <!-- 底部导航 -->
     <van-tabbar v-model="activeTab" fixed>
-      <van-tabbar-item icon="home-o" to="/home">首页</van-tabbar-item>
-      <van-tabbar-item icon="location-o" to="/checkin">打卡</van-tabbar-item>
-      <van-tabbar-item icon="user-o" to="/me">我的</van-tabbar-item>
+      <van-tabbar-item to="/home">
+        <span>首页</span>
+        <template #icon="{ active }">
+          <svg-icon name="dashboard" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
+      <van-tabbar-item to="/checkin">
+        <span>打卡</span>
+        <template #icon="{ active }">
+          <svg-icon name="attendance" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
+      <van-tabbar-item to="/me">
+        <span>我的</span>
+        <template #icon="{ active }">
+          <svg-icon name="account" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
     </van-tabbar>
   </div>
 </template>
@@ -141,9 +160,9 @@ const isLate = computed(() => todayRecord.value?.attendance_type === 'late')
 const isEarlyLeave = computed(() => todayRecord.value?.attendance_type === 'early_leave')
 
 const buttonIcon = computed(() => {
-  if (hasCheckedIn.value && hasCheckedOut.value) return 'clock-o'
-  if (hasCheckedIn.value) return 'clock-o'
-  return 'location-o'
+  if (hasCheckedIn.value && hasCheckedOut.value) return 'attendance'
+  if (hasCheckedIn.value) return 'attendance'
+  return 'attendance'
 })
 
 const buttonText = computed(() => {
@@ -152,12 +171,18 @@ const buttonText = computed(() => {
   return '上班签到'
 })
 
+const buttonStatusClass = computed(() => {
+  if (hasCheckedIn.value && hasCheckedOut.value) return 'status-completed'
+  if (hasCheckedIn.value) return 'status-working'
+  return 'status-start'
+})
+
 // 是否需要填写备注
 const showNotesInput = computed(() => {
   const now = new Date()
   const hours = now.getHours()
   const minutes = now.getMinutes()
-  
+
   if (!hasCheckedIn.value) {
     // 9点后签到需要填写迟到原因
     return hours > 9 || (hours === 9 && minutes > 0)
@@ -221,19 +246,19 @@ function updateTime() {
 function getLocation() {
   locationLoading.value = true
   locationError.value = ''
-  
+
   // 检查是否为非安全环境（HTTP 非 localhost）
-  const isSecure = window.isSecureContext || 
-                   location.protocol === 'https:' || 
-                   location.hostname === 'localhost' || 
+  const isSecure = window.isSecureContext ||
+                   location.protocol === 'https:' ||
+                   location.hostname === 'localhost' ||
                    location.hostname === '127.0.0.1'
-  
+
   if (!navigator.geolocation) {
     locationError.value = '浏览器不支持定位'
     locationLoading.value = false
     return
   }
-  
+
   // 非安全环境下尝试用 IP 地理定位或使用默认位置
   if (!isSecure) {
     console.warn('非 HTTPS 环境，无法使用精确定位')
@@ -245,7 +270,7 @@ function getLocation() {
     longitude.value = 0
     return
   }
-  
+
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       latitude.value = pos.coords.latitude
@@ -296,7 +321,7 @@ async function handleCheckin() {
     showToast('正在获取位置，请稍候')
     return
   }
-  
+
   // HTTP 环境下位置可能是 0,0，仍然允许提交，让后端决定
   // 只有明确的错误才阻止
   if (locationError.value && latitude.value === null) {
@@ -304,17 +329,17 @@ async function handleCheckin() {
     getLocation()
     return
   }
-  
+
   // 检查是否需要填写备注
   if (showNotesInput.value && !notes.value.trim()) {
     showToast(notesPlaceholder.value)
     return
   }
-  
+
   // 已签到后都是签退（可以多次更新）
   const action = hasCheckedIn.value ? 'check_out' : 'check_in'
   const actionText = hasCheckedIn.value ? (hasCheckedOut.value ? '更新签退' : '签退') : '签到'
-  
+
   loading.value = true
   try {
     const res = await api.post('/api/attendance/check/', {
@@ -323,7 +348,7 @@ async function handleCheckin() {
       longitude: longitude.value,
       notes: notes.value.trim(),
     })
-    
+
     if (res.data.success) {
       showSuccessToast(`${actionText}成功`)
       todayRecord.value = res.data.data
@@ -367,38 +392,100 @@ async function handleCheckin() {
 }
 
 .checkin-button-wrapper {
+  position: relative;
   display: flex;
   justify-content: center;
-  margin-bottom: 30px;
+  align-items: center;
+  margin-bottom: 40px;
+  height: 180px;
+}
+
+.checkin-halo {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  opacity: 0.2;
+  animation: pulse 2s infinite;
+  pointer-events: none;
 }
 
 .checkin-button {
-  width: 140px;
-  height: 140px;
+  position: relative;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 4px solid rgba(255, 255, 255, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #fff;
-  gap: 8px;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.button-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.button-text {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 4px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  letter-spacing: 1px;
+}
+
+.button-time {
+  font-size: 13px;
+  opacity: 0.9;
+  font-family: 'SF Mono', Monaco, monospace;
 }
 
 .checkin-button:active {
   transform: scale(0.95);
 }
 
-.checkin-button.checked {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-  box-shadow: 0 8px 20px rgba(56, 239, 125, 0.4);
+/* Status variants */
+.checkin-button.status-start {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  box-shadow: 0 10px 25px rgba(25, 118, 210, 0.4);
+}
+.checkin-halo.status-start {
+  background: #2196F3;
 }
 
-.checkin-button span {
-  font-size: 14px;
+.checkin-button.status-working {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  box-shadow: 0 10px 25px rgba(245, 124, 0, 0.4);
+}
+.checkin-halo.status-working {
+  background: #FF9800;
+}
+
+.checkin-button.status-completed {
+  background: linear-gradient(135deg, #00C853 0%, #009624 100%);
+  box-shadow: 0 10px 25px rgba(0, 150, 36, 0.4);
+}
+.checkin-halo.status-completed {
+  background: #00C853;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
 }
 
 .today-status {
