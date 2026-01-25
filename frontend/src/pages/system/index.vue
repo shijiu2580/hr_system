@@ -244,26 +244,52 @@
           <button class="btn-danger btn-sm" @click="clearLogs" :disabled="clearingLogs">{{ clearingLogs ? '清空中...' : '清空筛选结果' }}</button>
         </div>
       </header>
-      <div class="filter-grid">
-        <div class="filter-field">
-          <span>级别</span>
-          <CustomSelect
-            v-model="levelFilter"
-            :options="[
-              { value: '', label: '全部' },
-              { value: 'INFO', label: 'INFO' },
-              { value: 'WARNING', label: 'WARNING' },
-              { value: 'ERROR', label: 'ERROR' },
-              { value: 'DEBUG', label: 'DEBUG' }
-            ]"
-            placeholder="全部"
-            @change="reloadLogs"
-          />
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-field">
+            <span class="filter-label">日志级别</span>
+            <CustomSelect
+              v-model="levelFilter"
+              :options="[
+                { value: '', label: '全部级别' },
+                { value: 'INFO', label: 'INFO' },
+                { value: 'WARNING', label: 'WARNING' },
+                { value: 'ERROR', label: 'ERROR' },
+                { value: 'DEBUG', label: 'DEBUG' }
+              ]"
+              placeholder="全部级别"
+              @change="reloadLogs"
+            />
+          </div>
+          <div class="filter-field">
+            <span class="filter-label">操作用户</span>
+            <CustomSelect
+              v-model="userFilter"
+              :options="userOptions"
+              placeholder="全部用户"
+              @change="reloadLogs"
+            />
+          </div>
+          <div class="filter-field filter-field-grow">
+            <span class="filter-label">关键字搜索</span>
+            <div class="search-input-wrapper">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input v-model.trim="logKeyword" placeholder="搜索动作或详情..." class="search-input" />
+            </div>
+          </div>
         </div>
-        <label class="filter-field">
-          <span>关键字</span>
-          <input v-model.trim="logKeyword" placeholder="动作 / 详情" />
-        </label>
+        <div class="filter-summary" v-if="levelFilter || userFilter || logKeyword">
+          <span class="summary-text">
+            筛选条件：
+            <span v-if="levelFilter" class="filter-tag">{{ levelFilter }} <button @click="levelFilter='';reloadLogs()">×</button></span>
+            <span v-if="userFilter" class="filter-tag">{{ userFilter === 'system' ? '系统' : userFilter }} <button @click="userFilter='';reloadLogs()">×</button></span>
+            <span v-if="logKeyword" class="filter-tag">"{{ logKeyword }}" <button @click="logKeyword=''">×</button></span>
+          </span>
+          <button class="clear-all-btn" @click="clearFilters">清除全部</button>
+        </div>
       </div>
       <div class="alert-stack">
         <transition name="fade">
@@ -286,27 +312,38 @@
         <table v-else-if="filteredLogs.length" class="data-table logs-table">
           <thead>
             <tr>
-              <th>时间</th>
-              <th>级别</th>
-              <th>用户</th>
+              <th style="width:160px;">时间</th>
+              <th style="width:90px;">级别</th>
+              <th style="width:100px;">用户</th>
               <th>动作 / 详情</th>
+              <th style="width:120px;">IP地址</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="l in filteredLogs" :key="l.id">
-              <td>{{ formatTs(l.timestamp) }}</td>
+              <td class="time-cell">{{ formatTs(l.timestamp) }}</td>
               <td><span class="status-pill" :class="levelClass(l.level)">{{ l.level }}</span></td>
-              <td>{{ l.user?.username || '系统' }}</td>
+              <td class="user-cell">{{ l.user?.username || '系统' }}</td>
               <td>
                 <div class="log-text">
                   <strong>{{ l.action }}</strong>
-                  <span>{{ l.detail }}</span>
+                  <span v-if="l.detail">{{ l.detail }}</span>
                 </div>
               </td>
+              <td class="ip-cell">{{ l.ip_address || '-' }}</td>
             </tr>
           </tbody>
         </table>
-        <p v-else class="empty">未查询到相关日志，可以尝试放宽筛选条件。</p>
+        <div v-else class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <p>未查询到相关日志</p>
+          <span>尝试放宽筛选条件或刷新</span>
+        </div>
+      </div>
+      <div class="log-footer" v-if="filteredLogs.length">
+        <span class="log-count">共 {{ filteredLogs.length }} 条日志</span>
       </div>
     </section>
   </div>
@@ -371,7 +408,27 @@ const clearingLogs = ref(false);
 const errorLogs = ref('');
 const successLogs = ref('');
 const levelFilter = ref('');
+const userFilter = ref('');
 const logKeyword = ref('');
+
+// 用户列表选项（从日志中提取）
+const userOptions = computed(() => {
+  const users = new Set();
+  logs.value.forEach(l => {
+    if (l.user?.username) users.add(l.user.username);
+  });
+  const options = [{ value: '', label: '全部用户' }, { value: 'system', label: '系统' }];
+  users.forEach(u => options.push({ value: u, label: u }));
+  return options;
+});
+
+// 清除所有筛选条件
+function clearFilters() {
+  levelFilter.value = '';
+  userFilter.value = '';
+  logKeyword.value = '';
+  reloadLogs();
+}
 
 const logStats = computed(() => {
   const list = logs.value || [];
@@ -397,9 +454,27 @@ async function clearLogs(){
 }
 
 const filteredLogs = computed(()=> {
+  let result = logs.value;
+  
+  // 用户筛选
+  if (userFilter.value) {
+    if (userFilter.value === 'system') {
+      result = result.filter(l => !l.user);
+    } else {
+      result = result.filter(l => l.user?.username === userFilter.value);
+    }
+  }
+  
+  // 关键字筛选
   const kw = logKeyword.value.trim().toLowerCase();
-  if(!kw) return logs.value;
-  return logs.value.filter(l => (l.action && l.action.toLowerCase().includes(kw)) || (l.detail && l.detail.toLowerCase().includes(kw)) );
+  if (kw) {
+    result = result.filter(l => 
+      (l.action && l.action.toLowerCase().includes(kw)) || 
+      (l.detail && l.detail.toLowerCase().includes(kw))
+    );
+  }
+  
+  return result;
 });
 
 function levelClass(l){
@@ -520,20 +595,44 @@ onMounted(()=>{ loadBackups(); reloadLogs(); loadHealth(); });
 .btn-danger:disabled{opacity:.5;cursor:not-allowed;}
 .btn-danger:not(:disabled):hover{background:#b91c1c;}
 .filter-grid{display:flex;flex-wrap:wrap;gap:1rem;}
-.filter-field{display:flex;flex-direction:column;gap:.35rem;font-size:12px;color:#94a3b8;min-width:180px;}
+.filter-bar{background:#f8fafc;border:1px solid rgba(148,163,184,.3);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;}
+.filter-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;}
+.filter-field{display:flex;flex-direction:column;gap:.4rem;min-width:160px;}
+.filter-field-grow{flex:1;min-width:200px;}
+.filter-label{font-size:12px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.03em;}
 .filter-field input,.filter-field select{border:1px solid rgba(148,163,184,.4);border-radius:10px;padding:.6rem .8rem;font-size:13px;background:#fff;height:38px;transition:border-color .2s ease,background .2s ease;}
-.filter-field input:focus,.filter-field select:focus{outline:none;border-color:rgba(148,163,184,.6);background:#f8fafc;box-shadow:none;}
+.filter-field input:focus,.filter-field select:focus{outline:none;border-color:rgba(14,165,233,.5);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.search-input-wrapper{position:relative;display:flex;align-items:center;}
+.search-icon{position:absolute;left:.75rem;width:16px;height:16px;color:#94a3b8;pointer-events:none;}
+.search-input{width:100%;padding-left:2.25rem !important;}
+.filter-summary{display:flex;align-items:center;justify-content:space-between;margin-top:.85rem;padding-top:.85rem;border-top:1px dashed rgba(148,163,184,.4);}
+.summary-text{font-size:12px;color:#64748b;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.filter-tag{display:inline-flex;align-items:center;gap:.3rem;background:#e0f2fe;color:#0369a1;padding:.25rem .6rem;border-radius:6px;font-size:12px;font-weight:500;}
+.filter-tag button{background:none;border:none;color:#0369a1;cursor:pointer;font-size:14px;line-height:1;padding:0;margin-left:.15rem;}
+.filter-tag button:hover{color:#0c4a6e;}
+.clear-all-btn{background:none;border:none;color:#dc2626;font-size:12px;cursor:pointer;text-decoration:underline;}
+.clear-all-btn:hover{color:#b91c1c;}
 .filter-field select{appearance:none;cursor:pointer;padding-right:2.4rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;}
 .filter-field select:hover{border-color:rgba(14,165,233,.5);background-color:rgba(248,250,252,.98);} 
-.log-panel{border:1px solid rgba(148,163,184,.4);border-radius:10px;background:#fff;padding:1rem;max-height:460px;overflow:auto;}
-.logs-table tbody td strong{display:block;font-size:13px;color:#0f172a;margin-bottom:.35rem;}
-.logs-table tbody td span{font-size:13px;color:#475569;}
-.status-pill{display:inline-flex;align-items:center;justify-content:center;padding:.2rem .7rem;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.05em;}
+.log-panel{border:1px solid rgba(148,163,184,.4);border-radius:10px;background:#fff;padding:1rem;max-height:500px;overflow:auto;}
+.logs-table tbody td{vertical-align:middle;}
+.logs-table tbody td strong{display:block;font-size:13px;color:#0f172a;margin-bottom:.2rem;}
+.logs-table tbody td span{font-size:12px;color:#64748b;}
+.time-cell{font-size:13px;color:#475569;white-space:nowrap;}
+.user-cell{font-size:13px;font-weight:500;color:#334155;}
+.ip-cell{font-size:12px;color:#94a3b8;font-family:monospace;}
+.status-pill{display:inline-flex;align-items:center;justify-content:center;padding:.25rem .65rem;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.04em;}
 .status-pill.success{background:rgba(134,239,172,.35);color:#15803d;}
 .status-pill.warning{background:rgba(253,224,71,.4);color:#92400e;}
 .status-pill.danger{background:rgba(248,113,113,.4);color:#b91c1c;}
 .status-pill.debug{background:rgba(148,163,184,.35);color:#475569;}
-.log-text{display:flex;flex-direction:column;gap:.25rem;}
+.log-text{display:flex;flex-direction:column;gap:.15rem;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;color:#94a3b8;}
+.empty-state svg{width:48px;height:48px;margin-bottom:.75rem;opacity:.5;}
+.empty-state p{font-size:14px;font-weight:500;color:#64748b;margin:0;}
+.empty-state span{font-size:12px;margin-top:.25rem;}
+.log-footer{display:flex;justify-content:flex-end;padding:.75rem 0 0;border-top:1px solid rgba(148,163,184,.2);margin-top:1rem;}
+.log-count{font-size:12px;color:#64748b;}
 .table-skeleton{display:flex;flex-direction:column;gap:.5rem;}
 .skeleton-row{height:44px;border-radius:8px;background:linear-gradient(90deg,#f3f4f6,#e5e7eb,#f3f4f6);background-size:200% 100%;animation:skeleton 1.2s infinite;}
 .empty{font-size:13px;color:#94a3b8;text-align:center;padding:.5rem 0;}
