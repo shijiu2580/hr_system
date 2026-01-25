@@ -9,26 +9,24 @@ services:
       - ./media:/app/media
       - ./data:/app/data
     mem_limit: 256m
-    env_file:
-      - .env.production
     environment:
       - DEBUG=False
+      - SECRET_KEY=django-insecure-hr-system-production-2026
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend,159.75.138.185,canway.site,www.canway.site
       - DATABASE_PATH=/app/data/db.sqlite3
       - SECURE_SSL_REDIRECT=False
       - EMAIL_HOST=smtp.qq.com
       - EMAIL_PORT=465
       - EMAIL_USE_SSL=True
+      - EMAIL_HOST_USER=483496381@qq.com
+      - EMAIL_HOST_PASSWORD=zvsskswifehnbhfh
+      - DEFAULT_FROM_EMAIL=483496381@qq.com
       - HOLIDAY_API_ENABLED=True
     restart: unless-stopped
 
   # Vue Web 前端
   frontend:
-    build:
-      context: ./frontend
-      args:
-        - VITE_AMAP_KEY=${VITE_AMAP_KEY:-}
-        - VITE_AMAP_SECURITY_JS_CODE=${VITE_AMAP_SECURITY_JS_CODE:-}
+    build: ./frontend
     container_name: hr-frontend
     ports:
       - "3000:80"
