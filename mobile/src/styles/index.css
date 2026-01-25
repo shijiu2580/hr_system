@@ -4,7 +4,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -90,4 +90,14 @@ div.van-popup.van-toast[style*="display: none"] {
   height: 0 !important;
   overflow: hidden !important;
   transform: scale(0) !important;
+}
+
+/* 兜底：避免 Toast 变成“白框无文字”（主题变量/样式冲突时） */
+.van-toast {
+  background: rgba(0, 0, 0, 0.78) !important;
+  color: #fff !important;
+}
+
+.van-toast__text {
+  color: #fff !important;
 }
