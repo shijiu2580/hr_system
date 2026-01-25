@@ -25,9 +25,9 @@
     <div class="checkin-card card" @click="$router.push('/checkin')">
       <div class="checkin-status">
         <van-loading v-if="checkinLoading" size="24" />
-        <van-icon 
+        <van-icon
           v-else
-          :name="checkinIcon" 
+          :name="checkinIcon"
           :color="checkinIconColor"
           size="32"
         />
@@ -43,25 +43,25 @@
     <div class="menu-grid">
       <div class="menu-item" @click="$router.push('/checkin')">
         <div class="menu-icon" style="background: #e8f4ff;">
-          <van-icon name="location-o" color="#1989fa" size="24" />
+          <svg-icon name="attendance" color="#1989fa" size="24" />
         </div>
         <span>签到打卡</span>
       </div>
       <div class="menu-item" @click="$router.push('/attendance')">
         <div class="menu-icon" style="background: #e8f7e8;">
-          <van-icon name="calendar-o" color="#07c160" size="24" />
+          <svg-icon name="calendar" color="#07c160" size="24" />
         </div>
         <span>考勤记录</span>
       </div>
       <div class="menu-item" @click="$router.push('/leave')">
         <div class="menu-icon" style="background: #fff7e8;">
-          <van-icon name="edit" color="#ff976a" size="24" />
+          <svg-icon name="leaves" color="#ff976a" size="24" />
         </div>
         <span>请假申请</span>
       </div>
       <div class="menu-item" @click="$router.push('/me')">
         <div class="menu-icon" style="background: #f7e8ff;">
-          <van-icon name="user-o" color="#b37feb" size="24" />
+          <svg-icon name="account" color="#b37feb" size="24" />
         </div>
         <span>个人中心</span>
       </div>
@@ -70,15 +70,38 @@
     <!-- 快捷入口 -->
     <div class="section-title">快捷服务</div>
     <van-cell-group inset>
-      <van-cell title="补签申请" is-link icon="edit" to="/attendance" />
-      <van-cell title="公司通知" is-link icon="bullhorn-o" />
+      <van-cell title="补签申请" is-link to="/attendance">
+        <template #icon>
+          <svg-icon name="leaves" size="16" style="margin-right: 4px; vertical-align: middle" />
+        </template>
+      </van-cell>
+      <van-cell title="公司通知" is-link>
+        <template #icon>
+          <svg-icon name="documents" size="16" style="margin-right: 4px; vertical-align: middle" />
+        </template>
+      </van-cell>
     </van-cell-group>
 
     <!-- 底部导航 -->
     <van-tabbar v-model="activeTab" fixed>
-      <van-tabbar-item icon="home-o" to="/home">首页</van-tabbar-item>
-      <van-tabbar-item icon="location-o" to="/checkin">打卡</van-tabbar-item>
-      <van-tabbar-item icon="user-o" to="/me">我的</van-tabbar-item>
+      <van-tabbar-item to="/home">
+        <span>首页</span>
+        <template #icon="{ active }">
+          <svg-icon name="dashboard" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
+      <van-tabbar-item to="/checkin">
+        <span>打卡</span>
+        <template #icon="{ active }">
+          <svg-icon name="attendance" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
+      <van-tabbar-item to="/me">
+        <span>我的</span>
+        <template #icon="{ active }">
+          <svg-icon name="account" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
     </van-tabbar>
   </div>
 </template>
