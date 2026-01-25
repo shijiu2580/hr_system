@@ -37,7 +37,6 @@
       <!-- 工作日打卡（或已加班打卡）-->
       <template v-else-if="isWorkday || hasCheckedIn">
       <div class="checkin-button-wrapper">
-        <div class="checkin-halo" :class="buttonStatusClass"></div>
         <div
           class="checkin-button"
           :class="buttonStatusClass"
@@ -80,7 +79,10 @@
         <svg-icon name="attendance" color="#1989fa" />
         <span v-if="locationLoading">正在获取位置...</span>
         <span v-else-if="locationError" class="error">{{ locationError }}</span>
-        <span v-else>{{ locationName || '已获取位置' }}</span>
+        <span v-else>
+          {{ locationName || '已获取位置' }}
+          <span v-if="locationRefreshing" class="location-hint">（更新中）</span>
+        </span>
       </div>
 
       <!-- 备注输入（迟到/早退时显示） -->
@@ -125,7 +127,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { showToast, showSuccessToast, showConfirmDialog } from 'vant'
+import { showToast, showConfirmDialog } from 'vant'
 import api from '../utils/api'
 
 const activeTab = ref(1)
@@ -140,7 +142,36 @@ const latitude = ref(null)
 const longitude = ref(null)
 const locationName = ref('')
 const locationLoading = ref(true)
+const locationRefreshing = ref(false)
 const locationError = ref('')
+
+const LOCATION_CACHE_KEY = 'hr_mobile_location_cache_v1'
+const LOCATION_CACHE_TTL_MS = 10 * 60 * 1000
+
+function readLocationCache() {
+  try {
+    const raw = localStorage.getItem(LOCATION_CACHE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return null
+    if (typeof parsed.lat !== 'number' || typeof parsed.lng !== 'number' || typeof parsed.ts !== 'number') return null
+    if (Date.now() - parsed.ts > LOCATION_CACHE_TTL_MS) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function writeLocationCache(lat, lng) {
+  try {
+    localStorage.setItem(
+      LOCATION_CACHE_KEY,
+      JSON.stringify({ lat, lng, ts: Date.now() })
+    )
+  } catch {
+    // ignore
+  }
+}
 
 // 签到状态
 const loading = ref(false)
@@ -246,6 +277,18 @@ function updateTime() {
 function getLocation() {
   locationLoading.value = true
   locationError.value = ''
+  locationRefreshing.value = false
+
+  // 先使用缓存位置（提升“体感速度”），再后台刷新真实位置
+  const cached = readLocationCache()
+  const hasCached = !!cached
+  if (cached) {
+    latitude.value = cached.lat
+    longitude.value = cached.lng
+    locationName.value = `上次位置 ${cached.lat.toFixed(4)}, ${cached.lng.toFixed(4)}`
+    locationLoading.value = false
+    locationRefreshing.value = true
+  }
 
   // 检查是否为非安全环境（HTTP 非 localhost）
   const isSecure = window.isSecureContext ||
@@ -271,37 +314,61 @@ function getLocation() {
     return
   }
 
+  // 定位成功回调
+  const onSuccess = (pos) => {
+    latitude.value = pos.coords.latitude
+    longitude.value = pos.coords.longitude
+    locationLoading.value = false
+    locationRefreshing.value = false
+    locationName.value = `${latitude.value.toFixed(4)}, ${longitude.value.toFixed(4)}`
+    writeLocationCache(latitude.value, longitude.value)
+  }
+
+  // 定位失败回调
+  const onError = (err) => {
+    locationLoading.value = false
+    locationRefreshing.value = false
+
+    // 如果已有缓存位置，则不显示错误，避免“位置更新中”变成红字干扰
+    if (hasCached) {
+      return
+    }
+
+    switch (err.code) {
+      case 1:
+        locationError.value = '请允许获取位置权限'
+        break
+      case 2:
+        locationError.value = '无法获取位置信息'
+        break
+      case 3:
+        locationError.value = '获取位置超时'
+        break
+      default:
+        locationError.value = '获取位置失败'
+    }
+    // 定位失败时也使用默认位置
+    if (!latitude.value) {
+      latitude.value = 22.5431
+      longitude.value = 114.0579
+      locationName.value = '默认位置'
+      locationError.value = ''
+    }
+  }
+
+  // 策略：先快速获取低精度位置，再尝试获取高精度位置
+  // 低精度定位（使用网络/基站，速度快）
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      latitude.value = pos.coords.latitude
-      longitude.value = pos.coords.longitude
-      locationLoading.value = false
-      locationName.value = `${latitude.value.toFixed(4)}, ${longitude.value.toFixed(4)}`
+    onSuccess,
+    // 低精度失败时尝试高精度
+    () => {
+      navigator.geolocation.getCurrentPosition(
+        onSuccess,
+        onError,
+        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+      )
     },
-    (err) => {
-      locationLoading.value = false
-      switch (err.code) {
-        case 1:
-          locationError.value = '请允许获取位置权限'
-          break
-        case 2:
-          locationError.value = '无法获取位置信息'
-          break
-        case 3:
-          locationError.value = '获取位置超时'
-          break
-        default:
-          locationError.value = '获取位置失败'
-      }
-      // 定位失败时也使用默认位置
-      if (!latitude.value) {
-        latitude.value = 22.5431
-        longitude.value = 114.0579
-        locationName.value = '默认位置'
-        locationError.value = ''
-      }
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
+    { enableHighAccuracy: false, timeout: 1500, maximumAge: 10 * 60 * 1000 }
   )
 }
 
@@ -318,29 +385,49 @@ async function fetchTodayRecord() {
 
 async function handleCheckin() {
   if (locationLoading.value) {
-    showToast('正在获取位置，请稍候')
+    showToast({
+      message: '正在获取位置，请稍候',
+      duration: 1500,
+    })
     return
   }
 
   // HTTP 环境下位置可能是 0,0，仍然允许提交，让后端决定
   // 只有明确的错误才阻止
   if (locationError.value && latitude.value === null) {
-    showToast('请先允许获取位置')
+    showToast({
+      message: '请先允许获取位置',
+      icon: 'warning-o',
+    })
     getLocation()
     return
   }
 
   // 检查是否需要填写备注
   if (showNotesInput.value && !notes.value.trim()) {
-    showToast(notesPlaceholder.value)
+    showToast({
+      message: notesPlaceholder.value,
+      position: 'top',
+    })
     return
   }
 
-  // 已签到后都是签退（可以多次更新）
+  // 计算打卡类型和提示文案
+  const isUpdate = hasCheckedIn.value && hasCheckedOut.value
   const action = hasCheckedIn.value ? 'check_out' : 'check_in'
-  const actionText = hasCheckedIn.value ? (hasCheckedOut.value ? '更新签退' : '签退') : '签到'
+  let actionText = '签到'
+  if (hasCheckedIn.value) {
+    actionText = isUpdate ? '更新签退' : '签退'
+  }
 
   loading.value = true
+  const pendingToast = showToast({
+    type: 'loading',
+    message: `${actionText}中...`,
+    duration: 0,
+    forbidClick: true,
+  })
+
   try {
     const res = await api.post('/api/attendance/check/', {
       action,
@@ -350,15 +437,29 @@ async function handleCheckin() {
     })
 
     if (res.data.success) {
-      showSuccessToast(`${actionText}成功`)
+      // 先关闭 loading toast，再展示结果 toast，避免“白框无文字”的竞态
+      pendingToast?.close?.()
+      showToast({
+        type: 'success',
+        message: `${actionText}成功`,
+        duration: 1500,
+      })
       todayRecord.value = res.data.data
       notes.value = ''
     } else {
+      pendingToast?.close?.()
       showToast(res.data.error?.message || `${actionText}失败`)
     }
   } catch (e) {
-    showToast(e.response?.data?.error?.message || `${actionText}失败`)
+    // 避免与 api.js 中的全局错误提示重复
+    // api.js 处理了 401, 403, 404, 500 以及网络错误
+    const status = e.response?.status
+    if (!status || ![401, 403, 404, 500].includes(status)) {
+        pendingToast?.close?.()
+        showToast(e.response?.data?.error?.message || `${actionText}失败`)
+    }
   } finally {
+    pendingToast?.close?.()
     loading.value = false
   }
 }
@@ -400,16 +501,6 @@ async function handleCheckin() {
   height: 180px;
 }
 
-.checkin-halo {
-  position: absolute;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  opacity: 0.2;
-  animation: pulse 2s infinite;
-  pointer-events: none;
-}
-
 .checkin-button {
   position: relative;
   width: 150px;
@@ -425,6 +516,19 @@ async function handleCheckin() {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   z-index: 10;
   box-sizing: border-box;
+}
+
+/* Halo Effect via pseudo-element */
+.checkin-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  z-index: -1;
+  animation: pulse 2s ease-out infinite;
 }
 
 .button-inner {
@@ -457,24 +561,24 @@ async function handleCheckin() {
   background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
   box-shadow: 0 10px 25px rgba(25, 118, 210, 0.4);
 }
-.checkin-halo.status-start {
-  background: #2196F3;
+.checkin-button.status-start::before {
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.6) 0%, rgba(33, 150, 243, 0) 70%);
 }
 
 .checkin-button.status-working {
   background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
   box-shadow: 0 10px 25px rgba(245, 124, 0, 0.4);
 }
-.checkin-halo.status-working {
-  background: #FF9800;
+.checkin-button.status-working::before {
+  background: radial-gradient(circle, rgba(255, 152, 0, 0.6) 0%, rgba(255, 152, 0, 0) 70%);
 }
 
 .checkin-button.status-completed {
   background: linear-gradient(135deg, #00C853 0%, #009624 100%);
   box-shadow: 0 10px 25px rgba(0, 150, 36, 0.4);
 }
-.checkin-halo.status-completed {
-  background: #00C853;
+.checkin-button.status-completed::before {
+  background: radial-gradient(circle, rgba(0, 200, 83, 0.6) 0%, rgba(0, 200, 83, 0) 70%);
 }
 
 @keyframes pulse {
@@ -549,6 +653,12 @@ async function handleCheckin() {
   gap: 8px;
   font-size: 13px;
   color: #646566;
+}
+
+.location-hint {
+  color: #969799;
+  margin-left: 6px;
+  font-size: 12px;
 }
 
 .location-info .error {

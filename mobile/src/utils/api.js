@@ -23,11 +23,16 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const { response } = error
-    
-    if (response) {
-      switch (response.status) {
-        case 401:
-          // Token 过期，尝试刷新
+
+    // 如果没有响应对象，说明是网络错误
+    if (!response) {
+      showToast('网络连接失败')
+      return Promise.reject(error)
+    }
+
+    switch (response.status) {
+      case 401:
+        // Token 过期，尝试刷新
           const refreshToken = localStorage.getItem('mobile_refresh_token')
           if (refreshToken) {
             try {
@@ -57,13 +62,9 @@ api.interceptors.response.use(
         case 500:
           showToast('服务器错误')
           break
-        default:
-          showToast(response.data?.error?.message || response.data?.detail || '请求失败')
-      }
-    } else {
-      showToast('网络连接失败')
+        // 其他错误码不在拦截器中弹框，交给业务代码处理
     }
-    
+
     return Promise.reject(error)
   }
 )
