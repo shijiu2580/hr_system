@@ -1,0 +1,30 @@
+# ========================================
+# 公开仓库额外排除的敏感文件
+# ========================================
+
+# 数据库文件
+*.sqlite3
+db.sqlite3
+data/db.sqlite3
+/data/
+
+# 环境配置（包含密钥）
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# 数据备份
+/media/backups/
+data_clean.json
+db_base64.txt
+db_copy.sqlite3
+
+# 用户上传文件
+/media/avatars/
+/media/documents/
+/media/invoices/
+
+# 日志文件
+/logs/
+*.log
