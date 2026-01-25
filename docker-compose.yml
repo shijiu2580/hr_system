@@ -1,0 +1,49 @@
+services:
+  # Django 后端
+  backend:
+    build: .
+    container_name: hr-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./media:/app/media
+      - ./data:/app/data
+    mem_limit: 256m
+    env_file:
+      - .env.production
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,159.75.138.185,canway.site,www.canway.site
+      - DATABASE_PATH=/app/data/db.sqlite3
+      - SECURE_SSL_REDIRECT=False
+      - EMAIL_HOST=smtp.qq.com
+      - EMAIL_PORT=465
+      - EMAIL_USE_SSL=True
+      - HOLIDAY_API_ENABLED=True
+    restart: unless-stopped
+
+  # Vue Web 前端
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_AMAP_KEY=${VITE_AMAP_KEY:-}
+        - VITE_AMAP_SECURITY_JS_CODE=${VITE_AMAP_SECURITY_JS_CODE:-}
+    container_name: hr-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    mem_limit: 32m
+    restart: unless-stopped
+
+  # Vue Mobile H5 移动端
+  mobile:
+    build: ./mobile
+    container_name: hr-mobile
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    mem_limit: 32m
+    restart: unless-stopped

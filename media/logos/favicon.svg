@@ -1,0 +1,30 @@
+<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="faviconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="75" cy="75" r="75" fill="url(#faviconGradient)"/>
+  
+  <!-- HR图标 -->
+  <g fill="white" opacity="0.9">
+    <!-- 人员图标 -->
+    <circle cx="50" cy="50" r="15"/>
+    <path d="M30 70 Q30 65 35 65 L65 65 Q70 65 70 70 L70 85 Q70 90 65 90 L35 90 Q30 90 30 85 Z"/>
+    
+    <!-- 第二个人员图标 -->
+    <circle cx="100" cy="50" r="15"/>
+    <path d="M80 70 Q80 65 85 65 L115 65 Q120 65 120 70 L120 85 Q120 90 115 90 L85 90 Q80 90 80 85 Z"/>
+  </g>
+  
+  <!-- HR文字 -->
+  <text x="75" y="120" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">HR</text>
+</svg>
+
+
+
+
+

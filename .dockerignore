@@ -1,0 +1,22 @@
+# Docker
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.git
+.gitignore
+.env
+*.log
+*.sqlite3
+media/backups/*
+node_modules/
+.vscode/
+*.md

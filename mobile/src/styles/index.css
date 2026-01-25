@@ -1,0 +1,93 @@
+/* 全局样式 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 页面容器 */
+.page-container {
+  min-height: 100vh;
+  background-color: #f7f8fa;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 表单容器 */
+.form-container {
+  padding: 16px;
+}
+
+/* 卡片样式 */
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+/* 状态标签 */
+.status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-pending {
+  background-color: #fffbe8;
+  color: #ed6a0c;
+}
+
+.status-approved {
+  background-color: #e8f7e8;
+  color: #07c160;
+}
+
+.status-rejected {
+  background-color: #ffece8;
+  color: #ee0a24;
+}
+
+/* 页面标题 */
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #323233;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* 描述文字 */
+.desc-text {
+  color: #969799;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 上传区域 */
+.upload-section {
+  margin-top: 16px;
+}
+
+.upload-title {
+  font-size: 14px;
+  color: #323233;
+  margin-bottom: 8px;
+}
+
+/* 修复 Vant Toast 隐藏问题 - 覆盖 Vant 的 flex 样式 */
+.van-popup.van-toast[style*="display: none"],
+div.van-popup.van-toast[style*="display: none"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  transform: scale(0) !important;
+}

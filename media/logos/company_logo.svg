@@ -1,0 +1,40 @@
+<svg width="300" height="100" viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="300" height="100" rx="15" fill="url(#logoGradient)"/>
+  
+  <!-- 图标 -->
+  <g fill="white" opacity="0.9">
+    <!-- 人员图标 -->
+    <circle cx="30" cy="35" r="12"/>
+    <path d="M15 55 Q15 50 20 50 L40 50 Q45 50 45 55 L45 70 Q45 75 40 75 L20 75 Q15 75 15 70 Z"/>
+    
+    <!-- 连接线 -->
+    <line x1="50" y1="50" x2="70" y2="50" stroke="white" stroke-width="3" opacity="0.7"/>
+    
+    <!-- 第二个人员图标 -->
+    <circle cx="80" cy="35" r="12"/>
+    <path d="M65 55 Q65 50 70 50 L90 50 Q95 50 95 55 L95 70 Q95 75 90 75 L70 75 Q65 75 65 70 Z"/>
+  </g>
+  
+  <!-- 公司名称 -->
+  <text x="120" y="40" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">智慧科技</text>
+  <text x="120" y="60" fill="white" font-family="Arial, sans-serif" font-size="14" opacity="0.8">Smart Technology Co., Ltd.</text>
+  
+  <!-- 装饰元素 -->
+  <circle cx="250" cy="25" r="3" fill="white" opacity="0.3"/>
+  <circle cx="270" cy="35" r="2" fill="white" opacity="0.3"/>
+  <circle cx="260" cy="55" r="2" fill="white" opacity="0.3"/>
+  <circle cx="280" cy="65" r="3" fill="white" opacity="0.3"/>
+</svg>
+
+
+
+
+

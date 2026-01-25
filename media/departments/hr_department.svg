@@ -1,0 +1,27 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hrGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="64" height="64" rx="12" fill="url(#hrGradient)"/>
+  
+  <!-- 人员图标 -->
+  <g fill="white" opacity="0.9">
+    <!-- 头部 -->
+    <circle cx="32" cy="20" r="6"/>
+    <!-- 身体 -->
+    <path d="M20 35 Q20 30 25 30 L39 30 Q44 30 44 35 L44 50 Q44 55 39 55 L25 55 Q20 55 20 50 Z"/>
+  </g>
+  
+  <!-- HR文字 -->
+  <text x="32" y="45" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8" font-weight="bold">HR</text>
+</svg>
+
+
+
+
+
