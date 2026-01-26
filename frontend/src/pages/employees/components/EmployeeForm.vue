@@ -43,7 +43,7 @@
         <FormField label="邮箱" :error="errors.email"><input type="email" v-model="model.email" /></FormField>
         <FormField label="地址" :error="errors.address"><input v-model="model.address" /></FormField>
         <FormField label="身份证" :error="errors.id_card"><input v-model="model.id_card" /></FormField>
-        <FormField label="护照号码" :error="errors.passport_no"><input v-model="model.passport_no" /></FormField>
+
       </div>
     </fieldset>
 
@@ -305,7 +305,7 @@ function makeBlank(){
   return {
     user_id: '', employee_id: '', name: '', gender: 'M', birth_date: '', hire_date: '',
     english_name: '',
-    phone: '', email: '', address: '', id_card: '', passport_no: '', marital_status: 'single',
+    phone: '', email: '', address: '', id_card: '', marital_status: 'single',
     emergency_contact: '', emergency_relation: '', emergency_phone: '',
 
     nationality: '中国', hukou_location: '', hukou_type: '', native_place: '', hukou_address: '',
@@ -338,7 +338,7 @@ function pickEditable(e){
     birth_date: e.birth_date, hire_date: e.hire_date,
     english_name: e.english_name,
     phone: e.phone, email: e.email, address: e.address,
-    id_card: e.id_card, passport_no: e.passport_no,
+    id_card: e.id_card,
     marital_status: e.marital_status,
     emergency_contact: e.emergency_contact, emergency_relation: e.emergency_relation, emergency_phone: e.emergency_phone,
 

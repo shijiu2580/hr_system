@@ -163,10 +163,7 @@
                     <span class="label">身份证号</span>
                     <span class="value">{{ currentEmployee.id_card || '-' }}</span>
                   </div>
-                  <div class="detail-item">
-                    <span class="label">护照号</span>
-                    <span class="value">{{ currentEmployee.passport_no || '-' }}</span>
-                  </div>
+
                   <div class="detail-item">
                     <span class="label">婚姻状况</span>
                     <span class="value">{{ maritalMap[currentEmployee.marital_status] || '-' }}</span>

@@ -115,7 +115,7 @@
 
         <!-- 空状态 -->
         <div v-if="!loading && !paginatedData.length" class="empty-state">
-          <div class="empty-icon">✓</div>
+          <img src="/icons/success.svg" alt="success" class="empty-icon" />
           <p>太棒了！暂无考勤异常记录</p>
         </div>
       </div>
@@ -643,13 +643,6 @@ async function loadData() {
 .empty-icon {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
-  background: #d1fae5;
-  color: #059669;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
   margin-bottom: 16px;
 }
 

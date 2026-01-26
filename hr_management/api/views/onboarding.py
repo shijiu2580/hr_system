@@ -179,7 +179,6 @@ class OnboardProfileAPIView(views.APIView):
             'gender': emp.gender,
             'birth_date': str(emp.birth_date) if emp.birth_date else None,
             'id_card': emp.id_card,
-            'passport_no': emp.passport_no,
             'address': emp.address,
             'marital_status': emp.marital_status,
             'emergency_contact': emp.emergency_contact,
@@ -232,7 +231,7 @@ class OnboardProfileAPIView(views.APIView):
 
         # 可更新的字段
         updatable_fields = [
-            'name', 'english_name', 'gender', 'birth_date', 'id_card', 'passport_no',
+            'name', 'english_name', 'gender', 'birth_date', 'id_card',
             'phone', 'email', 'address', 'marital_status',
             'emergency_contact', 'emergency_phone', 'emergency_relation',
             # 户籍信息
@@ -349,7 +348,6 @@ class OnboardPendingListAPIView(views.APIView):
                 'gender': emp.gender,
                 'birth_date': str(emp.birth_date) if emp.birth_date else None,
                 'id_card': emp.id_card,
-                'passport_no': emp.passport_no,
                 'marital_status': emp.marital_status,
                 'nationality': emp.nationality,
                 'native_place': emp.native_place,
