@@ -151,9 +151,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_avatar(self, obj: User):
         try:
             if hasattr(obj, 'employee') and obj.employee and obj.employee.avatar:
-                request = self.context.get('request')
-                if request:
-                    return request.build_absolute_uri(obj.employee.avatar.url)
+                # 直接返回相对路径，让前端使用当前域名访问
                 return obj.employee.avatar.url
             return None
         except Exception:
@@ -187,11 +185,10 @@ class EmployeeSerializer(serializers.ModelSerializer):
         if not f:
             return None
         try:
-            url = f.url
+            # 直接返回相对路径，让前端使用当前域名访问
+            return f.url
         except Exception:
             return None
-        request = self.context.get('request')
-        return request.build_absolute_uri(url) if request else url
 
     def get_avatar(self, obj):
         return self._build_file_url(obj, 'avatar')
