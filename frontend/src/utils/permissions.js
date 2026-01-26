@@ -100,6 +100,12 @@ export const Permissions = {
   RBAC_ROLE_MANAGE: 'rbac.role_manage',
   RBAC_PERMISSION_MANAGE: 'rbac.permission_manage',
 
+  // -------- 入职管理 --------
+  ONBOARDING_VIEW: 'onboarding.view',
+  ONBOARDING_VIEW_ALL: 'onboarding.view_all',
+  ONBOARDING_APPROVE: 'onboarding.approve',
+  ONBOARDING_REJECT: 'onboarding.reject',
+
   // -------- 离职管理 --------
   RESIGNATION_VIEW: 'resignation.view',
   RESIGNATION_VIEW_ALL: 'resignation.view_all',
@@ -179,26 +185,26 @@ export const routePermissions = {
   '/employees/manage': [Permissions.EMPLOYEE_VIEW],
   '/employees/create': [Permissions.EMPLOYEE_CREATE],
   '/employees/:id/edit': [Permissions.EMPLOYEE_EDIT],
-  
+
   // 考勤管理
   '/attendance/manage': [Permissions.ATTENDANCE_VIEW_ALL],
   '/attendance/approval': [Permissions.ATTENDANCE_APPROVE],
   '/attendance/locations': [Permissions.ATTENDANCE_LOCATION],
-  
+
   // 请假管理
   '/leaves/approval': [Permissions.LEAVE_APPROVE],
-  
+
   // 薪资管理
   '/salaries': [Permissions.SALARY_VIEW_ALL],
   '/salaries/create': [Permissions.SALARY_CREATE],
   '/salaries/expense-approval': [Permissions.EXPENSE_APPROVE],
-  
+
   // 组织架构
   '/departments/create': [Permissions.DEPARTMENT_CREATE],
   '/departments/:id/edit': [Permissions.DEPARTMENT_EDIT],
   '/positions/create': [Permissions.POSITION_CREATE],
   '/positions/:id/edit': [Permissions.POSITION_EDIT],
-  
+
   // 系统管理
   '/system': [Permissions.SYSTEM_VIEW],
   '/rbac': [Permissions.RBAC_VIEW],
@@ -206,7 +212,7 @@ export const routePermissions = {
   '/users/create': [Permissions.USER_CREATE],
   '/users/:id/edit': [Permissions.USER_EDIT],
   '/admin-reset-password': [Permissions.USER_RESET_PASSWORD],
-  
+
   // 报表
   '/reports': [Permissions.REPORT_VIEW],
 };
@@ -219,7 +225,7 @@ export const routePermissions = {
 export function canAccessRoute(path) {
   // 管理员可访问所有路由
   if (isAdmin()) return true;
-  
+
   // 查找匹配的路由权限配置
   for (const [pattern, perms] of Object.entries(routePermissions)) {
     // 简单的路径匹配（支持 :id 这样的参数）
@@ -228,7 +234,7 @@ export function canAccessRoute(path) {
       return perms.every(p => hasPermission(p));
     }
   }
-  
+
   // 没有配置权限的路由默认可访问
   return true;
 }

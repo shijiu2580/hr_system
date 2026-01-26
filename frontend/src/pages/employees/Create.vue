@@ -19,8 +19,12 @@
     </div>
 
     <section class="card form-card">
-      <div v-if="loadingOptions" class="loading-state">
-        <div class="spinner"></div>
+      <div v-if="loadingOptions" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
         <span>加载选项数据...</span>
       </div>
       <EmployeeForm

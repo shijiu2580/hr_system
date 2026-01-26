@@ -19,8 +19,12 @@
     </div>
 
     <section class="card form-card">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
         <span>加载数据...</span>
       </div>
       <form v-else @submit.prevent="handleSubmit" class="position-form">
@@ -29,21 +33,22 @@
             <label class="form-label">职位名称 *</label>
             <input v-model.trim="form.name" class="form-control" required />
           </div>
-          
+
           <div class="form-field">
             <label class="form-label">所属部门</label>
-            <CustomSelect
+            <DeptTreeSelect
               v-model="form.department_id"
-              :options="[{ value: '', label: '不指定部门' }, ...departments.map(d => ({ value: d.id, label: d.name }))]"
+              :departments="departments"
               placeholder="请选择部门"
+              empty-label="不指定部门"
             />
           </div>
-          
+
           <div class="form-field span-2">
             <label class="form-label">职位描述</label>
             <textarea v-model.trim="form.description" rows="3" class="form-control" placeholder="可选填写职位说明"></textarea>
           </div>
-          
+
           <div class="form-field">
             <label class="form-label">最低薪资</label>
             <input type="number" step="0.01" v-model.number="form.salary_range_min" class="form-control" placeholder="可选" />
@@ -52,13 +57,26 @@
             <label class="form-label">最高薪资</label>
             <input type="number" step="0.01" v-model.number="form.salary_range_max" class="form-control" placeholder="可选" />
           </div>
-          
+
           <div class="form-field span-2">
             <label class="form-label">任职要求</label>
             <textarea v-model.trim="form.requirements" rows="3" class="form-control" placeholder="可选填写任职要求"></textarea>
           </div>
+
+          <div class="form-field span-2">
+            <label class="form-label">默认角色</label>
+            <p class="field-hint">新员工入职该职位时将自动获得这些角色的权限</p>
+            <div class="checkbox-group">
+              <label v-for="role in roles" :key="role.id" class="checkbox-item">
+                <input type="checkbox" :value="role.id" v-model="form.default_role_ids" />
+                <span class="checkbox-label">{{ role.name }}</span>
+                <span v-if="role.description" class="checkbox-desc">{{ role.description }}</span>
+              </label>
+              <span v-if="!roles.length" class="muted">暂无可用角色</span>
+            </div>
+          </div>
         </div>
-        
+
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" :disabled="saving">
             {{ saving ? '保存中...' : '保存' }}
@@ -74,7 +92,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '../../utils/api'
-import CustomSelect from '../../components/CustomSelect.vue'
+import DeptTreeSelect from '../../components/DeptTreeSelect.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -82,6 +100,7 @@ const route = useRoute()
 const isEdit = computed(() => !!route.params.id)
 
 const departments = ref([])
+const roles = ref([])
 const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
@@ -92,15 +111,20 @@ const form = ref({
   description: '',
   salary_range_min: null,
   salary_range_max: null,
-  requirements: ''
+  requirements: '',
+  default_role_ids: []
 })
 
 onMounted(async () => {
   try {
-    // 加载部门列表
-    const deptRes = await api.get('/departments/')
+    // 并行加载部门和角色列表
+    const [deptRes, roleRes] = await Promise.all([
+      api.get('/departments/'),
+      api.get('/rbac/roles/')
+    ])
     departments.value = deptRes.data.results || deptRes.data || []
-    
+    roles.value = roleRes.data.results || roleRes.data || []
+
     // 如果是编辑模式，加载职位数据
     if (isEdit.value) {
       const res = await api.get(`/positions/${route.params.id}/`)
@@ -111,7 +135,8 @@ onMounted(async () => {
         description: data.description || '',
         salary_range_min: data.salary_range_min,
         salary_range_max: data.salary_range_max,
-        requirements: data.requirements || ''
+        requirements: data.requirements || '',
+        default_role_ids: data.default_role_ids || []
       }
     }
   } catch (e) {
@@ -130,13 +155,13 @@ async function handleSubmit() {
     error.value = '请填写职位名称'
     return
   }
-  
+
   saving.value = true
   error.value = ''
   try {
     const payload = { ...form.value }
     if (!payload.department_id) payload.department_id = null
-    
+
     if (isEdit.value) {
       await api.put(`/positions/${route.params.id}/`, payload)
     } else {
@@ -347,6 +372,60 @@ textarea.form-control {
 
 .btn-secondary:hover {
   background: var(--color-bg-tertiary, #e2e8f0);
+}
+
+.field-hint {
+  margin: 0 0 0.5rem;
+  font-size: 12px;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  background: var(--color-bg-secondary, #f8fafc);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.checkbox-item:hover {
+  background: var(--color-bg-tertiary, #e2e8f0);
+}
+
+.checkbox-item input[type="checkbox"] {
+  margin-top: 2px;
+  accent-color: var(--color-primary, #3b82f6);
+}
+
+.checkbox-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary, #1e293b);
+}
+
+.checkbox-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary, #64748b);
+  margin-left: auto;
+}
+
+.muted {
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 13px;
 }
 
 @keyframes spin {

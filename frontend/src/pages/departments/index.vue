@@ -70,8 +70,8 @@
             <tr class="data-row root-row" :data-dept-id="item.id">
               <td class="col-name">
                 <div class="dept-info">
-                  <button 
-                    v-if="item.children?.length" 
+                  <button
+                    v-if="item.children?.length"
                     class="expand-btn"
                     @click="toggleExpand(item.id)"
                   >
@@ -123,8 +123,8 @@
                 <tr class="data-row child-row" :data-dept-id="child.id">
                   <td class="col-name">
                     <div class="dept-info" style="padding-left: 32px;">
-                      <button 
-                        v-if="child.children?.length" 
+                      <button
+                        v-if="child.children?.length"
                         class="expand-btn"
                         @click="toggleExpand(child.id)"
                       >
@@ -217,10 +217,10 @@
       </table>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+      <div v-if="loading" class="loading-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
 
       <!-- 空状态 -->
@@ -470,12 +470,12 @@ function getDeptColor(id) {
 // 构建树形数据
 const treeData = computed(() => {
   let list = items.value
-  
+
   // 搜索过滤
   if (searchKeyword.value) {
     const kw = searchKeyword.value.toLowerCase()
     const matchIds = new Set()
-    
+
     // 找到匹配的部门及其父级
     list.forEach(d => {
       if (d.name?.toLowerCase().includes(kw)) {
@@ -488,19 +488,19 @@ const treeData = computed(() => {
         }
       }
     })
-    
+
     list = list.filter(d => matchIds.has(d.id))
-    
+
     // 搜索时自动展开所有匹配的父级
     matchIds.forEach(id => expandedIds.value.add(id))
   }
-  
+
   // 构建 id -> 部门 映射
   const deptMap = {}
   list.forEach(d => {
     deptMap[d.id] = { ...d, children: [] }
   })
-  
+
   // 构建树形结构
   const roots = []
   list.forEach(d => {
@@ -510,7 +510,7 @@ const treeData = computed(() => {
       roots.push(deptMap[d.id])
     }
   })
-  
+
   // 按名称排序
   const sortChildren = (nodes) => {
     nodes.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
@@ -519,7 +519,7 @@ const treeData = computed(() => {
     })
   }
   sortChildren(roots)
-  
+
   return roots
 })
 
@@ -564,7 +564,7 @@ const parentOptions = computed(() => {
     })
   }
   getChildIds(editItem.value.id)
-  
+
   return items.value
     .filter(d => !excludeIds.has(d.id))
     .map(d => ({ value: d.id, label: d.full_path || d.name }))
@@ -592,33 +592,33 @@ async function loadData() {
       api.get('/positions/'),
       api.get('/employees/')
     ])
-    
+
     const deptList = deptRes.data?.results || deptRes.data || []
     const posList = posRes.data?.results || posRes.data || []
     const empList = empRes.data?.results || empRes.data || []
-    
+
     // 计算每个部门关联的职位数和员工数
     const posCountMap = {}
     const empCountMap = {}
-    
+
     posList.forEach(pos => {
       if (pos.department?.id) {
         posCountMap[pos.department.id] = (posCountMap[pos.department.id] || 0) + 1
       }
     })
-    
+
     empList.forEach(emp => {
       if (emp.department?.id) {
         empCountMap[emp.department.id] = (empCountMap[emp.department.id] || 0) + 1
       }
     })
-    
+
     items.value = deptList.map(d => ({
       ...d,
       position_count: posCountMap[d.id] || 0,
       employee_count: empCountMap[d.id] || 0
     }))
-    
+
     allPositions.value = posList
     allEmployees.value = empList
   } catch (e) {
@@ -665,7 +665,7 @@ async function handleSubmit() {
     message.value = { type: 'error', text: '请输入部门名称' }
     return
   }
-  
+
   saving.value = true
   try {
     const parentId = form.value.parent_id ? parseInt(form.value.parent_id) : null
@@ -674,7 +674,7 @@ async function handleSubmit() {
       description: form.value.description || '',
       parent_id: parentId
     }
-    
+
     if (editItem.value) {
       await api.put(`/departments/${editItem.value.id}/`, payload)
       message.value = { type: 'success', text: '部门已更新' }
@@ -682,7 +682,7 @@ async function handleSubmit() {
       await api.post('/departments/', payload)
       message.value = { type: 'success', text: '部门已创建' }
     }
-    
+
     closeModal()
     await loadData()
   } catch (e) {
@@ -694,7 +694,7 @@ async function handleSubmit() {
 
 async function remove(item) {
   if (!confirm(`确认删除部门「${item.name}」？\n注意：该部门下的职位和员工将解除关联。`)) return
-  
+
   try {
     await api.delete(`/departments/${item.id}/`)
     message.value = { type: 'success', text: '已删除' }
@@ -720,7 +720,7 @@ function showAssign(item) {
 // 添加职位到部门
 async function assignPosition() {
   if (!selectedPosition.value) return
-  
+
   try {
     await api.patch(`/positions/${selectedPosition.value}/`, {
       department_id: assignItem.value.id
@@ -737,7 +737,7 @@ async function assignPosition() {
 // 解除职位与部门的关联
 async function unassignPosition(pos) {
   if (!confirm(`确认解除职位「${pos.name}」与该部门的关联？`)) return
-  
+
   try {
     await api.patch(`/positions/${pos.id}/`, {
       department_id: null
@@ -765,7 +765,7 @@ function showAssignSupervisor(item) {
 // 添加主管
 async function addSupervisor() {
   if (!selectedSupervisor.value) return
-  
+
   try {
     const newSupervisorIds = [...currentSupervisors.value.map(s => s.id), selectedSupervisor.value]
     await api.patch(`/departments/${supervisorItem.value.id}/`, {
@@ -788,7 +788,7 @@ async function addSupervisor() {
 // 移除主管
 async function removeSupervisor(sup) {
   if (!confirm(`确认移除「${sup.name}」的主管身份？`)) return
-  
+
   try {
     const newSupervisorIds = currentSupervisors.value.filter(s => s.id !== sup.id).map(s => s.id)
     await api.patch(`/departments/${supervisorItem.value.id}/`, {
@@ -1737,19 +1737,19 @@ onMounted(loadData)
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .filters-bar {
     flex-direction: column;
   }
-  
+
   .search-box {
     max-width: none;
   }
-  
+
   .table-container {
     overflow-x: auto;
   }
-  
+
   .data-table {
     min-width: 800px;
   }

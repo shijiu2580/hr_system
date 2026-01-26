@@ -86,10 +86,10 @@
       </table>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+      <div v-if="loading" class="loading-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
 
       <!-- 空状态 -->
@@ -103,9 +103,9 @@
       <span class="total-count">共{{ filtered.length }}人</span>
       <div class="pagination">
         <span class="page-size-label">每页</span>
-        <CustomSelect 
-          v-model="pageSize" 
-          :options="pageSizeOptions" 
+        <CustomSelect
+          v-model="pageSize"
+          :options="pageSizeOptions"
           class="page-size-custom-select"
           :dropUp="true"
         />
@@ -279,8 +279,8 @@
             <div class="modal-body">
               <div class="form-group">
                 <label class="form-label">拒绝原因 <span class="required">*</span></label>
-                <textarea 
-                  v-model="rejectReason" 
+                <textarea
+                  v-model="rejectReason"
                   class="form-textarea"
                   rows="3"
                   placeholder="请输入拒绝原因"
@@ -317,8 +317,8 @@
               </div>
               <div class="form-group">
                 <label class="form-label">职位 <span class="required">*</span></label>
-                <CustomSelect 
-                  v-model="approveForm.position_id" 
+                <CustomSelect
+                  v-model="approveForm.position_id"
                   :options="positionOptions"
                   class="form-custom-select"
                 />
@@ -471,22 +471,22 @@ const pendingCount = computed(() => {
 // 筛选
 const filtered = computed(() => {
   let result = list.value
-  
+
   // 按状态筛选
   if (statusFilter.value && statusFilter.value !== 'all') {
     result = result.filter(e => e.onboard_status === statusFilter.value)
   }
-  
+
   // 按关键词搜索
   if (searchKeyword.value) {
     const kw = searchKeyword.value.toLowerCase()
-    result = result.filter(e => 
+    result = result.filter(e =>
       e.name?.toLowerCase().includes(kw) ||
       e.employee_id?.toLowerCase().includes(kw) ||
       e.phone?.includes(kw)
     )
   }
-  
+
   return result
 })
 

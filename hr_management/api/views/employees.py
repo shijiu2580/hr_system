@@ -9,7 +9,7 @@ from ...models import Employee
 from ...permissions import IsStaffOrReadOwnEmployee, get_managed_department_ids, HasRBACPermission
 from ...rbac import Permissions
 from ...utils import log_event, api_success, api_error, get_client_ip
-from ..serializers import EmployeeSerializer, EmployeeWriteSerializer
+from ..serializers import EmployeeSerializer, EmployeeWriteSerializer, EmployeeSelfUpdateSerializer
 
 
 class EmployeeListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
@@ -17,7 +17,7 @@ class EmployeeListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     serializer_class = EmployeeSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '员工'
-    
+
     # RBAC 权限：读取需要 EMPLOYEE_VIEW，创建需要 EMPLOYEE_CREATE
     def get_rbac_permissions(self):
         if self.request.method == 'POST':
@@ -34,27 +34,27 @@ class EmployeeListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
                 qs = qs.filter(Q(user=user) | Q(department_id__in=managed_dept_ids))
             else:
                 qs = qs.filter(user=user)
-        
+
         # 搜索过滤
         q = self.request.query_params.get('q')
         if q:
             qs = qs.filter(
                 Q(employee_id__icontains=q) | Q(name__icontains=q) | Q(user__username__icontains=q)
             )
-        
+
         dept = self.request.query_params.get('department')
         if dept:
             qs = qs.filter(department__id=dept)
-        
+
         pos = self.request.query_params.get('position')
         if pos:
             qs = qs.filter(position__id=pos)
-        
+
         active = self.request.query_params.get('active')
         if active in ['1', '0', 'true', 'false', 'True', 'False']:
             val = active in ['1', 'true', 'True']
             qs = qs.filter(is_active=val)
-        
+
         # 排序
         ordering = self.request.query_params.get('ordering')
         allowed = {'id': 'id', 'employee_id': 'employee_id', 'name': 'name', 'hire_date': 'hire_date', 'salary': 'salary'}
@@ -65,14 +65,14 @@ class EmployeeListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
                 if ordering.startswith('-'):
                     field = f'-{field}'
                 qs = qs.order_by(field)
-        
+
         return qs
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return EmployeeWriteSerializer
         return EmployeeSerializer
-    
+
     def get_log_detail(self, obj):
         return f'{obj.employee_id}-{obj.name}'
 
@@ -91,7 +91,7 @@ class EmployeeDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIView)
     serializer_class = EmployeeSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '员工'
-    
+
     # RBAC 权限
     def get_rbac_permissions(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -104,7 +104,7 @@ class EmployeeDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIView)
         if self.request.method in ['PUT', 'PATCH']:
             return EmployeeWriteSerializer
         return EmployeeSerializer
-    
+
     def get_log_detail(self, obj):
         return f'{obj.employee_id}-{obj.name}'
 
@@ -122,13 +122,13 @@ class EmployeeDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIView)
         emp = self.get_object()
         self.log_delete(request, emp)
         detail = self.get_log_detail(emp)
-        
+
         # 同时删除关联的 User 账号，这样邮箱可以重新注册
         user = emp.user
         emp.delete()
         if user:
             user.delete()
-        
+
         return Response(api_success(detail=f'已删除 {detail}'))
 
 
@@ -137,21 +137,21 @@ class CurrentEmployeeAPIView(LoggingMixin, generics.RetrieveUpdateAPIView):
     serializer_class = EmployeeSerializer
     permission_classes = [permissions.IsAuthenticated]
     log_model_name = '个人信息'
-    
+
     def get_object(self):
         try:
             return Employee.objects.select_related('department', 'position', 'user').get(user=self.request.user)
         except Employee.DoesNotExist:
             raise NotFound('当前用户没有关联的员工档案')
-    
+
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
-            return EmployeeWriteSerializer
+            return EmployeeSelfUpdateSerializer
         return EmployeeSerializer
-    
+
     def get_log_detail(self, obj):
         return f'{obj.employee_id}-{obj.name}'
-    
+
     def update(self, request, *args, **kwargs):
         partial = request.method == 'PATCH'
         instance = self.get_object()

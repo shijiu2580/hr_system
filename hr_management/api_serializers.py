@@ -16,10 +16,10 @@ class DepartmentSerializer(serializers.ModelSerializer):
         required=False
     )
     parent_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
-    
+
     class Meta:
         model = Department
-        fields = ['id', 'name', 'description', 'manager', 'supervisors', 'supervisor_ids', 
+        fields = ['id', 'name', 'description', 'manager', 'supervisors', 'supervisor_ids',
                   'parent', 'parent_id', 'children_count', 'full_path']
 
     def get_manager(self, obj):
@@ -32,7 +32,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
                 'employee_id': manager.employee_id,
             }
         return None
-    
+
     def get_supervisors(self, obj):
         supervisors = obj.supervisors.all()
         return [{
@@ -41,7 +41,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
             'user_id': s.user_id,
             'employee_id': s.employee_id,
         } for s in supervisors]
-    
+
     def get_parent(self, obj):
         if obj.parent:
             return {
@@ -49,17 +49,17 @@ class DepartmentSerializer(serializers.ModelSerializer):
                 'name': obj.parent.name,
             }
         return None
-    
+
     def get_children_count(self, obj):
         return obj.children.count()
-    
+
     def get_full_path(self, obj):
         return obj.get_full_path()
-    
+
     def create(self, validated_data):
         supervisor_ids = validated_data.pop('supervisor_ids', [])
         parent_id = validated_data.pop('parent_id', None)
-        
+
         # 设置父部门
         if parent_id:
             try:
@@ -67,16 +67,16 @@ class DepartmentSerializer(serializers.ModelSerializer):
                 validated_data['parent'] = parent
             except Department.DoesNotExist:
                 pass
-        
+
         department = Department.objects.create(**validated_data)
         if supervisor_ids:
             department.supervisors.set(supervisor_ids)
         return department
-    
+
     def update(self, instance, validated_data):
         supervisor_ids = validated_data.pop('supervisor_ids', None)
         parent_id = validated_data.pop('parent_id', None)
-        
+
         # 检查是否将部门设置为自己的子部门（避免循环引用）
         if parent_id is not None:
             if parent_id == instance.id:
@@ -89,7 +89,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
                     if parent in all_children:
                         raise serializers.ValidationError({'parent_id': '不能将子部门设置为上级部门'})
             instance.parent_id = parent_id
-        
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -99,35 +99,52 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 class PositionSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
+    default_roles = serializers.SerializerMethodField()
+    default_role_ids = serializers.PrimaryKeyRelatedField(
+        source='default_roles', many=True, read_only=True
+    )
+
     class Meta:
         model = Position
-        fields = ['id', 'name', 'department', 'description']
+        fields = ['id', 'name', 'department', 'description', 'default_roles', 'default_role_ids']
+
+    def get_default_roles(self, obj):
+        return [{'id': r.id, 'name': r.name, 'code': r.code} for r in obj.default_roles.all()]
 
 class UserSerializer(serializers.ModelSerializer):
     must_change_password = serializers.SerializerMethodField()
     roles = serializers.SerializerMethodField()
     has_employee = serializers.SerializerMethodField()
+    employee_id = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username', 'is_staff', 'is_superuser', 'is_active', 'email', 'first_name', 'last_name', 'must_change_password', 'roles', 'has_employee', 'date_joined', 'last_login']
+        fields = ['id', 'username', 'is_staff', 'is_superuser', 'is_active', 'email', 'first_name', 'last_name', 'must_change_password', 'roles', 'has_employee', 'employee_id', 'date_joined', 'last_login']
 
     def get_must_change_password(self, obj: User):
         try:
             return bool(getattr(obj, 'employee', None) and obj.employee.must_change_password)
         except Exception:
             return False
-    
+
     def get_roles(self, obj: User):
         try:
             return [{'id': r.id, 'name': r.name, 'code': r.code} for r in obj.roles.all()]
         except Exception:
             return []
-    
+
     def get_has_employee(self, obj: User):
         try:
             return hasattr(obj, 'employee') and obj.employee is not None
         except Exception:
             return False
+
+    def get_employee_id(self, obj: User):
+        try:
+            if hasattr(obj, 'employee') and obj.employee:
+                return obj.employee.employee_id
+            return None
+        except Exception:
+            return None
 
 class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -137,13 +154,57 @@ class EmployeeSerializer(serializers.ModelSerializer):
         source='checkin_locations', many=True, read_only=True
     )
     checkin_locations = serializers.SerializerMethodField()
-    
+    avatar = serializers.SerializerMethodField()
+    id_card_front = serializers.SerializerMethodField()
+    id_card_back = serializers.SerializerMethodField()
+
     def get_checkin_locations(self, obj):
         return [{'id': loc.id, 'name': loc.name} for loc in obj.checkin_locations.all()]
-    
+
+    def _build_file_url(self, obj, field_name: str):
+        f = getattr(obj, field_name, None)
+        if not f:
+            return None
+        try:
+            url = f.url
+        except Exception:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
+
+    def get_avatar(self, obj):
+        return self._build_file_url(obj, 'avatar')
+
+    def get_id_card_front(self, obj):
+        return self._build_file_url(obj, 'id_card_front')
+
+    def get_id_card_back(self, obj):
+        return self._build_file_url(obj, 'id_card_back')
+
     class Meta:
         model = Employee
-        fields = ['id','employee_id','name','gender','birth_date','department','position','hire_date','salary','is_active','onboard_status','user','checkin_location_ids','checkin_locations']
+        fields = [
+            'id', 'employee_id', 'name', 'english_name', 'gender', 'birth_date',
+            'phone', 'email', 'address', 'id_card', 'passport_no',
+            # 户籍信息
+            'nationality', 'hukou_location', 'hukou_type', 'native_place', 'hukou_address',
+            'ethnicity', 'blood_type', 'political_status', 'party_date',
+            # 紧急联系人
+            'emergency_contact', 'emergency_relation', 'emergency_phone',
+            # 教育信息
+            'school_type', 'school_name', 'major', 'graduation_date', 'education',
+            # 银行信息
+            'bank_card_no', 'expense_card_no',
+            # 设备信息
+            'computer_info', 'computer_brand',
+            # 任职/状态
+            'department', 'position', 'hire_date', 'salary', 'is_active',
+            'onboard_status', 'onboard_reject_reason',
+            # 证件/图片
+            'avatar', 'id_card_front', 'id_card_back',
+            # 关联
+            'user', 'checkin_location_ids', 'checkin_locations',
+        ]
 
 class AttendanceSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer(read_only=True)
@@ -204,9 +265,9 @@ class RoleSerializer(serializers.ModelSerializer):
 
 class DepartmentWriteSerializer(serializers.ModelSerializer):
     parent_id = serializers.PrimaryKeyRelatedField(
-        queryset=Department.objects.all(), 
-        source='parent', 
-        allow_null=True, 
+        queryset=Department.objects.all(),
+        source='parent',
+        allow_null=True,
         required=False
     )
     supervisor_ids = serializers.PrimaryKeyRelatedField(
@@ -215,11 +276,11 @@ class DepartmentWriteSerializer(serializers.ModelSerializer):
         required=False,
         write_only=True
     )
-    
+
     class Meta:
         model = Department
         fields = ['name', 'description', 'parent_id', 'supervisor_ids']
-    
+
     def validate_parent_id(self, value):
         """验证防止循环引用"""
         if self.instance and value:
@@ -230,14 +291,14 @@ class DepartmentWriteSerializer(serializers.ModelSerializer):
             if value in all_children:
                 raise serializers.ValidationError('不能将子部门设置为上级部门')
         return value
-    
+
     def create(self, validated_data):
         supervisor_ids = validated_data.pop('supervisor_ids', [])
         department = super().create(validated_data)
         if supervisor_ids:
             department.supervisors.set(supervisor_ids)
         return department
-    
+
     def update(self, instance, validated_data):
         supervisor_ids = validated_data.pop('supervisor_ids', None)
         department = super().update(instance, validated_data)
@@ -248,9 +309,27 @@ class DepartmentWriteSerializer(serializers.ModelSerializer):
 
 class PositionWriteSerializer(serializers.ModelSerializer):
     department_id = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all(), source='department')
+    default_role_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Role.objects.all(), source='default_roles', many=True, required=False
+    )
+
     class Meta:
         model = Position
-        fields = ['name', 'description', 'department_id']
+        fields = ['name', 'description', 'department_id', 'default_role_ids']
+
+    def create(self, validated_data):
+        default_roles = validated_data.pop('default_roles', [])
+        position = super().create(validated_data)
+        if default_roles:
+            position.default_roles.set(default_roles)
+        return position
+
+    def update(self, instance, validated_data):
+        default_roles = validated_data.pop('default_roles', None)
+        position = super().update(instance, validated_data)
+        if default_roles is not None:
+            position.default_roles.set(default_roles)
+        return position
 
 
 class EmployeeWriteSerializer(serializers.ModelSerializer):
@@ -258,37 +337,56 @@ class EmployeeWriteSerializer(serializers.ModelSerializer):
     position_id = serializers.PrimaryKeyRelatedField(queryset=Position.objects.all(), source='position', allow_null=True, required=False)
     user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source='user', required=True, help_text='已有用户ID')
     checkin_location_ids = serializers.PrimaryKeyRelatedField(
-        queryset=CheckInLocation.objects.all(), 
-        many=True, 
-        required=False, 
+        queryset=CheckInLocation.objects.all(),
+        many=True,
+        required=False,
         write_only=True
     )
-    
+
     # 覆盖字段以允许空值且不触发模型验证器
+    employee_id = serializers.CharField(required=False, allow_blank=True, max_length=20)
     phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
     email = serializers.EmailField(required=False, allow_blank=True)
     id_card = serializers.CharField(required=False, allow_blank=True, max_length=18)
-    
+
     class Meta:
         model = Employee
-        fields = ['user_id', 'employee_id', 'name', 'gender', 'birth_date', 'phone', 'email', 'address', 
-                  'id_card', 'marital_status', 'emergency_contact', 'emergency_phone', 
-                  'department_id', 'position_id', 'hire_date', 'salary', 'is_active', 'checkin_location_ids']
-    
+        fields = [
+            'user_id', 'employee_id', 'name', 'english_name', 'gender', 'birth_date',
+            'phone', 'email', 'address', 'id_card', 'passport_no', 'marital_status',
+            # 户籍信息
+            'nationality', 'hukou_location', 'hukou_type', 'native_place', 'hukou_address',
+            'ethnicity', 'blood_type', 'political_status', 'party_date',
+            # 紧急联系人
+            'emergency_contact', 'emergency_relation', 'emergency_phone',
+            # 教育信息
+            'school_type', 'school_name', 'major', 'graduation_date', 'education',
+            # 银行信息
+            'bank_card_no', 'expense_card_no',
+            # 设备信息
+            'computer_info', 'computer_brand',
+            # 任职信息
+            'department_id', 'position_id', 'hire_date', 'salary', 'is_active',
+            # 证件上传（可选，multipart/form-data）
+            'avatar', 'id_card_front', 'id_card_back',
+            # 考勤地点
+            'checkin_location_ids',
+        ]
+
     def validate_phone(self, value):
         """只在有值时验证格式"""
         import re
         if value and not re.match(r'^1[3-9]\d{9}$', value):
             raise serializers.ValidationError('请输入有效的11位手机号')
         return value
-    
+
     def validate_id_card(self, value):
         """只在有值时验证格式"""
         import re
         if value and not re.match(r'^\d{17}[\dXx]$', value):
             raise serializers.ValidationError('请输入有效的18位身份证号')
         return value
-    
+
     def validate_emergency_phone(self, value):
         """只在有值时验证格式"""
         import re
@@ -303,14 +401,81 @@ class EmployeeWriteSerializer(serializers.ModelSerializer):
         employee = super().create(validated_data)
         if checkin_location_ids:
             employee.checkin_locations.set(checkin_location_ids)
+        # 自动分配职位默认角色
+        if employee.position:
+            for role in employee.position.default_roles.all():
+                role.users.add(employee.user)
         return employee
-    
+
     def update(self, instance, validated_data):
         checkin_location_ids = validated_data.pop('checkin_location_ids', None)
+        old_position = instance.position
+        new_position = validated_data.get('position', old_position)
+
         employee = super().update(instance, validated_data)
         if checkin_location_ids is not None:
             employee.checkin_locations.set(checkin_location_ids)
+
+        # 处理职位变更时的角色同步
+        if new_position != old_position:
+            # 移除旧职位的默认角色（仅移除通过职位分配的）
+            if old_position:
+                for role in old_position.default_roles.all():
+                    role.users.remove(employee.user)
+            # 添加新职位的默认角色
+            if new_position:
+                for role in new_position.default_roles.all():
+                    role.users.add(employee.user)
+
         return employee
+
+
+class EmployeeSelfUpdateSerializer(serializers.ModelSerializer):
+    """当前登录用户更新自己的员工档案（不允许改 user / employee_id）"""
+
+    # 覆盖字段以允许空值且不触发模型验证器
+    phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    id_card = serializers.CharField(required=False, allow_blank=True, max_length=18)
+    emergency_phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
+
+    class Meta:
+        model = Employee
+        fields = [
+            'name', 'english_name', 'gender', 'birth_date',
+            'phone', 'email', 'address', 'id_card', 'passport_no', 'marital_status',
+            # 户籍信息
+            'nationality', 'hukou_location', 'hukou_type', 'native_place', 'hukou_address',
+            'ethnicity', 'blood_type', 'political_status', 'party_date',
+            # 紧急联系人
+            'emergency_contact', 'emergency_relation', 'emergency_phone',
+            # 教育信息
+            'school_type', 'school_name', 'major', 'graduation_date', 'education',
+            # 银行信息
+            'bank_card_no', 'expense_card_no',
+            # 设备信息
+            'computer_info', 'computer_brand',
+            # 证件上传（可选，multipart/form-data）
+            'avatar', 'id_card_front', 'id_card_back',
+        ]
+
+    def validate_phone(self, value):
+        import re
+        if value and not re.match(r'^1[3-9]\d{9}$', value):
+            raise serializers.ValidationError('请输入有效的11位手机号')
+        return value
+
+    def validate_id_card(self, value):
+        import re
+        if value and not re.match(r'^\d{17}[\dXx]$', value):
+            raise serializers.ValidationError('请输入有效的18位身份证号')
+        return value
+
+    def validate_emergency_phone(self, value):
+        import re
+        if value and not re.match(r'^1[3-9]\d{9}$', value):
+            raise serializers.ValidationError('请输入有效的11位手机号')
+        return value
 
 
 class AttendanceWriteSerializer(serializers.ModelSerializer):
@@ -362,7 +527,7 @@ class SalaryRecordWriteSerializer(serializers.ModelSerializer):
     bonus = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     overtime_pay = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     allowance = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-    
+
     class Meta:
         model = SalaryRecord
         fields = ['employee_id','year','month','basic_salary','bonus','overtime_pay','allowance','paid','paid_at']
@@ -375,14 +540,14 @@ class SalaryRecordWriteSerializer(serializers.ModelSerializer):
         employee = attrs.get('employee', instance.employee if instance else None)
         year = attrs.get('year', instance.year if instance else None)
         month = attrs.get('month', instance.month if instance else None)
-        
+
         if employee and year and month:
             qs = SalaryRecord.objects.filter(employee=employee, year=year, month=month)
             if instance:
                 qs = qs.exclude(pk=instance.pk)
             if qs.exists():
                 raise serializers.ValidationError({'month': f'该员工{year}年{month}月的薪资记录已存在'})
-        
+
         return attrs
 
 
@@ -539,17 +704,17 @@ class RoleWriteSerializer(serializers.ModelSerializer):
 class UserWriteSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, help_text='创建时必填，更新时选填（留空则不修改）')
     role_ids = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all(), many=True, required=False, write_only=True, help_text='分配的角色ID列表')
-    
+
     class Meta:
         model = User
         fields = ['username', 'password', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'role_ids']
-    
+
     def validate_password(self, value):
         # 创建时密码必填
         if not self.instance and not value:
             raise serializers.ValidationError('创建用户时密码不能为空')
         return value
-    
+
     def create(self, validated_data):
         role_ids = validated_data.pop('role_ids', [])
         password = validated_data.pop('password')
@@ -557,7 +722,7 @@ class UserWriteSerializer(serializers.ModelSerializer):
         if role_ids:
             user.roles.set(role_ids)
         return user
-    
+
     def update(self, instance, validated_data):
         role_ids = validated_data.pop('role_ids', None)
         password = validated_data.pop('password', None)
@@ -575,7 +740,7 @@ class BusinessTripSerializer(serializers.ModelSerializer):
     """出差申请读取序列化器"""
     employee = EmployeeSerializer(read_only=True)
     approved_by = UserSerializer(read_only=True)
-    
+
     class Meta:
         model = BusinessTrip
         fields = [
@@ -587,11 +752,11 @@ class BusinessTripSerializer(serializers.ModelSerializer):
 class BusinessTripWriteSerializer(serializers.ModelSerializer):
     """出差申请写入序列化器"""
     employee = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.all(), required=False)
-    
+
     class Meta:
         model = BusinessTrip
         fields = ['employee', 'destination', 'trip_type', 'start_date', 'end_date', 'days', 'reason', 'remarks']
-    
+
     def validate(self, data):
         if data.get('start_date') and data.get('end_date'):
             if data['start_date'] > data['end_date']:
@@ -604,7 +769,7 @@ class TravelExpenseSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer(read_only=True)
     business_trip = BusinessTripSerializer(read_only=True)
     approved_by = UserSerializer(read_only=True)
-    
+
     class Meta:
         model = TravelExpense
         fields = [
@@ -617,22 +782,22 @@ class TravelExpenseWriteSerializer(serializers.ModelSerializer):
     """差旅报销写入序列化器"""
     employee = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.all(), required=False)
     business_trip_id = serializers.PrimaryKeyRelatedField(
-        queryset=BusinessTrip.objects.all(), 
+        queryset=BusinessTrip.objects.all(),
         source='business_trip',
         required=False,
         allow_null=True
     )
     invoice = serializers.FileField(required=False, allow_null=True)
-    
+
     class Meta:
         model = TravelExpense
         fields = ['employee', 'expense_type', 'amount', 'business_trip_id', 'description', 'invoice', 'remarks']
-    
+
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError('报销金额必须大于0')
         return value
-    
+
     def validate_invoice(self, value):
         if value:
             # 限制文件类型和大小
@@ -656,19 +821,19 @@ class CheckInLocationWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = CheckInLocation
         fields = ['name', 'address', 'latitude', 'longitude', 'radius', 'is_active', 'is_default']
-    
+
     def validate_latitude(self, value):
         # 中国范围纬度：3.86° ~ 53.55°
         if value < 3.86 or value > 53.55:
             raise serializers.ValidationError('纬度超出中国范围(3.86° ~ 53.55°)')
         return value
-    
+
     def validate_longitude(self, value):
         # 中国范围经度：73.66° ~ 135.05°
         if value < 73.66 or value > 135.05:
             raise serializers.ValidationError('经度超出中国范围(73.66° ~ 135.05°)')
         return value
-    
+
     def validate_radius(self, value):
         if value < 50:
             raise serializers.ValidationError('允许范围不能小于50米')

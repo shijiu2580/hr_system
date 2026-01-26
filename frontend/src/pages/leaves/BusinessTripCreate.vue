@@ -345,33 +345,45 @@ async function submit() {
 }
 
 .form-date-input :deep(.date-input-wrapper) {
-  position: relative;
-}
-height: 36px;
-  padding: 0 12
-.form-date-input :deep(.date-input) {
-  width: 100%;
-  padding: 12px 14px;
-  padding-right: 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #1f2937;
-  background: #fff;
-  box-sizing: border-box;
+  /* 兼容旧类名：当前 CustomDateInput 使用 custom-date/date-display */
 }
 
-.form-date-input :deep(.date-input:focus) {
-  outline: none;
+.form-date-input :deep(.custom-date) {
+  width: 100%;
+  height: 36px;
+}
+
+.form-date-input :deep(.date-display) {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.form-date-input :deep(.custom-date:hover .date-display) {
+  border-color: #3b82f6;
+  background: #fff;
+}
+
+.form-date-input :deep(.custom-date.focused .date-display) {
   border-color: #3b82f6;
   box-shadow: none;
 }
 
-.dheight: 36px;
+.form-date-input :deep(.date-text) {
+  font-size: 14px;
+}
+
+.form-date-input :deep(.date-native-input) {
+  height: 36px;
+}
+
+.duration-display {
+  height: 36px;
   padding: 0 12px;
   display: flex;
-  align-items: center
-  padding: 12px 14px;
+  align-items: center;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -379,7 +391,6 @@ height: 36px;
   color: #1f2937;
   font-weight: 500;
 }
-8px 12
 .form-textarea {
   width: 100%;
   padding: 12px 14px;

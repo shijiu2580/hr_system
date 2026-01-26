@@ -19,8 +19,12 @@
     </div>
 
     <section class="card form-card">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
         <span>加载数据...</span>
       </div>
       <form v-else @submit.prevent="handleSubmit" class="department-form">
@@ -28,12 +32,12 @@
           <label class="form-label">部门名称 *</label>
           <input v-model.trim="form.name" class="form-control" required />
         </div>
-        
+
         <div class="form-field">
           <label class="form-label">部门描述</label>
           <textarea v-model.trim="form.description" rows="4" class="form-control" placeholder="可选填写部门说明"></textarea>
         </div>
-        
+
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" :disabled="saving">
             {{ saving ? '保存中...' : '保存' }}
@@ -90,7 +94,7 @@ async function handleSubmit() {
     error.value = '请填写部门名称'
     return
   }
-  
+
   saving.value = true
   error.value = ''
   try {

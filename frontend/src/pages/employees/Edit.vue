@@ -19,8 +19,12 @@
     </div>
 
     <section class="card form-card">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
         <span>加载员工数据...</span>
       </div>
       <EmployeeForm
@@ -70,7 +74,8 @@ onMounted(async () => {
       api.get('/positions/'),
       api.get('/checkin-locations/')
     ])
-    employee.value = empRes.data
+    // 兼容两种返回：直接对象 或 { success: true, data: {...} }
+    employee.value = empRes.data?.data || empRes.data
     users.value = usersRes.data.results || usersRes.data || []
     departments.value = deptsRes.data.results || deptsRes.data || []
     positions.value = posRes.data.results || posRes.data || []

@@ -9,9 +9,9 @@
         <span class="header-title">薪资记录</span>
       </div>
       <div class="header-right">
-        <button 
-          type="button" 
-          class="btn-export" 
+        <button
+          type="button"
+          class="btn-export"
           @click="exportExcel"
           :disabled="exporting"
         >
@@ -28,31 +28,31 @@
     <!-- 筛选栏 -->
     <div class="filters-bar">
       <div class="employee-search-wrapper" ref="employeeSearchRef">
-        <input 
-          type="text" 
-          v-model="employeeSearchText" 
+        <input
+          type="text"
+          v-model="employeeSearchText"
           @focus="showEmployeeDropdown = true"
           @input="onEmployeeSearch"
           placeholder="搜索员工..."
           class="employee-search-input"
         />
-        <button 
-          v-if="filterEmployee" 
-          type="button" 
+        <button
+          v-if="filterEmployee"
+          type="button"
           class="clear-employee-btn"
           @click="clearEmployeeFilter"
         >×</button>
         <transition name="dropdown">
           <div v-if="showEmployeeDropdown" class="employee-dropdown">
-            <div 
-              class="employee-option" 
+            <div
+              class="employee-option"
               :class="{ active: !filterEmployee }"
               @click="selectEmployee(null)"
             >
               全部员工
             </div>
-            <div 
-              v-for="emp in filteredEmployeeOptions" 
+            <div
+              v-for="emp in filteredEmployeeOptions"
               :key="emp.id"
               class="employee-option"
               :class="{ active: filterEmployee === emp.id }"
@@ -89,9 +89,9 @@
         placeholder="发放状态"
         class="filter-dropdown"
       />
-      <button 
-        v-if="!showLastMonthAndUnpaid" 
-        class="reset-filter-btn" 
+      <button
+        v-if="!showLastMonthAndUnpaid"
+        class="reset-filter-btn"
         @click="resetFilters"
         title="重置为默认显示"
       >重置</button>
@@ -103,9 +103,9 @@
         <thead>
           <tr>
             <th class="col-checkbox">
-              <input 
-                type="checkbox" 
-                :checked="isAllPageSelected" 
+              <input
+                type="checkbox"
+                :checked="isAllPageSelected"
                 :indeterminate="isPartialSelected"
                 @change="toggleSelectAll"
                 class="checkbox"
@@ -140,17 +140,17 @@
         <tbody v-if="!loading && paged.length">
           <tr v-for="item in paged" :key="item.id" class="data-row" :class="{ 'row-selected': selectedIds.has(item.id) }">
             <td class="col-checkbox">
-              <input 
-                type="checkbox" 
-                :checked="selectedIds.has(item.id)" 
+              <input
+                type="checkbox"
+                :checked="selectedIds.has(item.id)"
                 @change="toggleSelect(item.id)"
                 class="checkbox"
               />
             </td>
             <td class="col-employee">
-              <router-link 
-                v-if="item.employee?.id" 
-                :to="`/employees/${item.employee.id}`" 
+              <router-link
+                v-if="item.employee?.id"
+                :to="`/employees/${item.employee.id}`"
                 class="employee-link"
               >
                 {{ item.employee?.name || '-' }}
@@ -181,10 +181,10 @@
       </table>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+      <div v-if="loading" class="loading-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
 
       <!-- 空状态 -->
@@ -198,9 +198,9 @@
       <span class="total-count">共{{ filtered.length }}条</span>
       <div class="pagination">
         <span class="page-size-label">每页</span>
-        <CustomSelect 
-          v-model="pageSize" 
-          :options="pageSizeSelectOptions" 
+        <CustomSelect
+          v-model="pageSize"
+          :options="pageSizeSelectOptions"
           class="page-size-custom-select"
           @change="currentPage = 1"
         />
@@ -464,8 +464,8 @@ const filterEmployee = ref(null);
 const filteredEmployeeOptions = computed(() => {
   if (!employeeSearchText.value) return employeeOptions.value;
   const keyword = employeeSearchText.value.toLowerCase();
-  return employeeOptions.value.filter(emp => 
-    emp.name.toLowerCase().includes(keyword) || 
+  return employeeOptions.value.filter(emp =>
+    emp.name.toLowerCase().includes(keyword) ||
     emp.employee_id.toLowerCase().includes(keyword)
   );
 });
@@ -551,12 +551,12 @@ const lastMonth = computed(() => {
 // 筛选后的数据
 const filtered = computed(() => {
   let result = [...records.value];
-  
+
   // 员工筛选
   if (filterEmployee.value) {
     result = result.filter(r => r.employee?.id === filterEmployee.value);
   }
-  
+
   // 默认模式：显示上个月已发放 + 所有未发放
   if (showLastMonthAndUnpaid.value && !filterYear.value && !filterMonth.value && !filterStatus.value) {
     const { year: lastY, month: lastM } = lastMonth.value;
@@ -582,7 +582,7 @@ const filtered = computed(() => {
       }
     }
   }
-  
+
   // 排序
   if (sortField.value) {
     result.sort((a, b) => {
@@ -602,7 +602,7 @@ const filtered = computed(() => {
       return 0;
     });
   }
-  
+
   return result;
 });
 
@@ -712,7 +712,7 @@ async function saveEdit() {
     showMessage('error', '年份和月份不能为空');
     return;
   }
-  
+
   saving.value = true;
   try {
     // 已发放的记录只能修改奖金和津贴
@@ -725,9 +725,9 @@ async function saveEdit() {
           bonus: editForm.value.bonus,
           allowance: editForm.value.allowance
         };
-    
+
     const resp = await api.patch(`/salaries/${editItem.value.id}/`, data);
-    
+
     if (resp.success) {
       // 更新本地数据
       const idx = records.value.findIndex(r => r.id === editItem.value.id);
@@ -781,7 +781,7 @@ async function load() {
       name: e.name,
       employee_id: e.employee_id || '-'
     }));
-    
+
     // 默认显示上个月已发放 + 所有未发放（不设置筛选条件）
   } catch (err) {
     showMessage('error', '加载失败');
@@ -1618,8 +1618,8 @@ function resetFilters() {
 }
 
 /* 员工列 */
-.col-employee { 
-  width: 120px; 
+.col-employee {
+  width: 120px;
 }
 
 .employee-link {

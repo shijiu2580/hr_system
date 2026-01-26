@@ -10,26 +10,27 @@
       <Transition name="dropdown">
         <div v-if="isOpen" class="select-dropdown" :style="dropdownStyle" ref="dropdownRef">
           <div class="options-list">
-            <!-- 全部选项 -->
+            <!-- 全部/空选项 -->
             <div
+              v-if="showEmpty"
               class="select-option"
               :class="{ selected: modelValue === '' }"
               @click="selectDept('')"
             >
-              全部部门
+              {{ emptyLabel }}
             </div>
             <!-- 树形部门 -->
             <template v-for="dept in treeData" :key="dept.id">
               <div
                 class="select-option"
-                :class="{ 
+                :class="{
                   selected: modelValue === dept.id,
                   'dept-parent': dept.children && dept.children.length
                 }"
                 @click="selectDept(dept.id)"
               >
-                <span 
-                  v-if="dept.children && dept.children.length" 
+                <span
+                  v-if="dept.children && dept.children.length"
                   class="expand-icon"
                   @click.stop="toggleExpand(dept.id)"
                 >
@@ -67,7 +68,9 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 const props = defineProps({
   modelValue: { type: [String, Number], default: '' },
   departments: { type: Array, default: () => [] },
-  placeholder: { type: String, default: '全部部门' }
+  placeholder: { type: String, default: '全部部门' },
+  emptyLabel: { type: String, default: '全部部门' },
+  showEmpty: { type: Boolean, default: true }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -83,12 +86,12 @@ const treeData = computed(() => {
   const depts = props.departments
   const map = {}
   const roots = []
-  
+
   // 先建立 id -> dept 映射
   depts.forEach(d => {
     map[d.id] = { ...d, children: [] }
   })
-  
+
   // 建立父子关系
   depts.forEach(d => {
     const parentId = d.parent?.id || d.parent
@@ -98,7 +101,7 @@ const treeData = computed(() => {
       roots.push(map[d.id])
     }
   })
-  
+
   // 排序：没有子部门的排前面，有子部门的排后面
   roots.sort((a, b) => {
     const aHasChildren = a.children && a.children.length > 0
@@ -106,7 +109,7 @@ const treeData = computed(() => {
     if (aHasChildren === bHasChildren) return 0
     return aHasChildren ? 1 : -1
   })
-  
+
   return roots
 })
 
@@ -157,7 +160,7 @@ function toggleExpand(id) {
 
 // 点击外部关闭
 function handleClickOutside(e) {
-  if (selectRef.value && !selectRef.value.contains(e.target) && 
+  if (selectRef.value && !selectRef.value.contains(e.target) &&
       dropdownRef.value && !dropdownRef.value.contains(e.target)) {
     isOpen.value = false
   }

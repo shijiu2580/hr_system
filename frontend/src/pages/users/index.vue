@@ -63,10 +63,10 @@
     <!-- 筛选栏 -->
     <section class="filters-bar">
       <div class="filter-item filter-search">
-        <input 
-          v-model.trim="q" 
-          @keyup.enter="applyFilters" 
-          placeholder="搜索用户名 / 邮箱" 
+        <input
+          v-model.trim="q"
+          @keyup.enter="applyFilters"
+          placeholder="搜索用户名 / 邮箱"
           class="filter-input"
         />
       </div>
@@ -110,6 +110,7 @@
             <thead>
               <tr>
                 <th>ID</th>
+                <th>员工编号</th>
                 <th>用户名</th>
                 <th>邮箱</th>
                 <th>角色</th>
@@ -121,6 +122,7 @@
             <tbody>
               <tr v-for="u in users" :key="u.id" :class="{ 'row-inactive': !u.is_active }">
                 <td>{{ u.id }}</td>
+                <td>{{ u.employee_id || '-' }}</td>
                 <td>
                   <div class="name-cell">
                     <span>{{ u.username }}</span>
@@ -221,7 +223,7 @@ async function loadUsers() {
     if (active.value !== '') params.is_active = active.value;
     if (staff.value === '1') params.is_staff = '1';
     else if (staff.value === 'super') params.is_superuser = '1';
-    
+
     const res = await api.get('/users/manage/', { params });
     if (res.success) {
       const data = res.data;

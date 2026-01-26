@@ -24,8 +24,12 @@
     </div>
 
     <section class="card form-card">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
         <span>加载数据...</span>
       </div>
       <form v-else @submit.prevent="handleSubmit" class="attendance-form">
@@ -133,7 +137,7 @@ onMounted(async () => {
       const res = await api.get('/employees/')
       employees.value = res.data.results || res.data || []
     }
-    
+
     // 如果是编辑模式，加载现有记录
     if (isEdit.value) {
       const res = await api.get(`/attendance/${route.params.id}/`)

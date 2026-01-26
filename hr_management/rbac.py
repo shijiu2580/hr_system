@@ -12,7 +12,7 @@ from rest_framework.response import Response
 
 class Permissions:
     """系统权限常量"""
-    
+
     # -------- 员工管理 --------
     EMPLOYEE_VIEW = 'employee.view'           # 查看员工
     EMPLOYEE_CREATE = 'employee.create'       # 创建员工
@@ -20,38 +20,38 @@ class Permissions:
     EMPLOYEE_DELETE = 'employee.delete'       # 删除员工
     EMPLOYEE_IMPORT = 'employee.import'       # 导入员工
     EMPLOYEE_EXPORT = 'employee.export'       # 导出员工
-    
+
     # -------- 部门管理 --------
     DEPARTMENT_VIEW = 'department.view'       # 查看部门
     DEPARTMENT_CREATE = 'department.create'   # 创建部门
     DEPARTMENT_EDIT = 'department.edit'       # 编辑部门
     DEPARTMENT_DELETE = 'department.delete'   # 删除部门
-    
+
     # -------- 职位管理 --------
     POSITION_VIEW = 'position.view'           # 查看职位
     POSITION_CREATE = 'position.create'       # 创建职位
     POSITION_EDIT = 'position.edit'           # 编辑职位
     POSITION_DELETE = 'position.delete'       # 删除职位
-    
+
     # -------- 考勤管理 --------
     ATTENDANCE_VIEW = 'attendance.view'             # 查看考勤
     ATTENDANCE_VIEW_ALL = 'attendance.view_all'     # 查看所有人考勤
     ATTENDANCE_EDIT = 'attendance.edit'             # 编辑考勤
     ATTENDANCE_APPROVE = 'attendance.approve'       # 审批补签
     ATTENDANCE_LOCATION = 'attendance.location'     # 管理考勤地点
-    
+
     # -------- 请假管理 --------
     LEAVE_VIEW = 'leave.view'                 # 查看请假
     LEAVE_VIEW_ALL = 'leave.view_all'         # 查看所有请假
     LEAVE_CREATE = 'leave.create'             # 创建请假
     LEAVE_APPROVE = 'leave.approve'           # 审批请假
-    
+
     # -------- 出差管理 --------
     TRIP_VIEW = 'trip.view'                   # 查看出差
     TRIP_VIEW_ALL = 'trip.view_all'           # 查看所有出差
     TRIP_CREATE = 'trip.create'               # 创建出差
     TRIP_APPROVE = 'trip.approve'             # 审批出差
-    
+
     # -------- 薪资管理 --------
     SALARY_VIEW = 'salary.view'               # 查看薪资
     SALARY_VIEW_ALL = 'salary.view_all'       # 查看所有薪资
@@ -59,19 +59,19 @@ class Permissions:
     SALARY_EDIT = 'salary.edit'               # 编辑薪资
     SALARY_DELETE = 'salary.delete'           # 删除薪资
     SALARY_DISBURSE = 'salary.disburse'       # 发放薪资
-    
+
     # -------- 报销管理 --------
     EXPENSE_VIEW = 'expense.view'             # 查看报销
     EXPENSE_VIEW_ALL = 'expense.view_all'     # 查看所有报销
     EXPENSE_CREATE = 'expense.create'         # 创建报销
     EXPENSE_APPROVE = 'expense.approve'       # 审批报销
-    
+
     # -------- 文档管理 --------
     DOCUMENT_VIEW = 'document.view'           # 查看文档
     DOCUMENT_UPLOAD = 'document.upload'       # 上传文档
     DOCUMENT_DELETE = 'document.delete'       # 删除文档
     DOCUMENT_MANAGE = 'document.manage'       # 管理公司文档
-    
+
     # -------- 报表统计 --------
     REPORT_VIEW = 'report.view'               # 查看报表
     REPORT_EXPORT = 'report.export'           # 导出报表
@@ -79,7 +79,7 @@ class Permissions:
     REPORT_ATTENDANCE = 'report.attendance'   # 考勤报表
     REPORT_SALARY = 'report.salary'           # 薪资报表
     REPORT_LEAVE = 'report.leave'             # 请假报表
-    
+
     # -------- 系统管理 --------
     SYSTEM_VIEW = 'system.view'               # 查看系统设置
     SYSTEM_LOG = 'system.log'                 # 查看系统日志
@@ -90,27 +90,33 @@ class Permissions:
     SYSTEM_BACKUP_CREATE = 'system.backup_create'  # 创建备份
     SYSTEM_BACKUP_RESTORE = 'system.backup_restore'  # 恢复备份
     SYSTEM_RESTORE = 'system.restore'         # 系统恢复
-    
+
     # -------- 文档管理补充 --------
     DOCUMENT_CREATE = 'document.create'       # 创建文档
     DOCUMENT_EDIT = 'document.edit'           # 编辑文档
-    
+
     # -------- 考勤管理补充 --------
     ATTENDANCE_CREATE = 'attendance.create'   # 创建考勤记录
-    
+
     # -------- 用户管理 --------
     USER_VIEW = 'user.view'                   # 查看用户
     USER_CREATE = 'user.create'               # 创建用户
     USER_EDIT = 'user.edit'                   # 编辑用户
     USER_DELETE = 'user.delete'               # 删除用户
     USER_RESET_PASSWORD = 'user.reset_password'  # 重置密码
-    
+
     # -------- 权限管理 --------
     RBAC_VIEW = 'rbac.view'                     # 查看角色权限
     RBAC_MANAGE = 'rbac.manage'                 # 管理角色权限
     RBAC_ROLE_MANAGE = 'rbac.role_manage'       # 管理角色
     RBAC_PERMISSION_MANAGE = 'rbac.permission_manage'  # 管理权限
-    
+
+    # -------- 入职管理 --------
+    ONBOARDING_VIEW = 'onboarding.view'             # 查看入职申请
+    ONBOARDING_VIEW_ALL = 'onboarding.view_all'     # 查看所有入职申请
+    ONBOARDING_APPROVE = 'onboarding.approve'       # 审批入职申请
+    ONBOARDING_REJECT = 'onboarding.reject'         # 拒绝入职申请
+
     # -------- 离职管理 --------
     RESIGNATION_VIEW = 'resignation.view'           # 查看离职
     RESIGNATION_VIEW_ALL = 'resignation.view_all'   # 查看所有离职
@@ -214,6 +220,12 @@ PERMISSION_GROUPS = {
         (Permissions.RBAC_ROLE_MANAGE, '管理角色', '创建、编辑、删除角色'),
         (Permissions.RBAC_PERMISSION_MANAGE, '管理权限', '创建、编辑、删除权限'),
     ],
+    '入职管理': [
+        (Permissions.ONBOARDING_VIEW, '查看入职申请', '查看入职申请详情'),
+        (Permissions.ONBOARDING_VIEW_ALL, '查看所有入职', '查看所有待入职员工'),
+        (Permissions.ONBOARDING_APPROVE, '审批入职', '审批通过入职申请'),
+        (Permissions.ONBOARDING_REJECT, '拒绝入职', '拒绝入职申请'),
+    ],
     '离职管理': [
         (Permissions.RESIGNATION_VIEW, '查看离职', '查看自己的离职申请'),
         (Permissions.RESIGNATION_VIEW_ALL, '查看所有离职', '查看所有员工的离职申请'),
@@ -236,8 +248,8 @@ DEFAULT_ROLES = {
         'description': '管理员工、考勤、请假、薪资等人事相关事务',
         'is_system': True,
         'permissions': [
-            Permissions.EMPLOYEE_VIEW, Permissions.EMPLOYEE_CREATE, 
-            Permissions.EMPLOYEE_EDIT, Permissions.EMPLOYEE_IMPORT, 
+            Permissions.EMPLOYEE_VIEW, Permissions.EMPLOYEE_CREATE,
+            Permissions.EMPLOYEE_EDIT, Permissions.EMPLOYEE_IMPORT,
             Permissions.EMPLOYEE_EXPORT,
             Permissions.DEPARTMENT_VIEW, Permissions.DEPARTMENT_CREATE,
             Permissions.DEPARTMENT_EDIT,
@@ -254,6 +266,7 @@ DEFAULT_ROLES = {
             Permissions.DOCUMENT_MANAGE,
             Permissions.REPORT_VIEW, Permissions.REPORT_EXPORT,
             Permissions.USER_VIEW,
+            Permissions.ONBOARDING_VIEW_ALL, Permissions.ONBOARDING_APPROVE, Permissions.ONBOARDING_REJECT,
             Permissions.RESIGNATION_VIEW_ALL, Permissions.RESIGNATION_APPROVE,
         ],
     },
@@ -296,46 +309,46 @@ DEFAULT_ROLES = {
 
 def user_has_permission(user, permission_key):
     """检查用户是否拥有指定权限
-    
+
     Args:
         user: Django User 对象
         permission_key: 权限键字符串
-        
+
     Returns:
         bool: 是否拥有权限
     """
     if not user or not user.is_authenticated:
         return False
-    
+
     # 超级管理员拥有所有权限
     if user.is_superuser:
         return True
-    
+
     # 管理员角色拥有所有权限
     if hasattr(user, 'roles'):
         if user.roles.filter(code='admin').exists():
             return True
-    
+
     # 检查用户角色中是否包含该权限
     from .models import Role
     return Role.objects.filter(
-        users=user, 
+        users=user,
         permissions__key=permission_key
     ).exists()
 
 
 def require_permission(*permission_keys, any_of=False):
     """权限检查装饰器，用于视图函数
-    
+
     Args:
         permission_keys: 需要的权限键
         any_of: True表示只需满足任一权限，False表示需要满足所有权限
-        
+
     Usage:
         @require_permission('employee.view')
         def get(self, request):
             ...
-            
+
         @require_permission('employee.edit', 'employee.delete', any_of=True)
         def post(self, request):
             ...
@@ -344,28 +357,28 @@ def require_permission(*permission_keys, any_of=False):
         @wraps(view_func)
         def wrapped_view(self, request, *args, **kwargs):
             user = request.user
-            
+
             if not user or not user.is_authenticated:
                 return Response({'success': False, 'message': '请先登录'}, status=401)
-            
+
             # 超级管理员直接放行
             if user.is_superuser:
                 return view_func(self, request, *args, **kwargs)
-            
+
             # 检查权限
             if any_of:
                 has_perm = any(user_has_permission(user, key) for key in permission_keys)
             else:
                 has_perm = all(user_has_permission(user, key) for key in permission_keys)
-            
+
             if not has_perm:
                 return Response({
-                    'success': False, 
+                    'success': False,
                     'message': '权限不足',
                     'code': 'permission_denied',
                     'required_permissions': list(permission_keys)
                 }, status=403)
-            
+
             return view_func(self, request, *args, **kwargs)
         return wrapped_view
     return decorator
@@ -373,7 +386,7 @@ def require_permission(*permission_keys, any_of=False):
 
 class RBACPermissionMixin:
     """RBAC权限检查Mixin，用于类视图
-    
+
     Usage:
         class MyView(RBACPermissionMixin, APIView):
             required_permissions = ['employee.view']
@@ -382,31 +395,31 @@ class RBACPermissionMixin:
     """
     required_permissions = []  # 需要所有权限
     required_any_permission = []  # 只需任一权限
-    
+
     def check_rbac_permission(self, request):
         """检查RBAC权限"""
         user = request.user
-        
+
         if not user or not user.is_authenticated:
             return False, '请先登录'
-        
+
         # 超级管理员直接放行
         if user.is_superuser:
             return True, None
-        
+
         # 检查所有必需权限
         if self.required_permissions:
             for key in self.required_permissions:
                 if not user_has_permission(user, key):
                     return False, f'缺少权限: {key}'
-        
+
         # 检查任一权限
         if self.required_any_permission:
             if not any(user_has_permission(user, key) for key in self.required_any_permission):
                 return False, '权限不足'
-        
+
         return True, None
-    
+
     def dispatch(self, request, *args, **kwargs):
         has_perm, message = self.check_rbac_permission(request)
         if not has_perm:

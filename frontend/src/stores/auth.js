@@ -44,8 +44,9 @@ export const useAuthStore = defineStore('auth', {
         return;
       }
       try {
-        const { data } = await api.get('/auth/me/');
-        if(data.authenticated){
+        const resp = await api.get('/auth/me/', { noCache: true, skipDuplicateCheck: true });
+        const data = resp?.data;
+        if(resp?.success && data?.authenticated){
           this.user = data.user;
           this.roles = data.roles || [];
           this.permissions = data.permissions || [];
@@ -72,13 +73,13 @@ export const useAuthStore = defineStore('auth', {
         if (!resp.success) {
           // 401 时 detail 通常是 "No active account found with the given credentials"
           const msg = resp.error?.message || resp.detail || '登录失败';
-          this.error = msg.includes('credentials') || msg.includes('active account') 
-            ? '账号或密码错误' 
+          this.error = msg.includes('credentials') || msg.includes('active account')
+            ? '账号或密码错误'
             : msg;
           throw new Error(this.error);
         }
-        this.accessToken = resp.data.access; 
-        this.refreshToken = resp.data.refresh; 
+        this.accessToken = resp.data.access;
+        this.refreshToken = resp.data.refresh;
         this.persistTokens();
         await this.fetchMe();
         if(!this.user){
@@ -95,8 +96,12 @@ export const useAuthStore = defineStore('auth', {
     async refresh(){
       if(!this.refreshToken) throw new Error('无刷新令牌');
       try {
-        const { data } = await api.post('/auth/token/refresh/', { refresh: this.refreshToken });
-        this.accessToken = data.access; if(data.refresh) this.refreshToken = data.refresh; this.persistTokens();
+        const resp = await api.post('/auth/token/refresh/', { refresh: this.refreshToken }, { skipDuplicateCheck: true });
+        if (!resp.success) throw new Error(resp.error?.message || resp.detail || '刷新失败');
+        const data = resp.data;
+        this.accessToken = data.access;
+        if (data.refresh) this.refreshToken = data.refresh;
+        this.persistTokens();
       } catch(e){
         this.forceLogout();
         throw e;

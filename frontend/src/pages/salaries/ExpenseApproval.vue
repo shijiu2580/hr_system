@@ -94,10 +94,10 @@
       </table>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+      <div v-if="loading" class="loading-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
 
       <!-- 空状态 -->
@@ -111,9 +111,9 @@
       <span class="total-count">共{{ filtered.length }}条</span>
       <div class="pagination">
         <span class="page-size-label">每页</span>
-        <CustomSelect 
-          v-model="pageSize" 
-          :options="pageSizeSelectOptions" 
+        <CustomSelect
+          v-model="pageSize"
+          :options="pageSizeSelectOptions"
           class="page-size-custom-select"
           @change="currentPage = 1"
         />
@@ -167,7 +167,7 @@
           <div class="detail-row" v-if="detailItem.invoice">
             <span class="detail-label">发票附件</span>
             <span class="detail-value">
-              <a :href="detailItem.invoice" target="_blank" class="invoice-link">📄 点击查看/下载发票</a>
+              <a :href="detailItem.invoice" target="_blank" class="invoice-link">点击查看/下载发票</a>
             </span>
           </div>
           <div class="detail-row">
@@ -196,7 +196,7 @@
             <span class="detail-label">备注</span>
             <span class="detail-value">{{ detailItem.remarks }}</span>
           </div>
-          
+
           <!-- 审批操作区 -->
           <div v-if="detailItem.status === 'pending'" class="approval-section">
             <div class="form-row">
@@ -280,15 +280,15 @@ function getStatusLabel(status) {
 // 筛选后的数据
 const filtered = computed(() => {
   let result = [...records.value];
-  
+
   if (filterType.value) {
     result = result.filter(r => r.expense_type === filterType.value);
   }
-  
+
   if (filterStatus.value) {
     result = result.filter(r => r.status === filterStatus.value);
   }
-  
+
   // 排序
   if (sortField.value) {
     result.sort((a, b) => {
@@ -299,7 +299,7 @@ const filtered = computed(() => {
       return 0;
     });
   }
-  
+
   return result;
 });
 
@@ -365,12 +365,12 @@ function showDetail(item) {
 async function handleApprove(item) {
   if (processing.value) return;
   processing.value = item.id;
-  
+
   const resp = await api.post(`/travel-expenses/${item.id}/approve/`, {
     action: 'approve',
     comments: ''
   });
-  
+
   if (resp.success) {
     showMessage('success', '已批准');
     await load();
@@ -383,12 +383,12 @@ async function handleApprove(item) {
 async function handleReject(item) {
   if (processing.value) return;
   processing.value = item.id;
-  
+
   const resp = await api.post(`/travel-expenses/${item.id}/approve/`, {
     action: 'reject',
     comments: ''
   });
-  
+
   if (resp.success) {
     showMessage('success', '已拒绝');
     await load();
@@ -401,9 +401,9 @@ async function handleReject(item) {
 async function handlePay(item) {
   if (processing.value) return;
   processing.value = item.id;
-  
+
   const resp = await api.post(`/travel-expenses/${item.id}/pay/`);
-  
+
   if (resp.success) {
     showMessage('success', '已发放');
     await load();
@@ -416,12 +416,12 @@ async function handlePay(item) {
 async function approveFromModal() {
   if (!detailItem.value || processing.value) return;
   processing.value = detailItem.value.id;
-  
+
   const resp = await api.post(`/travel-expenses/${detailItem.value.id}/approve/`, {
     action: 'approve',
     comments: approvalComment.value
   });
-  
+
   if (resp.success) {
     showMessage('success', '已批准');
     detailItem.value = null;
@@ -435,12 +435,12 @@ async function approveFromModal() {
 async function rejectFromModal() {
   if (!detailItem.value || processing.value) return;
   processing.value = detailItem.value.id;
-  
+
   const resp = await api.post(`/travel-expenses/${detailItem.value.id}/approve/`, {
     action: 'reject',
     comments: approvalComment.value
   });
-  
+
   if (resp.success) {
     showMessage('success', '已拒绝');
     detailItem.value = null;
@@ -454,9 +454,9 @@ async function rejectFromModal() {
 async function payFromModal() {
   if (!detailItem.value || processing.value) return;
   processing.value = detailItem.value.id;
-  
+
   const resp = await api.post(`/travel-expenses/${detailItem.value.id}/pay/`);
-  
+
   if (resp.success) {
     showMessage('success', '已发放');
     detailItem.value = null;

@@ -21,14 +21,14 @@
           <div class="current-date">{{ currentDateStr }}</div>
         </div>
         <div class="punch-actions">
-          <button 
-            class="btn-punch btn-checkin" 
-            @click="handleCheckIn" 
+          <button
+            class="btn-punch btn-checkin"
+            @click="handleCheckIn"
             :disabled="punching || (todayRecord && todayRecord.check_in_time)"
           >签到</button>
-          <button 
-            class="btn-punch btn-checkout" 
-            @click="handleCheckOut" 
+          <button
+            class="btn-punch btn-checkout"
+            @click="handleCheckOut"
             :disabled="punching || !todayRecord || !todayRecord.check_in_time"
           >{{ todayRecord && todayRecord.check_out_time ? '更新签退' : '签退' }}</button>
         </div>
@@ -69,8 +69,10 @@
         </table>
 
         <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
+        <div v-if="loading" class="loading-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
 
         <!-- 空状态 -->
@@ -94,10 +96,10 @@
         </div>
         <div class="modal-body">
           <p class="reason-hint">{{ reasonModalHint }}</p>
-          <textarea 
-            v-model="reasonText" 
-            class="reason-input" 
-            placeholder="请输入原因..." 
+          <textarea
+            v-model="reasonText"
+            class="reason-input"
+            placeholder="请输入原因..."
             rows="3"
           ></textarea>
         </div>
@@ -204,19 +206,19 @@ function parseTime(timeStr) {
 function getStatus(item) {
   if (!item) return 'normal';
   if (item.attendance_type === 'absent') return 'absent';
-  
+
   // 检查是否迟到（9:00后签到）
   const checkIn = parseTime(item.check_in_time);
   const isLate = checkIn && checkIn.totalMinutes > 9 * 60;
-  
+
   // 检查是否早退（18:00前签退）
   const checkOut = parseTime(item.check_out_time);
   const isEarlyLeave = checkOut && checkOut.totalMinutes < 18 * 60;
-  
+
   if (isLate && isEarlyLeave) return 'late_and_early';
   if (isLate) return 'late';
   if (isEarlyLeave) return 'early_leave';
-  
+
   return 'normal';
 }
 
@@ -236,11 +238,11 @@ function getStatusLabel(item) {
 // 计算缺勤时长（午休12:00-13:00不计算）
 function calcAbsentTime(item) {
   if (!item || !item.check_out_time) return '--';
-  
+
   // 解析签退时间
   let checkOutTime = item.check_out_time;
   let checkOutHours, checkOutMinutes;
-  
+
   if (checkOutTime.includes('T') || checkOutTime.includes(' ')) {
     const d = new Date(checkOutTime);
     checkOutHours = d.getHours();
@@ -250,33 +252,33 @@ function calcAbsentTime(item) {
     checkOutHours = parseInt(parts[0]);
     checkOutMinutes = parseInt(parts[1]);
   }
-  
+
   const WORK_START = 9; // 上班时间 9:00
   const LUNCH_START = 12; // 午休开始 12:00
   const LUNCH_END = 13; // 午休结束 13:00
   const WORK_END = 18; // 下班时间 18:00
   const TOTAL_WORK_HOURS = 8; // 总工作时长 8小时（不含午休）
-  
+
   const checkOutTotalMinutes = checkOutHours * 60 + checkOutMinutes;
   const workStartMinutes = WORK_START * 60; // 9:00 = 540
   const lunchStartMinutes = LUNCH_START * 60; // 12:00 = 720
   const lunchEndMinutes = LUNCH_END * 60; // 13:00 = 780
   const workEndMinutes = WORK_END * 60; // 18:00 = 1080
   const totalWorkMinutes = TOTAL_WORK_HOURS * 60; // 480分钟
-  
+
   // 如果签退时间在9:00之前，缺勤8小时
   if (checkOutTotalMinutes <= workStartMinutes) {
     return `${TOTAL_WORK_HOURS} 小时`;
   }
-  
+
   // 如果签退时间在18:00之后，不缺勤
   if (checkOutTotalMinutes >= workEndMinutes) {
     return '0 分钟';
   }
-  
+
   // 计算实际工作时长
   let workedMinutes = 0;
-  
+
   if (checkOutTotalMinutes <= lunchStartMinutes) {
     // 签退在12:00之前：工作时长 = 签退时间 - 9:00
     workedMinutes = checkOutTotalMinutes - workStartMinutes;
@@ -287,13 +289,13 @@ function calcAbsentTime(item) {
     // 签退在13:00之后：工作时长 = 3小时 + (签退时间 - 13:00)
     workedMinutes = (lunchStartMinutes - workStartMinutes) + (checkOutTotalMinutes - lunchEndMinutes);
   }
-  
+
   const absentMinutes = totalWorkMinutes - workedMinutes;
-  
+
   if (absentMinutes <= 0) {
     return '0 分钟';
   }
-  
+
   if (absentMinutes >= 60) {
     const hours = Math.floor(absentMinutes / 60);
     const mins = absentMinutes % 60;
@@ -322,7 +324,7 @@ function updateClock() {
 async function handleCheckIn() {
   const now = new Date();
   const isLate = now.getHours() >= 9; // 9点后算迟到
-  
+
   if (isLate) {
     // 迟到需要填写原因
     reasonModalTitle.value = '迟到签到';
@@ -340,7 +342,7 @@ async function handleCheckOut() {
   const now = new Date();
   const isEarlyLeave = now.getHours() < 18; // 18点前算早退
   const isUpdate = todayRecord.value && todayRecord.value.check_out_time;
-  
+
   if (isEarlyLeave && !isUpdate) {
     // 首次签退且早退需要填写原因
     reasonModalTitle.value = '早退签退';
@@ -414,13 +416,13 @@ function cancelReason() {
 async function confirmReason() {
   if (!reasonText.value.trim()) return;
   showReasonModal.value = false;
-  
+
   if (pendingAction.value === 'check_in') {
     await doCheckIn(reasonText.value.trim());
   } else if (pendingAction.value === 'check_out') {
     await doCheckOut(reasonText.value.trim());
   }
-  
+
   reasonText.value = '';
   pendingAction.value = null;
 }

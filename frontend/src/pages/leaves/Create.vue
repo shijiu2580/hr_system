@@ -17,8 +17,8 @@
         <form @submit.prevent="handleSubmit" class="leave-form">
           <div class="form-group">
             <label class="form-label">开始日期</label>
-            <CustomDateInput 
-              v-model="form.start_date" 
+            <CustomDateInput
+              v-model="form.start_date"
               placeholder="选择日期"
               class="form-date"
             />
@@ -26,8 +26,8 @@
 
           <div class="form-group">
             <label class="form-label">结束日期</label>
-            <CustomDateInput 
-              v-model="form.end_date" 
+            <CustomDateInput
+              v-model="form.end_date"
               placeholder="选择日期"
               class="form-date"
             />
@@ -45,9 +45,9 @@
 
           <div class="form-group">
             <label class="form-label">请假原因</label>
-            <textarea 
-              v-model="form.reason" 
-              class="form-textarea" 
+            <textarea
+              v-model="form.reason"
+              class="form-textarea"
               rows="4"
               placeholder="请填写请假原因"
               required
@@ -104,12 +104,12 @@ async function handleSubmit() {
     error.value = '请填写完整信息'
     return
   }
-  
+
   if (new Date(form.value.end_date) < new Date(form.value.start_date)) {
     error.value = '结束日期不能早于开始日期'
     return
   }
-  
+
   saving.value = true
   error.value = ''
   try {
@@ -304,7 +304,6 @@ async function handleSubmit() {
   border-color: #3b82f6;
   box-shadow: none;
 }
-8
 .form-textarea {
   width: 100%;
   padding: 10px 12px;
