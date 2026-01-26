@@ -116,9 +116,11 @@ class UserSerializer(serializers.ModelSerializer):
     roles = serializers.SerializerMethodField()
     has_employee = serializers.SerializerMethodField()
     employee_id = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    employee_name = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username', 'is_staff', 'is_superuser', 'is_active', 'email', 'first_name', 'last_name', 'must_change_password', 'roles', 'has_employee', 'employee_id', 'date_joined', 'last_login']
+        fields = ['id', 'username', 'is_staff', 'is_superuser', 'is_active', 'email', 'first_name', 'last_name', 'must_change_password', 'roles', 'has_employee', 'employee_id', 'avatar', 'employee_name', 'date_joined', 'last_login']
 
     def get_must_change_password(self, obj: User):
         try:
@@ -142,6 +144,25 @@ class UserSerializer(serializers.ModelSerializer):
         try:
             if hasattr(obj, 'employee') and obj.employee:
                 return obj.employee.employee_id
+            return None
+        except Exception:
+            return None
+
+    def get_avatar(self, obj: User):
+        try:
+            if hasattr(obj, 'employee') and obj.employee and obj.employee.avatar:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(obj.employee.avatar.url)
+                return obj.employee.avatar.url
+            return None
+        except Exception:
+            return None
+
+    def get_employee_name(self, obj: User):
+        try:
+            if hasattr(obj, 'employee') and obj.employee:
+                return obj.employee.name
             return None
         except Exception:
             return None

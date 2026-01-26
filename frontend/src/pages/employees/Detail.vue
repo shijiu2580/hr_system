@@ -23,7 +23,13 @@
 
     <section v-else class="card">
       <header class="card-header">
-        <h2>{{ emp?.name }} <span class="emp-id">{{ emp?.employee_id }}</span></h2>
+        <div class="employee-header">
+          <img v-if="emp?.avatar" :src="emp.avatar" class="avatar-large" alt="" />
+          <div v-else class="avatar-large-placeholder">{{ emp?.name?.charAt(0) || '?' }}</div>
+          <div>
+            <h2>{{ emp?.name }} <span class="emp-id">{{ emp?.employee_id }}</span></h2>
+          </div>
+        </div>
       </header>
       <div class="grid">
         <div class="field"><span class="label">部门</span><span class="value">{{ emp?.department?.name || '未填写' }}</span></div>
@@ -240,5 +246,31 @@ onMounted(async () => {
   color: #475569;
   min-width: 60px;
   text-align: center;
+}
+
+.employee-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.avatar-large-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
 }
 </style>

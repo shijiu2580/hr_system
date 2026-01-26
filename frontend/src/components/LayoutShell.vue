@@ -6,7 +6,7 @@
     <RouterLink to="/" class="nav-item">
       <span class="icon-box"><img class="icon" src="/icons/dashboard.svg" alt="" /></span><span class="text-box">动态</span>
     </RouterLink>
-    
+
     <!-- 员工菜单（带子菜单） -->
     <div class="nav-item-group">
       <div class="nav-item nav-item-parent" :class="{ 'has-active': isEmployeesActive }" @click="toggleSubmenu('employees')">
@@ -32,7 +32,7 @@
         </div>
       </transition>
     </div>
-    
+
     <!-- 考勤菜单（带子菜单） -->
     <div class="nav-item-group">
       <div class="nav-item nav-item-parent" :class="{ 'has-active': isAttendanceActive }" @click="toggleSubmenu('attendance')">
@@ -64,7 +64,7 @@
         </div>
       </transition>
     </div>
-    
+
     <!-- 请假菜单（带子菜单） -->
     <div class="nav-item-group">
       <div class="nav-item nav-item-parent" :class="{ 'has-active': isLeavesActive }" @click="toggleSubmenu('leaves')">
@@ -90,7 +90,7 @@
         </div>
       </transition>
     </div>
-    
+
     <!-- 薪资菜单（带子菜单） -->
     <div class="nav-item-group">
       <div class="nav-item nav-item-parent" :class="{ 'has-active': isSalariesActive }" @click="toggleSubmenu('salaries')">
@@ -131,7 +131,7 @@
     <RouterLink to="/reports" class="nav-item" v-if="canViewReports">
       <span class="icon-box"><img class="icon" src="/icons/reports.svg" alt="" /></span><span class="text-box">大数据报表</span>
     </RouterLink>
-    
+
     <!-- 离职申请（带子菜单） -->
     <div class="nav-item-group">
       <div class="nav-item nav-item-parent" :class="{ 'has-active': isResignationActive }" @click="toggleSubmenu('resignation')">
@@ -157,7 +157,7 @@
         </div>
       </transition>
     </div>
-    
+
     <RouterLink v-if="canViewSystem" to="/system" class="nav-item">
       <span class="icon-box"><img class="icon" src="/icons/system.svg" alt="" /></span><span class="text-box">系统</span>
     </RouterLink>
@@ -175,7 +175,11 @@
   <div class="layout-main">
       <div class="top-bar">
         <div class="user-box" v-if="auth.ready">
-          <span v-if="auth.user"><img src="/icons/logo.svg" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;" />{{ auth.user.username }}</span>
+          <span v-if="auth.user" class="user-info">
+            <img v-if="auth.user.avatar" :src="auth.user.avatar" alt="" class="user-avatar" />
+            <span v-else class="user-avatar-placeholder">{{ userInitials }}</span>
+            <span class="user-name">{{ auth.user.employee_name || auth.user.username }}</span>
+          </span>
           <button v-if="auth.user" @click="logout">退出</button>
           <button v-else @click="goLogin">登录</button>
           <button class="theme-toggle" @click="toggleTheme">{{ themeLabel }}</button>
@@ -199,6 +203,13 @@ const router = useRouter();
 const route = useRoute();
 const dark = ref(false);
 const globalError = ref(null);
+
+// 用户头像首字母
+const userInitials = computed(() => {
+  const name = auth.user?.employee_name || auth.user?.username || '';
+  if (!name) return '?';
+  return name.charAt(0).toUpperCase();
+});
 
 // 权限计算属性
 const canManageEmployees = computed(() => isAdmin() || hasPermission(Permissions.EMPLOYEE_VIEW));
@@ -341,6 +352,10 @@ window.addEventListener('error', (e) => { globalError.value = e.message; });
 [data-theme=dark] .user-box{color:#e2e8f0;}
 [data-theme=dark] .theme-toggle,.user-box button{background:linear-gradient(135deg,#3b82f6,#60a5fa);}
 .user-box{display:flex;align-items:center;gap:.65rem;font-size:14px;}
+.user-info{display:flex;align-items:center;gap:.5rem;}
+.user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;}
+.user-avatar-placeholder{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#60a5fa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;}
+.user-name{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .theme-toggle, .user-box button{padding:.45rem .75rem;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;}
 .user-box button:hover,.theme-toggle:hover{filter:brightness(.95);}
 .page-wrapper{padding:1rem 1.5rem;overflow:auto;flex:1;}

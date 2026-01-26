@@ -137,7 +137,11 @@
                 </td>
                 <td class="col-empid">{{ e.employee_id || '--' }}</td>
                 <td class="col-name">
-                  <router-link :to="`/employees/${e.id}`" class="name-link">{{ e.name || '--' }}</router-link>
+                  <div class="name-cell">
+                    <img v-if="e.avatar" :src="e.avatar" class="emp-avatar" alt="" />
+                    <div v-else class="emp-avatar-placeholder" :style="{ background: getAvatarColor(e.id) }">{{ e.name?.charAt(0) || '?' }}</div>
+                    <router-link :to="`/employees/${e.id}`" class="name-link">{{ e.name || '--' }}</router-link>
+                  </div>
                 </td>
                 <td class="col-dept">{{ e.department?.name || '--' }}</td>
                 <td class="col-pos">{{ e.position?.name || '--' }}</td>
@@ -505,6 +509,15 @@ async function saveLocations() {
   } finally {
     savingLocations.value = false
   }
+}
+
+// 头像颜色
+const avatarColors = [
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+  '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+]
+function getAvatarColor(id) {
+  return avatarColors[(id || 0) % avatarColors.length]
 }
 
 onMounted(async () => {
@@ -926,6 +939,33 @@ onMounted(async () => {
   height: 2px;
   background: #fff;
   transform: translate(-50%, -50%);
+}
+
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emp-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.emp-avatar-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .name-link {
