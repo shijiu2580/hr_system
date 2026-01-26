@@ -28,11 +28,11 @@
           </svg>
           返回列表
         </button>
-        <input 
-          ref="fileInput" 
-          type="file" 
-          accept=".xlsx,.xls" 
-          style="display:none" 
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".xlsx,.xls"
+          style="display:none"
           @change="handleFileImport"
         />
       </div>
@@ -49,8 +49,12 @@
     </teleport>
 
     <section class="card">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
         <span>加载数据...</span>
       </div>
 
@@ -309,8 +313,8 @@ async function handleFileImport(event) {
 
       // 查找员工（支持按姓名或工号匹配）
       const empNameOrId = String(row[0] || '').trim()
-      const emp = employees.value.find(e => 
-        e.name === empNameOrId || 
+      const emp = employees.value.find(e =>
+        e.name === empNameOrId ||
         e.employee_id === empNameOrId ||
         String(e.id) === empNameOrId
       )
@@ -338,9 +342,9 @@ async function handleFileImport(event) {
     // 检查未匹配的员工
     const unmatchedCount = importedRows.filter(r => !r.employee_id).length
     if (unmatchedCount > 0) {
-      message.value = { 
-        type: 'warning', 
-        text: `成功导入 ${importedRows.length} 条记录，其中 ${unmatchedCount} 条未能匹配员工，请手动选择` 
+      message.value = {
+        type: 'warning',
+        text: `成功导入 ${importedRows.length} 条记录，其中 ${unmatchedCount} 条未能匹配员工，请手动选择`
       }
     } else {
       message.value = { type: 'success', text: `成功导入 ${importedRows.length} 条记录` }
@@ -420,9 +424,9 @@ async function handleSubmitAll() {
       message.value = { type: 'success', text: `成功保存 ${successCount} 条薪资记录` }
       setTimeout(() => router.push('/salaries/records'), 1500)
     } else {
-      message.value = { 
-        type: 'error', 
-        text: `成功 ${successCount} 条，失败 ${failCount} 条: ${errors.slice(0, 3).join('; ')}${errors.length > 3 ? '...' : ''}` 
+      message.value = {
+        type: 'error',
+        text: `成功 ${successCount} 条，失败 ${failCount} 条: ${errors.slice(0, 3).join('; ')}${errors.length > 3 ? '...' : ''}`
       }
     }
   } catch (e) {

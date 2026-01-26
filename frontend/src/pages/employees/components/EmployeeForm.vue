@@ -12,10 +12,13 @@
           />
         </FormField>
         <FormField label="员工编号" :error="errors.employee_id">
-          <input v-model.trim="model.employee_id" :disabled="isEdit" />
+          <input v-model.trim="model.employee_id" disabled placeholder="系统自动生成（4位数字）" />
         </FormField>
         <FormField label="姓名" :error="errors.name">
           <input v-model.trim="model.name" />
+        </FormField>
+        <FormField label="英文名" :error="errors.english_name">
+          <input v-model.trim="model.english_name" placeholder="(可选)" />
         </FormField>
         <FormField label="性别" :error="errors.gender">
           <CustomSelect
@@ -40,6 +43,59 @@
         <FormField label="邮箱" :error="errors.email"><input type="email" v-model="model.email" /></FormField>
         <FormField label="地址" :error="errors.address"><input v-model="model.address" /></FormField>
         <FormField label="身份证" :error="errors.id_card"><input v-model="model.id_card" /></FormField>
+        <FormField label="护照号码" :error="errors.passport_no"><input v-model="model.passport_no" /></FormField>
+      </div>
+    </fieldset>
+
+    <!-- 户籍信息分组 -->
+    <fieldset class="fieldset">
+      <legend>户籍信息</legend>
+      <div class="grid">
+        <FormField label="国籍(地区)" :error="errors.nationality"><input v-model="model.nationality" /></FormField>
+        <FormField label="户籍所在地" :error="errors.hukou_location"><input v-model="model.hukou_location" /></FormField>
+        <FormField label="户籍性质" :error="errors.hukou_type">
+          <CustomSelect
+            v-model="model.hukou_type"
+            :options="[
+              { value: '', label: '(可选)' },
+              { value: '农村', label: '农村' },
+              { value: '城镇', label: '城镇' }
+            ]"
+            placeholder="选择户籍性质"
+          />
+        </FormField>
+        <FormField label="籍贯" :error="errors.native_place"><input v-model="model.native_place" placeholder="如：四川省/宜宾市" /></FormField>
+        <FormField label="户籍地址" :error="errors.hukou_address"><input v-model="model.hukou_address" /></FormField>
+        <FormField label="民族" :error="errors.ethnicity"><input v-model="model.ethnicity" /></FormField>
+        <FormField label="血型" :error="errors.blood_type">
+          <CustomSelect
+            v-model="model.blood_type"
+            :options="[
+              { value: '', label: '(可选)' },
+              { value: 'A型', label: 'A型' },
+              { value: 'B型', label: 'B型' },
+              { value: 'O型', label: 'O型' },
+              { value: 'AB型', label: 'AB型' },
+              { value: '未知', label: '未知' }
+            ]"
+            placeholder="选择血型"
+          />
+        </FormField>
+        <FormField label="政治面貌" :error="errors.political_status">
+          <CustomSelect
+            v-model="model.political_status"
+            :options="[
+              { value: '', label: '(可选)' },
+              { value: '群众', label: '群众' },
+              { value: '共青团员', label: '共青团员' },
+              { value: '中共党员', label: '中共党员' },
+              { value: '民主党派', label: '民主党派' },
+              { value: '其他', label: '其他' }
+            ]"
+            placeholder="选择政治面貌"
+          />
+        </FormField>
+        <FormField label="入党/团日期" :error="errors.party_date"><input type="date" v-model="model.party_date" /></FormField>
       </div>
     </fieldset>
     <!-- 个人状态分组 -->
@@ -59,7 +115,95 @@
           />
         </FormField>
         <FormField label="紧急联系人" :error="errors.emergency_contact"><input v-model="model.emergency_contact" /></FormField>
+        <FormField label="与本人关系" :error="errors.emergency_relation"><input v-model="model.emergency_relation" placeholder="如：父亲" /></FormField>
         <FormField label="紧急电话" :error="errors.emergency_phone"><input v-model="model.emergency_phone" /></FormField>
+      </div>
+    </fieldset>
+
+    <!-- 教育信息分组 -->
+    <fieldset class="fieldset">
+      <legend>教育信息</legend>
+      <div class="grid">
+        <FormField label="学校分类" :error="errors.school_type">
+          <CustomSelect
+            v-model="model.school_type"
+            :options="[
+              { value: '', label: '(可选)' },
+              { value: '普通本科', label: '普通本科' },
+              { value: '211', label: '211' },
+              { value: '985', label: '985' },
+              { value: '双一流', label: '双一流' },
+              { value: '大专', label: '大专' },
+              { value: '高中/中专', label: '高中/中专' },
+              { value: '其他', label: '其他' }
+            ]"
+            placeholder="选择学校分类"
+          />
+        </FormField>
+        <FormField label="毕业学校" :error="errors.school_name"><input v-model="model.school_name" /></FormField>
+        <FormField label="专业" :error="errors.major"><input v-model="model.major" /></FormField>
+        <FormField label="毕业时间" :error="errors.graduation_date"><input type="date" v-model="model.graduation_date" /></FormField>
+        <FormField label="学历" :error="errors.education">
+          <CustomSelect
+            v-model="model.education"
+            :options="[
+              { value: '', label: '(可选)' },
+              { value: '高中/中专', label: '高中/中专' },
+              { value: '大专', label: '大专' },
+              { value: '本科', label: '本科' },
+              { value: '硕士', label: '硕士' },
+              { value: '博士', label: '博士' }
+            ]"
+            placeholder="选择学历"
+          />
+        </FormField>
+      </div>
+    </fieldset>
+
+    <!-- 银行信息分组 -->
+    <fieldset class="fieldset">
+      <legend>银行信息</legend>
+      <div class="grid">
+        <FormField label="工资卡账号" :error="errors.bank_card_no"><input v-model="model.bank_card_no" /></FormField>
+        <FormField label="报销卡账号" :error="errors.expense_card_no"><input v-model="model.expense_card_no" /></FormField>
+      </div>
+    </fieldset>
+
+    <!-- 设备信息分组 -->
+    <fieldset class="fieldset">
+      <legend>设备信息</legend>
+      <div class="grid">
+        <FormField label="电脑信息" :error="errors.computer_info">
+          <CustomSelect
+            v-model="model.computer_info"
+            :options="[
+              { value: '', label: '(可选)' },
+              { value: '自带', label: '自带' },
+              { value: '公司配发', label: '公司配发' }
+            ]"
+            placeholder="选择电脑信息"
+          />
+        </FormField>
+        <FormField label="电脑品牌" :error="errors.computer_brand"><input v-model="model.computer_brand" /></FormField>
+      </div>
+    </fieldset>
+
+    <!-- 证件信息（展示） -->
+    <fieldset class="fieldset" v-if="isEdit">
+      <legend>证件信息</legend>
+      <div class="grid">
+        <FormField label="照片(头像)">
+          <a v-if="props.value?.avatar" :href="props.value.avatar" target="_blank" rel="noreferrer">查看</a>
+          <span v-else>未上传</span>
+        </FormField>
+        <FormField label="身份证人像面">
+          <a v-if="props.value?.id_card_front" :href="props.value.id_card_front" target="_blank" rel="noreferrer">查看</a>
+          <span v-else>未上传</span>
+        </FormField>
+        <FormField label="身份证国徽面">
+          <a v-if="props.value?.id_card_back" :href="props.value.id_card_back" target="_blank" rel="noreferrer">查看</a>
+          <span v-else>未上传</span>
+        </FormField>
       </div>
     </fieldset>
     <!-- 任职信息分组 -->
@@ -97,9 +241,9 @@
       <legend>考勤地点 <span class="legend-tip">(可选，不选则使用全局设置)</span></legend>
       <div class="location-list">
         <label v-for="loc in checkinLocations" :key="loc.id" class="location-item">
-          <input 
-            type="checkbox" 
-            :value="loc.id" 
+          <input
+            type="checkbox"
+            :value="loc.id"
             v-model="model.checkin_location_ids"
           />
           <div class="location-info">
@@ -160,8 +304,18 @@ const isValid = computed(() => validate(false));
 function makeBlank(){
   return {
     user_id: '', employee_id: '', name: '', gender: 'M', birth_date: '', hire_date: '',
-    phone: '', email: '', address: '', id_card: '', marital_status: 'single', emergency_contact: '', emergency_phone: '',
-    department_id: '', position_id: '', salary: 0, is_active: true, checkin_location_ids: [],
+    english_name: '',
+    phone: '', email: '', address: '', id_card: '', passport_no: '', marital_status: 'single',
+    emergency_contact: '', emergency_relation: '', emergency_phone: '',
+
+    nationality: '中国', hukou_location: '', hukou_type: '', native_place: '', hukou_address: '',
+    ethnicity: '汉族', blood_type: '', political_status: '', party_date: '',
+
+    school_type: '', school_name: '', major: '', graduation_date: '', education: '',
+    bank_card_no: '', expense_card_no: '',
+    computer_info: '', computer_brand: '',
+
+    department_id: '', position_id: '', salary: null, is_active: true, checkin_location_ids: [],
   };
 }
 
@@ -181,10 +335,24 @@ watch(() => props.value, (v) => {
 function pickEditable(e){
   return {
     user_id: e.user?.id, employee_id: e.employee_id, name: e.name, gender: e.gender,
-    birth_date: e.birth_date, hire_date: e.hire_date, phone: e.phone, email: e.email, address: e.address,
-    id_card: e.id_card, marital_status: e.marital_status, emergency_contact: e.emergency_contact,
-    emergency_phone: e.emergency_phone, department_id: e.department?.id || '', position_id: e.position?.id || '',
-    salary: e.salary, is_active: e.is_active, checkin_location_ids: e.checkin_location_ids || [],
+    birth_date: e.birth_date, hire_date: e.hire_date,
+    english_name: e.english_name,
+    phone: e.phone, email: e.email, address: e.address,
+    id_card: e.id_card, passport_no: e.passport_no,
+    marital_status: e.marital_status,
+    emergency_contact: e.emergency_contact, emergency_relation: e.emergency_relation, emergency_phone: e.emergency_phone,
+
+    nationality: e.nationality, hukou_location: e.hukou_location, hukou_type: e.hukou_type,
+    native_place: e.native_place, hukou_address: e.hukou_address,
+    ethnicity: e.ethnicity, blood_type: e.blood_type, political_status: e.political_status, party_date: e.party_date,
+
+    school_type: e.school_type, school_name: e.school_name, major: e.major,
+    graduation_date: e.graduation_date, education: e.education,
+    bank_card_no: e.bank_card_no, expense_card_no: e.expense_card_no,
+    computer_info: e.computer_info, computer_brand: e.computer_brand,
+
+    department_id: e.department?.id || '', position_id: e.position?.id || '',
+    salary: e.salary ?? null, is_active: e.is_active, checkin_location_ids: e.checkin_location_ids || [],
   };
 }
 
@@ -200,26 +368,20 @@ async function onSubmit(){
     // 将空字符串转换为 null（department_id 和 position_id）
     if (payload.department_id === '') payload.department_id = null;
     if (payload.position_id === '') payload.position_id = null;
-    
-    // 清理所有空字符串字段（除了必填的user_id和employee_id）
-    const optionalFields = ['name', 'gender', 'birth_date', 'hire_date', 'phone', 'email', 
-                            'address', 'id_card', 'emergency_contact', 'emergency_phone', 'marital_status'];
-    optionalFields.forEach(field => {
-      if (payload[field] === '') {
-        delete payload[field];
-      }
+
+    // 空日期用 null，避免后端 DateField 接收空字符串报错
+    ['birth_date', 'hire_date', 'party_date', 'graduation_date'].forEach((k) => {
+      if (payload[k] === '') payload[k] = null;
     });
-    
-    // salary为0时也可以删除，让后端使用默认值
-    if (payload.salary === 0 || payload.salary === '') {
-      delete payload.salary;
-    }
-    
+
+    // salary 空值用 null
+    if (payload.salary === '') payload.salary = null;
+
     // 确保 checkin_location_ids 是数组
     if (!Array.isArray(payload.checkin_location_ids)) {
       payload.checkin_location_ids = [];
     }
-    
+
     emit('save', payload);
   } catch(e){
     error.value = e.message || '提交失败';
@@ -231,22 +393,21 @@ function stripReactive(obj){ return JSON.parse(JSON.stringify(obj)); }
 function validate(mark){
   // 清空错误
   Object.keys(errors).forEach(k => delete errors[k]);
-  // 必填校验 - 只有用户和员工编号必填
+  // 必填校验 - 只有用户必填（员工编号系统自动生成）
   if(!model.user_id) errors.user_id = '必填';
-  if(!model.employee_id) errors.employee_id = '必填';
-  
+
   // 格式校验（如果填写了才验证）
   if(model.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(model.email)) errors.email = '邮箱格式不正确';
   if(model.phone && !/^1[3-9]\d{9}$/.test(model.phone)) errors.phone = '请输入有效的11位手机号';
   if(model.emergency_phone && !/^1[3-9]\d{9}$/.test(model.emergency_phone)) errors.emergency_phone = '请输入有效的11位手机号';
   if(model.id_card && !/^\d{17}[\dXx]$/.test(model.id_card)) errors.id_card = '请输入有效的18位身份证号';
-  
+
   // 日期逻辑：如果都填了，出生日期不能晚于入职
   if(model.birth_date && model.hire_date && model.birth_date > model.hire_date) errors.birth_date = '出生日期不能晚于入职日期';
-  
+
   // 工资非负
   if(model.salary < 0) errors.salary = '工资不能为负数';
-  
+
   // 返回是否有效
   return Object.keys(errors).length === 0;
 }

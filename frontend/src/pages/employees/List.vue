@@ -104,10 +104,10 @@
       </table>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+      <div v-if="loading" class="loading-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
 
       <!-- 空状态 -->
@@ -121,9 +121,9 @@
       <span class="total-count">共{{ filtered.length }}人</span>
       <div class="pagination">
         <span class="page-size-label">每页</span>
-        <CustomSelect 
-          v-model="pageSize" 
-          :options="pageSizeOptions" 
+        <CustomSelect
+          v-model="pageSize"
+          :options="pageSizeOptions"
           class="page-size-custom-select"
           :dropUp="true"
         />
@@ -221,16 +221,16 @@ const summary = computed(() => {
 // 筛选
 const filtered = computed(() => {
   let list = employees.value
-  
+
   if (searchKeyword.value) {
     const kw = searchKeyword.value.toLowerCase()
-    list = list.filter(e => 
+    list = list.filter(e =>
       e.name?.toLowerCase().includes(kw) ||
       e.employee_id?.toLowerCase().includes(kw) ||
       e.phone?.includes(kw)
     )
   }
-  
+
   if (filterDept.value) {
     // 获取选中部门及其所有子部门的ID
     const deptIds = new Set([Number(filterDept.value)])
@@ -247,16 +247,16 @@ const filtered = computed(() => {
     addChildDepts(Number(filterDept.value))
     list = list.filter(e => deptIds.has(e.department?.id))
   }
-  
+
   if (filterPosition.value) {
     list = list.filter(e => e.position?.id == filterPosition.value)
   }
-  
+
   if (filterStatus.value !== '') {
     const isActive = filterStatus.value === '1'
     list = list.filter(e => e.is_active === isActive)
   }
-  
+
   // 排序
   if (sortField.value) {
     list = [...list].sort((a, b) => {
@@ -269,7 +269,7 @@ const filtered = computed(() => {
       }
     })
   }
-  
+
   return list
 })
 

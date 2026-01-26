@@ -82,10 +82,10 @@
       </table>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+      <div v-if="loading" class="loading-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
 
       <!-- 空状态 -->
@@ -99,9 +99,9 @@
       <span class="total-count">共{{ filtered.length }}条</span>
       <div class="pagination">
         <span class="page-size-label">每页</span>
-        <CustomSelect 
-          v-model="pageSize" 
-          :options="[{value:10,label:'10'},{value:20,label:'20'},{value:50,label:'50'}]" 
+        <CustomSelect
+          v-model="pageSize"
+          :options="[{value:10,label:'10'},{value:20,label:'20'},{value:50,label:'50'}]"
           class="page-size-select"
           @change="currentPage = 1"
         />
@@ -138,11 +138,11 @@
           </div>
           <div class="form-row">
             <label>所属部门</label>
-            <CustomSelect
+            <DeptTreeSelect
               v-model="form.department_id"
-              :options="[{ value: '', label: '请选择部门' }, ...departments.map(d => ({ value: d.id, label: d.name }))]"
+              :departments="departments"
               placeholder="请选择部门"
-              searchable
+              empty-label="不指定部门"
             />
           </div>
           <div class="form-row-inline">
@@ -243,6 +243,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '../../utils/api'
 import CustomSelect from '../../components/CustomSelect.vue'
+import DeptTreeSelect from '../../components/DeptTreeSelect.vue'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -313,10 +314,10 @@ async function loadData() {
       api.get('/departments/'),
       api.get('/employees/')
     ])
-    
+
     const posList = posRes.data?.results || posRes.data || []
     const empList = empRes.data?.results || empRes.data || []
-    
+
     // 计算每个职位关联的员工数
     const empCountMap = {}
     empList.forEach(emp => {
@@ -324,12 +325,12 @@ async function loadData() {
         empCountMap[emp.position.id] = (empCountMap[emp.position.id] || 0) + 1
       }
     })
-    
+
     items.value = posList.map(p => ({
       ...p,
       employee_count: empCountMap[p.id] || 0
     }))
-    
+
     departments.value = deptRes.data?.results || deptRes.data || []
     allEmployees.value = empList
   } catch (e) {
@@ -361,7 +362,7 @@ async function handleSubmit() {
     message.value = { type: 'error', text: '请输入职位名称' }
     return
   }
-  
+
   saving.value = true
   try {
     const payload = {
@@ -371,7 +372,7 @@ async function handleSubmit() {
       salary_range_max: form.value.salary_range_max || null,
       description: form.value.description || ''
     }
-    
+
     if (editItem.value) {
       await api.put(`/positions/${editItem.value.id}/`, payload)
       message.value = { type: 'success', text: '职位已更新' }
@@ -379,7 +380,7 @@ async function handleSubmit() {
       await api.post('/positions/', payload)
       message.value = { type: 'success', text: '职位已创建' }
     }
-    
+
     closeModal()
     await loadData()
   } catch (e) {
@@ -391,7 +392,7 @@ async function handleSubmit() {
 
 async function remove(item) {
   if (!confirm(`确认删除职位「${item.name}」？\n注意：已关联该职位的员工将解除关联。`)) return
-  
+
   try {
     await api.delete(`/positions/${item.id}/`)
     message.value = { type: 'success', text: '已删除' }
@@ -417,7 +418,7 @@ async function showAssign(item) {
 // 添加员工到职位
 async function assignEmployee() {
   if (!selectedEmployee.value) return
-  
+
   try {
     await api.patch(`/employees/${selectedEmployee.value}/`, {
       position_id: assignItem.value.id
@@ -434,7 +435,7 @@ async function assignEmployee() {
 // 解除员工与职位的关联
 async function unassignEmployee(emp) {
   if (!confirm(`确认解除「${emp.name}」与该职位的关联？`)) return
-  
+
   try {
     await api.patch(`/employees/${emp.id}/`, {
       position_id: null
@@ -1086,23 +1087,23 @@ onMounted(loadData)
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .filters-bar {
     flex-direction: column;
   }
-  
+
   .search-box {
     max-width: none;
   }
-  
+
   .table-container {
     overflow-x: auto;
   }
-  
+
   .data-table {
     min-width: 800px;
   }
-  
+
   .form-row-inline {
     grid-template-columns: 1fr;
   }

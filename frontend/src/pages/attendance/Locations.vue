@@ -52,8 +52,8 @@
               <td class="muted">{{ item.address }}</td>
               <td>{{ item.radius }}</td>
               <td>
-                <span 
-                  class="tag tag-clickable" 
+                <span
+                  class="tag tag-clickable"
                   :class="item.is_active ? 'tag-success' : 'tag-muted'"
                   @click="isStaff && toggleStatus(item)"
                   :style="isStaff ? 'cursor: pointer;' : ''"
@@ -75,8 +75,10 @@
             </tr>
           </tbody>
         </table>
-        <div v-if="loading" class="loading">
-          <div class="spinner"></div>
+        <div v-if="loading" class="loading-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
       </div>
 
@@ -85,9 +87,9 @@
         <span class="total-count">共 {{ locations.length }} 条</span>
         <div class="pagination">
           <span class="page-size-label">每页</span>
-          <CustomSelect 
-            v-model="pageSize" 
-            :options="pageSizeOptions" 
+          <CustomSelect
+            v-model="pageSize"
+            :options="pageSizeOptions"
             class="page-size-custom-select"
             @change="currentPage = 1"
           />

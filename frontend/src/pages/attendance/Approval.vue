@@ -29,9 +29,9 @@
         </div>
         <div class="filter-item">
           <span class="filter-label">审批状态</span>
-          <CustomSelect 
-            v-model="statusFilter" 
-            :options="approvalStatusOptions" 
+          <CustomSelect
+            v-model="statusFilter"
+            :options="approvalStatusOptions"
             placeholder="全部"
             class="filter-custom-select"
           />
@@ -82,8 +82,10 @@
         </table>
 
         <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
+        <div v-if="loading" class="loading-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
 
         <!-- 空状态 -->
@@ -97,9 +99,9 @@
         <span class="total-count">共{{ filtered.length }}条</span>
         <div class="pagination">
           <span class="page-size-label">每页</span>
-          <CustomSelect 
-            v-model="pageSize" 
-            :options="pageSizeSelectOptions" 
+          <CustomSelect
+            v-model="pageSize"
+            :options="pageSizeSelectOptions"
             class="page-size-custom-select"
             @change="currentPage = 1"
           />
@@ -172,7 +174,7 @@ onMounted(() => {
 
 const filtered = computed(() => {
   let result = items.value;
-  
+
   if (dateFrom.value) {
     result = result.filter(i => i.date >= dateFrom.value);
   }
@@ -182,7 +184,7 @@ const filtered = computed(() => {
   if (statusFilter.value) {
     result = result.filter(i => i.status === statusFilter.value);
   }
-  
+
   // 按申请时间倒序排列
   return result.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
 });
@@ -256,15 +258,15 @@ async function load() {
 
 async function handleBatchApprove() {
   if (selected.value.length === 0) return;
-  
+
   if (!window.confirm(`确定要批量通过 ${selected.value.length} 条补签申请吗？`)) {
     return;
   }
-  
+
   batchApproving.value = true;
   let successCount = 0;
   let failCount = 0;
-  
+
   for (const id of selected.value) {
     try {
       const resp = await api.post(`/attendance/supplement/${id}/approve/`, { action: 'approve', comments: '' });
@@ -277,16 +279,16 @@ async function handleBatchApprove() {
       failCount++;
     }
   }
-  
+
   batchApproving.value = false;
   selected.value = [];
-  
+
   if (failCount === 0) {
     showMessage('success', `成功通过 ${successCount} 条补签申请`);
   } else {
     showMessage('warning', `成功 ${successCount} 条，失败 ${failCount} 条`);
   }
-  
+
   await load();
 }
 
@@ -297,7 +299,7 @@ async function handleApprove(id, action) {
     comments = window.prompt('请输入拒绝原因：', '');
     if (comments === null) return;
   }
-  
+
   approvingId.value = id;
   try {
     const resp = await api.post(`/attendance/supplement/${id}/approve/`, { action, comments });

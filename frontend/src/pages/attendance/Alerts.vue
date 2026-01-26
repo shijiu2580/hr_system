@@ -42,9 +42,9 @@
       <div class="filters-bar">
         <div class="filter-item">
           <span class="filter-label">时间范围</span>
-          <CustomSelect 
-            v-model="daysFilter" 
-            :options="daysOptions" 
+          <CustomSelect
+            v-model="daysFilter"
+            :options="daysOptions"
             class="filter-custom-select"
             @change="loadData"
           />
@@ -107,8 +107,10 @@
         </table>
 
         <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
+        <div v-if="loading" class="loading-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
 
         <!-- 空状态 -->
@@ -123,9 +125,9 @@
         <span class="total-count">共{{ alerts.length }}条</span>
         <div class="pagination">
           <span class="page-size-label">每页</span>
-          <CustomSelect 
-            v-model="pageSize" 
-            :options="pageSizeOptions" 
+          <CustomSelect
+            v-model="pageSize"
+            :options="pageSizeOptions"
             class="page-size-custom-select"
             @change="currentPage = 1"
           />

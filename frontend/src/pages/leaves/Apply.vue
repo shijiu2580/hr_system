@@ -114,10 +114,10 @@
       </table>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <div class="progress-bar">
-          <div class="progress-fill"></div>
-        </div>
+      <div v-if="loading" class="loading-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
 
       <!-- 空状态 -->
@@ -131,9 +131,9 @@
       <span class="total-count">共{{ filtered.length }}条</span>
       <div class="pagination">
         <span class="page-size-label">每页</span>
-        <CustomSelect 
-          v-model="pageSize" 
-          :options="pageSizeSelectOptions" 
+        <CustomSelect
+          v-model="pageSize"
+          :options="pageSizeSelectOptions"
           class="page-size-custom-select"
           @change="currentPage = 1"
         />
@@ -341,7 +341,7 @@ const filtered = computed(() => {
     if (filterType.value && item.leave_type !== filterType.value) return false
     return true
   })
-  
+
   // 排序
   if (sortField.value) {
     result = [...result].sort((a, b) => {
@@ -354,7 +354,7 @@ const filtered = computed(() => {
       }
     })
   }
-  
+
   return result
 })
 
@@ -443,7 +443,7 @@ async function submitEdit() {
     message.value = { type: 'error', text: '请填写完整信息' }
     return
   }
-  
+
   submitting.value = true
   try {
     const resp = await api.put(`/leaves/${editItem.value.id}/`, editForm.value)

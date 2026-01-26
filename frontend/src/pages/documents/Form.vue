@@ -19,8 +19,12 @@
     </div>
 
     <section class="card form-card">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
         <span>加载数据...</span>
       </div>
       <form v-else @submit.prevent="handleSubmit" class="document-form">
@@ -29,36 +33,36 @@
             <label class="form-label">标题 *</label>
             <input v-model.trim="form.title" class="form-control" required />
           </div>
-          
+
           <div class="form-field">
             <label class="form-label">文档类型 *</label>
-            <CustomSelect 
-              v-model="form.document_type" 
-              :options="typeOptions" 
+            <CustomSelect
+              v-model="form.document_type"
+              :options="typeOptions"
               placeholder="请选择文档类型"
             />
           </div>
-          
+
           <div class="form-field">
             <label class="form-label">版本号 *</label>
             <input v-model.trim="form.version" class="form-control" required placeholder="例如：1.0" />
           </div>
-          
+
           <div class="form-field span-2">
             <label class="form-label">描述</label>
-            <textarea 
-              v-model.trim="form.description" 
-              rows="4" 
-              class="form-control" 
+            <textarea
+              v-model.trim="form.description"
+              rows="4"
+              class="form-control"
               placeholder="补充文档适用范围、更新亮点或必读提示"
             ></textarea>
           </div>
-          
+
           <div class="form-field span-2">
             <label class="form-label">附件 {{ isEdit ? '(留空则不更换)' : '*' }}</label>
             <div class="file-upload">
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref="fileInput"
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
                 @change="handleFileChange"
@@ -79,7 +83,7 @@
               当前文件：{{ originalFileName }}
             </p>
           </div>
-          
+
           <div class="form-field span-2">
             <label class="toggle-label">
               <input type="checkbox" v-model="form.is_active" class="toggle-input" />
@@ -88,7 +92,7 @@
             </label>
           </div>
         </div>
-        
+
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" :disabled="saving">
             {{ saving ? '保存中...' : isEdit ? '保存更改' : '上传' }}
@@ -185,10 +189,10 @@ async function handleSubmit() {
     error.value = '请选择文件'
     return
   }
-  
+
   saving.value = true
   error.value = ''
-  
+
   try {
     const fd = new FormData()
     fd.append('title', form.value.title)
@@ -199,9 +203,9 @@ async function handleSubmit() {
     if (form.value.file) {
       fd.append('file', form.value.file)
     }
-    
+
     const headers = { headers: { 'Content-Type': 'multipart/form-data' } }
-    
+
     if (isEdit.value) {
       await api.patch(`/documents/${route.params.id}/`, fd, headers)
     } else {

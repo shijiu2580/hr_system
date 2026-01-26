@@ -33,18 +33,18 @@
           </div>
           <div class="filter-item">
             <span class="filter-label">考勤状态</span>
-            <CustomSelect 
-              v-model="statusFilter" 
-              :options="statusOptions" 
+            <CustomSelect
+              v-model="statusFilter"
+              :options="statusOptions"
               placeholder="全部"
               class="filter-custom-select"
             />
           </div>
           <div class="filter-item">
             <span class="filter-label">审批状态</span>
-            <CustomSelect 
-              v-model="approvalFilter" 
-              :options="approvalOptions" 
+            <CustomSelect
+              v-model="approvalFilter"
+              :options="approvalOptions"
               placeholder="全部"
               class="filter-custom-select"
             />
@@ -95,8 +95,10 @@
           </table>
 
           <!-- 加载状态 -->
-          <div v-if="loading" class="loading-state">
-            <div class="spinner"></div>
+          <div v-if="loading" class="loading-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
 
           <!-- 空状态 -->
@@ -115,9 +117,9 @@
           <span class="total-count">共{{ filtered.length }}条</span>
           <div class="pagination">
             <span class="page-size-label">每页</span>
-            <CustomSelect 
-              v-model="pageSize" 
-              :options="pageSizeSelectOptions" 
+            <CustomSelect
+              v-model="pageSize"
+              :options="pageSizeSelectOptions"
               class="page-size-custom-select"
               @change="currentPage = 1"
             />
@@ -172,9 +174,9 @@
           <span class="total-count">共{{ abnormalRecords.length }}条</span>
           <div class="pagination">
             <span class="page-size-label">每页</span>
-            <CustomSelect 
-              v-model="abnormalPageSize" 
-              :options="pageSizeSelectOptions" 
+            <CustomSelect
+              v-model="abnormalPageSize"
+              :options="pageSizeSelectOptions"
               class="page-size-custom-select"
               @change="abnormalCurrentPage = 1"
             />
@@ -223,9 +225,9 @@
           <span class="total-count">共{{ supplements.length }}条</span>
           <div class="pagination">
             <span class="page-size-label">每页</span>
-            <CustomSelect 
-              v-model="supplementPageSize" 
-              :options="pageSizeSelectOptions" 
+            <CustomSelect
+              v-model="supplementPageSize"
+              :options="pageSizeSelectOptions"
               class="page-size-custom-select"
               @change="supplementCurrentPage = 1"
             />
@@ -380,7 +382,7 @@ watch([dateFrom, dateTo], () => {
 
 const filtered = computed(() => {
   let result = items.value;
-  
+
   if (dateFrom.value) {
     result = result.filter(i => i.date >= dateFrom.value);
   }
@@ -390,7 +392,7 @@ const filtered = computed(() => {
   if (statusFilter.value) {
     result = result.filter(i => getStatus(i) === statusFilter.value);
   }
-  
+
   // 按日期倒序排列
   return result.sort((a, b) => b.date.localeCompare(a.date));
 });
@@ -583,12 +585,12 @@ async function handleExport() {
     showMessage('error', '请先勾选要导出的记录');
     return;
   }
-  
+
   exporting.value = true;
   try {
     // 获取选中的记录
     const selectedRecords = items.value.filter(item => selected.value.includes(item.id));
-    
+
     // 构建CSV内容
     const headers = ['考勤日期', '星期', '首打卡', '末打卡', '缺勤时长', '考勤状态', '异常原因'];
     const rows = selectedRecords.map(item => {
@@ -606,14 +608,14 @@ async function handleExport() {
         item.late_reason || item.early_leave_reason || '--'
       ];
     });
-    
+
     // 添加BOM以支持中文
     let csvContent = '\uFEFF';
     csvContent += headers.join(',') + '\n';
     rows.forEach(row => {
       csvContent += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',') + '\n';
     });
-    
+
     // 下载文件
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -621,7 +623,7 @@ async function handleExport() {
     link.download = `考勤记录_${dateFrom.value}_${dateTo.value}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    
+
     showMessage('success', `成功导出 ${selectedRecords.length} 条记录`);
     selected.value = [];
     selectAll.value = false;
@@ -640,7 +642,7 @@ async function load() {
     if (dateFrom.value) queryParams.push(`date_from=${dateFrom.value}`);
     if (dateTo.value) queryParams.push(`date_to=${dateTo.value}`);
     if (queryParams.length) url += '?' + queryParams.join('&');
-    
+
     const resp = await api.get(url);
     if (resp.success) {
       const raw = resp.data;
@@ -651,10 +653,10 @@ async function load() {
   } catch (e) {
     console.error('加载考勤记录出错:', e);
   }
-  
+
   // 加载补签申请记录
   await loadSupplements();
-  
+
   loading.value = false;
 }
 
@@ -713,7 +715,7 @@ async function handleApprove(id, action) {
     comments = window.prompt('请输入拒绝原因：', '');
     if (comments === null) return;
   }
-  
+
   approvingId.value = id;
   try {
     const resp = await api.post(`/attendance/supplement/${id}/approve/`, { action, comments });

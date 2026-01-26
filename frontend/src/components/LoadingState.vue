@@ -4,16 +4,16 @@
     <template v-if="type === 'skeleton'">
       <div class="skeleton-wrapper">
         <div v-for="i in rows" :key="i" class="skeleton-row">
-          <div 
-            v-for="j in columns" 
-            :key="j" 
+          <div
+            v-for="j in columns"
+            :key="j"
             class="skeleton-item"
             :style="{ width: getItemWidth(j) }"
           ></div>
         </div>
       </div>
     </template>
-    
+
     <!-- 加载动画 -->
     <template v-else-if="type === 'spinner'">
       <div class="spinner-wrapper">
@@ -21,7 +21,7 @@
         <p v-if="text" class="loading-text">{{ text }}</p>
       </div>
     </template>
-    
+
     <!-- 进度条 -->
     <template v-else-if="type === 'progress'">
       <div class="progress-wrapper">
@@ -31,7 +31,7 @@
         <p class="progress-text">{{ progress }}%</p>
       </div>
     </template>
-    
+
     <!-- 默认点状加载 -->
     <template v-else>
       <div class="dots-wrapper">
@@ -121,20 +121,26 @@ function getItemWidth(index) {
 }
 
 .dots span {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #409eff;
-  animation: dots-bounce 1.4s infinite ease-in-out both;
+  background: var(--color-primary, #409eff);
+  animation: dots-pulse 1.4s infinite ease-in-out both;
 }
 
 .dots span:nth-child(1) { animation-delay: -0.32s; }
 .dots span:nth-child(2) { animation-delay: -0.16s; }
 .dots span:nth-child(3) { animation-delay: 0s; }
 
-@keyframes dots-bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
+@keyframes dots-pulse {
+  0%, 80%, 100% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* 旋转加载动画 */

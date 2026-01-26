@@ -1,8 +1,9 @@
 <template>
   <section class="list-section">
-    <div v-if="loadingPerms" class="loading-state">
-      <div class="loading-spinner"></div>
-      <span>加载中...</span>
+    <div v-if="loadingPerms" class="loading-dots">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
     </div>
     <div v-else-if="pageGroups.length" class="page-groups-container">
       <!-- 按页面分组展示 -->
@@ -99,61 +100,67 @@ function toggleGroup(name) {
 // 按导航栏页面结构分组
 const PAGE_GROUP_CONFIG = [
   {
-    name: '🏠 首页（动态）',
+    name: '首页',
     icon: '/icons/dashboard.svg',
     prefixes: ['dashboard.'],
     keys: []
   },
   {
-    name: '👥 员工管理',
+    name: '员工管理',
     icon: '/icons/employees.svg',
     prefixes: ['employee.'],
     keys: []
   },
   {
-    name: '⏰ 考勤管理',
+    name: '入职管理',
+    icon: '/icons/onboarding.svg',
+    prefixes: ['onboarding.'],
+    keys: []
+  },
+  {
+    name: '考勤管理',
     icon: '/icons/attendance.svg',
     prefixes: ['attendance.'],
     keys: []
   },
   {
-    name: '📝 请假管理',
+    name: '请假管理',
     icon: '/icons/leaves.svg',
     prefixes: ['leave.', 'trip.'],
     keys: []
   },
   {
-    name: '💰 薪资管理',
+    name: '薪资管理',
     icon: '/icons/salaries.svg',
     prefixes: ['salary.', 'expense.'],
     keys: []
   },
   {
-    name: '🏢 职位管理',
+    name: '职位管理',
     icon: '/icons/positions.svg',
     prefixes: ['position.'],
     keys: []
   },
   {
-    name: '🏛️ 部门管理',
+    name: '部门管理',
     icon: '/icons/departments.svg',
     prefixes: ['department.'],
     keys: []
   },
   {
-    name: '📄 文档中心',
+    name: '文档中心',
     icon: '/icons/documents.svg',
     prefixes: ['document.'],
     keys: []
   },
   {
-    name: '📊 大数据报表',
+    name: '大数据报表',
     icon: '/icons/reports.svg',
     prefixes: ['report.'],
     keys: []
   },
   {
-    name: '🚪 离职管理',
+    name: '离职管理',
     icon: '/icons/resignation.svg',
     prefixes: ['resignation.'],
     keys: []
@@ -165,13 +172,13 @@ const PAGE_GROUP_CONFIG = [
     keys: []
   },
   {
-    name: '🔐 权限管理',
+    name: '权限管理',
     icon: '/icons/rbac.svg',
     prefixes: ['rbac.'],
     keys: []
   },
   {
-    name: '👤 用户管理',
+    name: '用户管理',
     icon: '/icons/users.svg',
     prefixes: ['user.'],
     keys: []
@@ -195,7 +202,7 @@ function matchGroup(perm) {
 // 计算分组后的权限
 const pageGroups = computed(() => {
   const groupMap = {};
-  
+
   // 初始化已配置的分组
   for (const config of PAGE_GROUP_CONFIG) {
     groupMap[config.name] = {
@@ -205,7 +212,7 @@ const pageGroups = computed(() => {
     };
   }
   groupMap['其他'] = { name: '其他', icon: null, permissions: [] };
-  
+
   // 分配权限到各分组
   for (const perm of permissions.value) {
     const groupName = matchGroup(perm);
@@ -213,7 +220,7 @@ const pageGroups = computed(() => {
       groupMap[groupName].permissions.push(perm);
     }
   }
-  
+
   // 返回有权限的分组（按配置顺序）
   const result = [];
   for (const config of PAGE_GROUP_CONFIG) {
@@ -228,7 +235,7 @@ const pageGroups = computed(() => {
   if (groupMap['其他'].permissions.length > 0) {
     result.push(groupMap['其他']);
   }
-  
+
   return result;
 });
 

@@ -11,7 +11,14 @@
       <router-link to="/employees/list" class="btn-secondary">返回员工列表</router-link>
     </header>
 
-    <div v-if="loading" class="loading">正在加载...</div>
+    <div v-if="loading" class="loading-dots-text">
+      <div class="dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <span>正在加载...</span>
+    </div>
     <div v-else-if="error" class="alert alert-error">{{ error }}</div>
 
     <section v-else class="card">

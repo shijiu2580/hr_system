@@ -17,9 +17,9 @@
     <!-- 筛选栏 -->
     <div class="filters-bar">
       <div class="filter-tabs">
-        <button 
-          v-for="tab in filterTabs" 
-          :key="tab.value" 
+        <button
+          v-for="tab in filterTabs"
+          :key="tab.value"
           class="filter-tab"
           :class="{ active: currentFilter === tab.value }"
           @click="currentFilter = tab.value"
@@ -32,9 +32,13 @@
 
     <!-- 列表内容 -->
     <section class="content-area">
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>加载中...</p>
+      <div v-if="loading" class="loading-dots-text">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <span>加载中...</span>
       </div>
 
       <div v-else-if="!filteredList.length" class="empty-state">
@@ -110,23 +114,23 @@
 
           <div class="card-footer" v-if="canApprove(item)">
             <div class="comment-input">
-              <input 
-                type="text" 
-                v-model="item._comment" 
+              <input
+                type="text"
+                v-model="item._comment"
                 placeholder="审批意见（可选）"
                 class="form-input"
               />
             </div>
             <div class="action-buttons">
-              <button 
-                class="btn btn-danger" 
+              <button
+                class="btn btn-danger"
                 :disabled="item._processing"
                 @click="handleApprove(item, 'reject')"
               >
                 拒绝
               </button>
-              <button 
-                class="btn btn-success" 
+              <button
+                class="btn btn-success"
                 :disabled="item._processing"
                 @click="handleApprove(item, 'approve')"
               >

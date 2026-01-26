@@ -12,9 +12,10 @@
         <span class="badge-count">{{ roles.length }}</span>
       </div>
     </div>
-    <div v-if="loadingRoles" class="loading-state">
-      <div class="loading-spinner"></div>
-      <span>加载中...</span>
+    <div v-if="loadingRoles" class="loading-dots">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
     </div>
     <div v-else-if="roles.length" class="role-cards">
       <div v-for="r in roles" :key="r.id" class="role-card" :class="{ system: r.is_system }">

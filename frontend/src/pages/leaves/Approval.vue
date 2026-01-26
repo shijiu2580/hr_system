@@ -101,16 +101,16 @@
               </td>
               <td class="col-actions">
                 <div class="action-links">
-                  <a 
-                    v-if="item.status === 'pending'" 
-                    href="javascript:;" 
+                  <a
+                    v-if="item.status === 'pending'"
+                    href="javascript:;"
                     class="action-link approve"
                     @click="handleApprove(item)"
                     :class="{ disabled: processing === item._key }"
                   >批准</a>
-                  <a 
-                    v-if="item.status === 'pending'" 
-                    href="javascript:;" 
+                  <a
+                    v-if="item.status === 'pending'"
+                    href="javascript:;"
                     class="action-link reject"
                     @click="handleReject(item)"
                     :class="{ disabled: processing === item._key }"
@@ -123,8 +123,10 @@
         </table>
 
         <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <div class="spinner"></div>
+        <div v-if="loading" class="loading-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
 
         <!-- 空状态 -->
@@ -143,9 +145,9 @@
         <span class="total-count">共{{ filtered.length }}条</span>
         <div class="pagination">
           <span class="page-size-label">每页</span>
-          <CustomSelect 
-            v-model="pageSize" 
-            :options="pageSizeSelectOptions" 
+          <CustomSelect
+            v-model="pageSize"
+            :options="pageSizeSelectOptions"
             class="page-size-custom-select"
             @change="currentPage = 1"
           />
@@ -222,9 +224,9 @@
             </div>
           </div>
           <div class="modal-footer" v-if="detailItem.status === 'pending'">
-            <input 
-              type="text" 
-              v-model="modalComment" 
+            <input
+              type="text"
+              v-model="modalComment"
               placeholder="审批备注（可选）"
               class="modal-input"
             />
@@ -273,51 +275,51 @@ const pageSizeSelectOptions = [
 
 const filtered = computed(() => {
   let result = items.value;
-  
+
   // 按单据类型筛选
   if (filterDocType.value) {
     result = result.filter(i => i._docType === filterDocType.value);
   }
-  
+
   // 按请假类型筛选（仅请假）
   if (filterType.value && filterDocType.value !== 'business_trip') {
     result = result.filter(i => i._docType === 'leave' && i.leave_type === filterType.value);
   }
-  
+
   // 按出差类型筛选（仅出差）
   if (filterTripType.value && filterDocType.value === 'business_trip') {
     result = result.filter(i => i._docType === 'business_trip' && i.trip_type === filterTripType.value);
   }
-  
+
   // 按状态筛选
   if (filterStatus.value) {
     result = result.filter(i => i.status === filterStatus.value);
   }
-  
+
   // 排序：先按状态排序（待审批在前），再按其他字段排序
   result = [...result].sort((a, b) => {
     // 待审批状态优先
     const statusOrder = { pending: 0 };
     const aStatusOrder = statusOrder[a.status] ?? 1;
     const bStatusOrder = statusOrder[b.status] ?? 1;
-    
+
     if (aStatusOrder !== bStatusOrder) {
       return aStatusOrder - bStatusOrder;
     }
-    
+
     // 如果状态相同，按其他字段排序
     if (sortField.value) {
       const aVal = a[sortField.value] || '';
       const bVal = b[sortField.value] || '';
-      return sortOrder.value === 'asc' 
-        ? aVal.localeCompare(bVal) 
+      return sortOrder.value === 'asc'
+        ? aVal.localeCompare(bVal)
         : bVal.localeCompare(aVal);
     }
-    
+
     // 默认按创建时间倒序
     return (b.created_at || '').localeCompare(a.created_at || '');
   });
-  
+
   return result;
 });
 
@@ -395,15 +397,15 @@ function showMessage(type, text) {
 
 async function load() {
   loading.value = true;
-  
+
   // 并行加载请假和出差数据
   const [leavesResp, tripsResp] = await Promise.all([
     api.get('/leaves/'),
     api.get('/business-trips/')
   ]);
-  
+
   const allItems = [];
-  
+
   // 处理请假数据
   if (leavesResp.success) {
     const raw = leavesResp.data;
@@ -416,7 +418,7 @@ async function load() {
       });
     });
   }
-  
+
   // 处理出差数据
   if (tripsResp.success) {
     const raw = tripsResp.data;
@@ -429,48 +431,48 @@ async function load() {
       });
     });
   }
-  
+
   // 按创建时间排序（最新的在前）
   allItems.sort((a, b) => {
     const dateA = a.created_at || '';
     const dateB = b.created_at || '';
     return dateB.localeCompare(dateA);
   });
-  
+
   items.value = allItems;
   loading.value = false;
 }
 
 async function doApprove(item, comments = '') {
-  const apiPath = item._docType === 'leave' 
+  const apiPath = item._docType === 'leave'
     ? `/leaves/${item.id}/approve/`
     : `/business-trips/${item.id}/approve/`;
-  
+
   const resp = await api.post(apiPath, {
     action: 'approve',
     comments: comments
   });
-  
+
   return resp;
 }
 
 async function doReject(item, comments = '') {
-  const apiPath = item._docType === 'leave' 
+  const apiPath = item._docType === 'leave'
     ? `/leaves/${item.id}/approve/`
     : `/business-trips/${item.id}/approve/`;
-  
+
   const resp = await api.post(apiPath, {
     action: 'reject',
     comments: comments
   });
-  
+
   return resp;
 }
 
 async function handleApprove(item) {
   if (processing.value) return;
   processing.value = item._key;
-  
+
   const resp = await doApprove(item);
   if (resp.success) {
     showMessage('success', '已批准');
@@ -484,7 +486,7 @@ async function handleApprove(item) {
 async function handleReject(item) {
   if (processing.value) return;
   processing.value = item._key;
-  
+
   const resp = await doReject(item);
   if (resp.success) {
     showMessage('success', '已拒绝');
@@ -498,7 +500,7 @@ async function handleReject(item) {
 async function approveFromModal() {
   if (!detailItem.value || processing.value) return;
   processing.value = detailItem.value._key;
-  
+
   const resp = await doApprove(detailItem.value, modalComment.value);
   if (resp.success) {
     showMessage('success', '已批准');
@@ -513,7 +515,7 @@ async function approveFromModal() {
 async function rejectFromModal() {
   if (!detailItem.value || processing.value) return;
   processing.value = detailItem.value._key;
-  
+
   const resp = await doReject(detailItem.value, modalComment.value);
   if (resp.success) {
     showMessage('success', '已拒绝');

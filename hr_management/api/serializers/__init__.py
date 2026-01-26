@@ -16,11 +16,12 @@ from ...api_serializers import (
     BusinessTripSerializer,
     TravelExpenseSerializer,
     CheckInLocationSerializer,
-    
+
     # 写入序列化器
     DepartmentWriteSerializer,
     PositionWriteSerializer,
     EmployeeWriteSerializer,
+    EmployeeSelfUpdateSerializer,
     AttendanceWriteSerializer,
     LeaveRequestWriteSerializer,
     LeaveApproveSerializer,
@@ -73,6 +74,7 @@ __all__ = [
     'DepartmentWriteSerializer',
     'PositionWriteSerializer',
     'EmployeeWriteSerializer',
+    'EmployeeSelfUpdateSerializer',
     'AttendanceWriteSerializer',
     'LeaveRequestWriteSerializer',
     'LeaveApproveSerializer',

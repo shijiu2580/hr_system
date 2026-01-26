@@ -11,7 +11,7 @@ class Department(models.Model):
     icon = models.ImageField(upload_to='departments/', blank=True, null=True, verbose_name='部门图标')
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
                               related_name='children', verbose_name='上级部门')
-    manager = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, 
+    manager = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True,
                                related_name='managed_departments', verbose_name='部门经理')
     supervisors = models.ManyToManyField('Employee', blank=True, related_name='supervised_departments',
                                          verbose_name='部门主管')
@@ -25,7 +25,7 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     def get_full_path(self):
         """获取部门完整路径，如：总公司 > 技术部 > 前端组"""
         path = [self.name]
@@ -34,7 +34,7 @@ class Department(models.Model):
             path.insert(0, parent.name)
             parent = parent.parent
         return ' > '.join(path)
-    
+
     def get_all_children(self):
         """获取所有子部门（递归）"""
         children = list(self.children.all())
@@ -48,11 +48,13 @@ class Position(models.Model):
     name = models.CharField(max_length=100, verbose_name='职位名称')
     department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='所属部门')
     description = models.TextField(blank=True, verbose_name='职位描述')
-    salary_range_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, 
+    salary_range_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
                                          verbose_name='最低薪资')
-    salary_range_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, 
+    salary_range_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
                                          verbose_name='最高薪资')
     requirements = models.TextField(blank=True, verbose_name='任职要求')
+    default_roles = models.ManyToManyField('Role', blank=True, related_name='positions',
+                                          verbose_name='默认角色')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 
@@ -71,14 +73,14 @@ class Employee(models.Model):
         ('M', '男'),
         ('F', '女'),
     ]
-    
+
     MARITAL_STATUS_CHOICES = [
         ('single', '未婚'),
         ('married', '已婚'),
         ('divorced', '离婚'),
         ('widowed', '丧偶'),
     ]
-    
+
     # 入职状态：待入职（自助注册）→ 已入职（HR审核通过）→ 离职
     ONBOARD_STATUS_CHOICES = [
         ('pending', '待入职'),      # 自助注册，等待HR审核
@@ -99,12 +101,12 @@ class Employee(models.Model):
     id_card = models.CharField(max_length=18, blank=True, validators=[RegexValidator(
         regex=r'^\d{17}[\dXx]$', message='请输入有效的身份证号码')], verbose_name='身份证号')
     passport_no = models.CharField(max_length=20, blank=True, verbose_name='护照号码')
-    marital_status = models.CharField(max_length=10, choices=MARITAL_STATUS_CHOICES, 
+    marital_status = models.CharField(max_length=10, choices=MARITAL_STATUS_CHOICES,
                                     default='single', blank=True, verbose_name='婚姻状况')
     emergency_contact = models.CharField(max_length=50, blank=True, verbose_name='紧急联系人')
     emergency_phone = models.CharField(max_length=20, blank=True, verbose_name='紧急联系电话')
     emergency_relation = models.CharField(max_length=20, blank=True, verbose_name='与本人关系')
-    
+
     # 户籍信息
     nationality = models.CharField(max_length=50, default='中国', blank=True, verbose_name='国籍')
     native_place = models.CharField(max_length=100, blank=True, verbose_name='籍贯')
@@ -115,55 +117,52 @@ class Employee(models.Model):
     political_status = models.CharField(max_length=20, blank=True, verbose_name='政治面貌')  # 群众/团员/党员
     party_date = models.DateField(null=True, blank=True, verbose_name='入党/团日期')
     blood_type = models.CharField(max_length=5, blank=True, verbose_name='血型')
-    
+
     # 教育信息
     education = models.CharField(max_length=20, blank=True, verbose_name='学历')  # 高中/大专/本科/硕士/博士
     school_type = models.CharField(max_length=20, blank=True, verbose_name='学校分类')  # 普通本科/211/985等
     school_name = models.CharField(max_length=100, blank=True, verbose_name='毕业学校名称')
     major = models.CharField(max_length=100, blank=True, verbose_name='专业')
     graduation_date = models.DateField(null=True, blank=True, verbose_name='毕业时间')
-    
+
     # 银行信息
     bank_card_no = models.CharField(max_length=30, blank=True, verbose_name='工资卡银行账号')
     expense_card_no = models.CharField(max_length=30, blank=True, verbose_name='报销卡银行账号')
-    
+
     # 设备信息
     computer_info = models.CharField(max_length=20, blank=True, verbose_name='电脑信息')  # 自带/公司配
     computer_brand = models.CharField(max_length=50, blank=True, verbose_name='电脑品牌')
-    
+
     # 入职状态
-    onboard_status = models.CharField(max_length=20, choices=ONBOARD_STATUS_CHOICES, 
+    onboard_status = models.CharField(max_length=20, choices=ONBOARD_STATUS_CHOICES,
                                       default='onboarded', verbose_name='入职状态')
     onboard_reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                             related_name='reviewed_employees', verbose_name='入职审核人')
     onboard_reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name='入职审核时间')
     onboard_reject_reason = models.TextField(blank=True, verbose_name='入职拒绝原因')
-    
+
     # 工作相关信息
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='所属部门')
     position = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='职位')
     hire_date = models.DateField(null=True, blank=True, verbose_name='入职日期')
     salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='基本工资')
     is_active = models.BooleanField(default=True, verbose_name='在职状态')
-    
+
     # 照片和文档
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name='头像照片')
     id_card_front = models.ImageField(upload_to='documents/id_cards/', blank=True, null=True, verbose_name='身份证人像面')
     id_card_back = models.ImageField(upload_to='documents/id_cards/', blank=True, null=True, verbose_name='身份证国徽面')
-    resume = models.FileField(upload_to='documents/resumes/', blank=True, null=True, verbose_name='简历')
-    contract = models.FileField(upload_to='documents/contracts/', blank=True, null=True, verbose_name='合同')
-    id_card_copy = models.FileField(upload_to='documents/id_cards/', blank=True, null=True, verbose_name='身份证复印件')
     # 首次登录强制修改密码标记
     must_change_password = models.BooleanField(default=False, verbose_name='首次登录需改密码')
-    
+
     # 关联的考勤地点（多对多）
     checkin_locations = models.ManyToManyField(
-        'CheckInLocation', 
-        blank=True, 
+        'CheckInLocation',
+        blank=True,
         related_name='employees',
         verbose_name='关联考勤地点'
     )
-    
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 
@@ -229,7 +228,7 @@ class Attendance(models.Model):
     date = models.DateField(verbose_name='日期')
     check_in_time = models.TimeField(null=True, blank=True, verbose_name='上班时间')
     check_out_time = models.TimeField(null=True, blank=True, verbose_name='下班时间')
-    attendance_type = models.CharField(max_length=20, choices=ATTENDANCE_TYPE_CHOICES, 
+    attendance_type = models.CharField(max_length=20, choices=ATTENDANCE_TYPE_CHOICES,
                                      default='check_in', verbose_name='考勤类型')
     notes = models.TextField(blank=True, verbose_name='备注')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
@@ -267,7 +266,7 @@ class AttendanceSupplement(models.Model):
     supplement_type = models.CharField(max_length=20, choices=SUPPLEMENT_TYPE_CHOICES, verbose_name='补签类型')
     reason = models.TextField(verbose_name='补签原因')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='状态')
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    verbose_name='审批人')
     approved_at = models.DateTimeField(null=True, blank=True, verbose_name='审批时间')
     comments = models.TextField(blank=True, verbose_name='审批意见')
@@ -317,7 +316,7 @@ class LeaveRequest(models.Model):
     days = models.IntegerField(verbose_name='请假天数')
     reason = models.TextField(verbose_name='请假原因')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='状态')
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    verbose_name='审批人')
     approved_at = models.DateTimeField(null=True, blank=True, verbose_name='审批时间')
     comments = models.TextField(blank=True, verbose_name='审批意见')
@@ -384,7 +383,7 @@ class CompanyDocument(models.Model):
         ('training', '培训资料'),
         ('other', '其他'),
     ]
-    
+
     title = models.CharField(max_length=200, verbose_name='文档标题')
     document_type = models.CharField(max_length=20, choices=DOCUMENT_TYPE_CHOICES, verbose_name='文档类型')
     description = models.TextField(blank=True, verbose_name='文档描述')
@@ -475,13 +474,55 @@ class Role(models.Model):
 def user_has_rbac_permission(user: User, key: str) -> bool:
     """检查用户是否具备某个自定义 RBAC 权限。
 
-    超级管理员(superuser)直接放行；否则查看其所属角色的权限集合。
+    权限来源（混合模式）：
+    1. 超级管理员(superuser)直接放行
+    2. 用户直接关联的角色
+    3. 用户员工档案对应职位的默认角色
     """
     if not user.is_authenticated:
         return False
     if user.is_superuser:
         return True
-    return Role.objects.filter(users=user, permissions__key=key).exists()
+
+    # 检查用户直接关联的角色
+    if Role.objects.filter(users=user, permissions__key=key).exists():
+        return True
+
+    # 检查职位默认角色
+    try:
+        employee = user.employee
+        if employee and employee.position:
+            if Role.objects.filter(positions=employee.position, permissions__key=key).exists():
+                return True
+    except Exception:
+        pass
+
+    return False
+
+
+def get_user_all_roles(user: User):
+    """获取用户的所有角色（个人角色 + 职位默认角色）"""
+    roles = set(user.roles.all())
+    try:
+        employee = user.employee
+        if employee and employee.position:
+            roles.update(employee.position.default_roles.all())
+    except Exception:
+        pass
+    return list(roles)
+
+
+def get_user_all_permissions(user: User):
+    """获取用户的所有权限键（合并个人角色和职位角色）"""
+    if not user.is_authenticated:
+        return []
+    if user.is_superuser:
+        return ['*']  # 表示全部权限
+
+    permission_keys = set()
+    for role in get_user_all_roles(user):
+        permission_keys.update(role.permissions.values_list('key', flat=True))
+    return list(permission_keys)
 
 
 class BusinessTrip(models.Model):
@@ -507,7 +548,7 @@ class BusinessTrip(models.Model):
     reason = models.TextField(verbose_name='出差事由')
     remarks = models.TextField(blank=True, verbose_name='备注')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='状态')
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    verbose_name='审批人')
     approved_at = models.DateTimeField(null=True, blank=True, verbose_name='审批时间')
     comments = models.TextField(blank=True, verbose_name='审批意见')
@@ -534,14 +575,14 @@ class VerificationCode(models.Model):
         ('register', '注册验证'),
         ('login', '登录验证'),
     ]
-    
+
     phone = models.CharField(max_length=11, verbose_name='手机号')
     code = models.CharField(max_length=6, verbose_name='验证码')
     code_type = models.CharField(max_length=20, choices=CODE_TYPE_CHOICES, default='reset_password', verbose_name='验证码类型')
     is_used = models.BooleanField(default=False, verbose_name='是否已使用')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     expires_at = models.DateTimeField(verbose_name='过期时间')
-    
+
     class Meta:
         verbose_name = '验证码'
         verbose_name_plural = '验证码'
@@ -549,10 +590,10 @@ class VerificationCode(models.Model):
         indexes = [
             models.Index(fields=['phone', 'code_type', '-created_at']),
         ]
-    
+
     def __str__(self):
         return f"{self.phone} - {self.code} ({self.code_type})"
-    
+
     def is_valid(self):
         """检查验证码是否有效"""
         return not self.is_used and timezone.now() < self.expires_at
@@ -605,13 +646,13 @@ class TravelExpense(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name='员工')
     expense_type = models.CharField(max_length=20, choices=EXPENSE_TYPE_CHOICES, default='travel', verbose_name='报销类型')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='报销金额')
-    business_trip = models.ForeignKey(BusinessTrip, on_delete=models.SET_NULL, null=True, blank=True, 
+    business_trip = models.ForeignKey(BusinessTrip, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='expenses', verbose_name='关联出差')
     description = models.TextField(verbose_name='报销事由')
     invoice = models.FileField(upload_to='invoices/', blank=True, null=True, verbose_name='发票文件')
     remarks = models.TextField(blank=True, verbose_name='备注')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='状态')
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    verbose_name='审批人')
     approved_at = models.DateTimeField(null=True, blank=True, verbose_name='审批时间')
     comments = models.TextField(blank=True, verbose_name='审批意见')

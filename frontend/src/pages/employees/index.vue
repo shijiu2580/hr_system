@@ -166,8 +166,10 @@
           </table>
 
           <!-- 加载状态 -->
-          <div v-if="loading" class="loading-state">
-            <div class="spinner"></div>
+          <div v-if="loading" class="loading-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
 
           <!-- 空状态 -->
@@ -219,22 +221,24 @@
           <button class="modal-close" @click="closeLocationModal">×</button>
         </div>
         <div class="modal-body">
-          <div v-if="locationsLoading" class="loading-state">
-            <div class="spinner"></div>
+          <div v-if="locationsLoading" class="loading-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
           <div v-else-if="allLocations.length === 0" class="empty-hint">
             暂无考勤地点，请先在考勤地点页面添加
           </div>
           <div v-else class="location-list">
-            <label 
-              v-for="loc in allLocations" 
-              :key="loc.id" 
+            <label
+              v-for="loc in allLocations"
+              :key="loc.id"
               class="location-item"
               :class="{ disabled: !loc.is_active }"
             >
-              <input 
-                type="checkbox" 
-                v-model="selectedLocationIds" 
+              <input
+                type="checkbox"
+                v-model="selectedLocationIds"
                 :value="loc.id"
                 :disabled="!loc.is_active"
               />

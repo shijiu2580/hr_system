@@ -51,16 +51,16 @@ const router = createRouter({
   routes: [
     // 主页
     { path: '/', component: Dashboard, meta: { requiresAuth: true } },
-    
+
     // 员工管理
     { path: '/employees', redirect: '/employees/list' },
     { path: '/employees/list', component: EmployeeList, meta: { requiresAuth: true } },
     { path: '/employees/manage', component: Employees, meta: { requiresAuth: true, permissions: [Permissions.EMPLOYEE_VIEW] } },
-    { path: '/employees/onboarding', component: EmployeeOnboarding, meta: { requiresAuth: true, permissions: [Permissions.EMPLOYEE_CREATE] } },
+    { path: '/employees/onboarding', component: EmployeeOnboarding, meta: { requiresAuth: true, permissions: [Permissions.ONBOARDING_VIEW_ALL] } },
     { path: '/employees/create', component: EmployeeCreate, meta: { requiresAuth: true, permissions: [Permissions.EMPLOYEE_CREATE] } },
     { path: '/employees/:id', component: EmployeeDetail, meta: { requiresAuth: true } },
     { path: '/employees/:id/edit', component: EmployeeEdit, meta: { requiresAuth: true, permissions: [Permissions.EMPLOYEE_EDIT] } },
-    
+
     // 考勤与请假
     { path: '/attendance', redirect: '/attendance/records' },
     { path: '/attendance/records', component: AttendanceRecords, meta: { requiresAuth: true } },
@@ -80,7 +80,7 @@ const router = createRouter({
     { path: '/resignation/progress', component: ResignationProgress, meta: { requiresAuth: true } },
     { path: '/resignation/apply', component: ResignationApply, meta: { requiresAuth: true } },
     { path: '/resignation/approval', component: ResignationApproval, meta: { requiresAuth: true, permissions: [Permissions.LEAVE_APPROVE] } },
-    
+
     // 薪资与组织
     { path: '/salaries', component: Salaries, meta: { requiresAuth: true, permissions: [Permissions.SALARY_VIEW_ALL] } },
     { path: '/salaries/create', component: SalaryCreate, meta: { requiresAuth: true, permissions: [Permissions.SALARY_CREATE] } },
@@ -93,7 +93,7 @@ const router = createRouter({
     { path: '/positions', component: Positions, meta: { requiresAuth: true } },
     { path: '/positions/create', component: PositionForm, meta: { requiresAuth: true, permissions: [Permissions.POSITION_CREATE] } },
     { path: '/positions/:id/edit', component: PositionForm, meta: { requiresAuth: true, permissions: [Permissions.POSITION_EDIT] } },
-    
+
     // 系统管理（管理员）
     { path: '/system', component: System, meta: { requiresAuth: true, permissions: [Permissions.SYSTEM_VIEW] } },
     { path: '/reports', component: Reports, meta: { requiresAuth: true, permissions: [Permissions.REPORT_VIEW] } },
@@ -105,12 +105,12 @@ const router = createRouter({
     { path: '/users/create', component: UserCreate, meta: { requiresAuth: true, permissions: [Permissions.USER_CREATE] } },
     { path: '/users/:id/edit', component: UserEdit, meta: { requiresAuth: true, permissions: [Permissions.USER_EDIT] } },
     { path: '/admin-reset-password', component: AdminResetPassword, meta: { requiresAuth: true, permissions: [Permissions.USER_RESET_PASSWORD] } },
-    
+
     // 用户相关
     { path: '/account', component: Account, meta: { requiresAuth: true, skipProfileCheck: true } },
     { path: '/login', component: Login, meta: { plain: true } },
     { path: '/forgot-password', component: ForgotPassword, meta: { plain: true } },
-    
+
     // 无权限页面
     { path: '/403', component: () => import('../pages/auth/Forbidden.vue'), meta: { requiresAuth: true } },
   ]
@@ -138,7 +138,7 @@ router.beforeEach(async (to, from, next) => {
   if(auth.isAuthenticated && auth.mustChangePassword && to.path !== '/account'){
     return next({ path: '/account', query: { redirect: to.fullPath } });
   }
-  
+
   // 权限检查
   const requiredPermissions = to.meta.permissions;
   if (requiredPermissions && requiredPermissions.length > 0) {
@@ -152,7 +152,7 @@ router.beforeEach(async (to, from, next) => {
       return next({ path: '/403', query: { from: to.fullPath } });
     }
   }
-  
+
   next();
 });
 
