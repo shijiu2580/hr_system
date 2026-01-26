@@ -8,13 +8,13 @@
     </div>
     <Teleport to="body">
       <Transition name="dropdown">
-        <div v-if="isOpen" class="select-dropdown" :style="dropdownStyle" ref="dropdownRef">
+        <div v-if="isOpen" class="select-dropdown" :style="dropdownStyle" ref="dropdownRef" @click.stop>
           <div v-if="searchable" class="search-box">
-            <input 
+            <input
               ref="searchInput"
-              type="text" 
-              v-model="searchQuery" 
-              class="search-input" 
+              type="text"
+              v-model="searchQuery"
+              class="search-input"
               placeholder="搜索..."
               @click.stop
               @keydown="onSearchKeydown"
@@ -29,7 +29,7 @@
               :key="opt.value"
               class="select-option"
               :class="{ selected: opt.value === modelValue, highlighted: idx === highlightedIndex }"
-              @click="select(opt.value)"
+              @mousedown.prevent.stop="select(opt.value)"
               @mouseenter="highlightedIndex = idx"
             >
               {{ opt.label }}
@@ -73,7 +73,7 @@ const filteredOptions = computed(() => {
     return props.options;
   }
   const query = searchQuery.value.toLowerCase();
-  return props.options.filter(opt => 
+  return props.options.filter(opt =>
     String(opt.label).toLowerCase().includes(query)
   );
 });
@@ -91,7 +91,7 @@ function updateDropdownPosition() {
       top: `${rect.top + scrollY - 4}px`,
       left: `${rect.left + scrollX}px`,
       width: `${rect.width}px`,
-      zIndex: 9999,
+      zIndex: 99999,
       transform: 'translateY(-100%)'
     };
   } else {
@@ -101,7 +101,7 @@ function updateDropdownPosition() {
       top: `${rect.bottom + scrollY + 4}px`,
       left: `${rect.left + scrollX}px`,
       width: `${rect.width}px`,
-      zIndex: 9999
+      zIndex: 99999
     };
   }
 }
@@ -134,8 +134,10 @@ function toggle() {
 function select(val) {
   emit('update:modelValue', val);
   emit('change', val);
-  isOpen.value = false;
-  searchQuery.value = '';
+  nextTick(() => {
+    isOpen.value = false;
+    searchQuery.value = '';
+  });
 }
 
 function onSearchKeydown(e) {
@@ -157,7 +159,7 @@ function onSearchKeydown(e) {
 
 function onKeydown(e) {
   if (props.disabled) return;
-  
+
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
     if (isOpen.value && highlightedIndex.value >= 0) {
@@ -182,8 +184,9 @@ function onKeydown(e) {
 }
 
 function onClickOutside(e) {
+  if (!isOpen.value) return;
   if (selectRef.value && !selectRef.value.contains(e.target)) {
-    if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    if (!dropdownRef.value || !dropdownRef.value.contains(e.target)) {
       isOpen.value = false;
     }
   }
@@ -288,6 +291,8 @@ onUnmounted(() => {
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 0.35rem 0;
+  z-index: 99999 !important;
+  pointer-events: auto;
 }
 
 .select-dropdown .search-box {
@@ -328,6 +333,7 @@ onUnmounted(() => {
   transition: background 0.15s;
   color: #374151;
   font-size: 13px;
+  user-select: none;
 }
 
 .select-dropdown .select-option:hover,

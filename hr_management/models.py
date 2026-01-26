@@ -100,7 +100,7 @@ class Employee(models.Model):
     address = models.TextField(blank=True, verbose_name='联系地址')
     id_card = models.CharField(max_length=18, blank=True, validators=[RegexValidator(
         regex=r'^\d{17}[\dXx]$', message='请输入有效的身份证号码')], verbose_name='身份证号')
-    passport_no = models.CharField(max_length=20, blank=True, verbose_name='护照号码')
+
     marital_status = models.CharField(max_length=10, choices=MARITAL_STATUS_CHOICES,
                                     default='single', blank=True, verbose_name='婚姻状况')
     emergency_contact = models.CharField(max_length=50, blank=True, verbose_name='紧急联系人')

@@ -185,7 +185,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'id', 'employee_id', 'name', 'english_name', 'gender', 'birth_date',
-            'phone', 'email', 'address', 'id_card', 'passport_no',
+            'phone', 'email', 'address', 'id_card',
             # 户籍信息
             'nationality', 'hukou_location', 'hukou_type', 'native_place', 'hukou_address',
             'ethnicity', 'blood_type', 'political_status', 'party_date',
@@ -353,7 +353,7 @@ class EmployeeWriteSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'user_id', 'employee_id', 'name', 'english_name', 'gender', 'birth_date',
-            'phone', 'email', 'address', 'id_card', 'passport_no', 'marital_status',
+            'phone', 'email', 'address', 'id_card', 'marital_status',
             # 户籍信息
             'nationality', 'hukou_location', 'hukou_type', 'native_place', 'hukou_address',
             'ethnicity', 'blood_type', 'political_status', 'party_date',
@@ -443,7 +443,7 @@ class EmployeeSelfUpdateSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'name', 'english_name', 'gender', 'birth_date',
-            'phone', 'email', 'address', 'id_card', 'passport_no', 'marital_status',
+            'phone', 'email', 'address', 'id_card', 'marital_status',
             # 户籍信息
             'nationality', 'hukou_location', 'hukou_type', 'native_place', 'hukou_address',
             'ethnicity', 'blood_type', 'political_status', 'party_date',

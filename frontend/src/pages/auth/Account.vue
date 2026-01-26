@@ -57,12 +57,7 @@
                   </div>
                   <div class="form-group">
                     <label>性别</label>
-                    <select v-model="profile.gender">
-                      <option value="">未选择</option>
-                      <option value="male">男</option>
-                      <option value="female">女</option>
-                      <option value="other">其他</option>
-                    </select>
+                    <CustomSelect v-model="profile.gender" :options="genderOptions" placeholder="未选择" />
                   </div>
                   <div class="form-group">
                     <label>出生日期</label>
@@ -81,18 +76,10 @@
                     <input v-model.trim="profile.id_card" maxlength="18" placeholder="18位身份证号" @input="validateProfile" />
                     <span v-if="idCardError" class="hint error-hint">{{ idCardError }}</span>
                   </div>
-                  <div class="form-group">
-                    <label>护照号</label>
-                    <input v-model.trim="profile.passport_no" maxlength="30" />
-                  </div>
+
                   <div class="form-group">
                     <label>婚姻状况</label>
-                    <select v-model="profile.marital_status">
-                      <option value="">未选择</option>
-                      <option value="single">未婚</option>
-                      <option value="married">已婚</option>
-                      <option value="divorced">离异</option>
-                    </select>
+                    <CustomSelect v-model="profile.marital_status" :options="maritalOptions" placeholder="未选择" />
                   </div>
                   <div class="form-group address-group" :class="{ invalid: !!addressError }">
                     <label>联系地址</label>
@@ -140,14 +127,7 @@
                     </div>
                     <div class="form-group">
                       <label>血型</label>
-                      <select v-model="profile.blood_type">
-                        <option value="">未选择</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="O">O</option>
-                        <option value="AB">AB</option>
-                        <option value="other">其他</option>
-                      </select>
+                      <CustomSelect v-model="profile.blood_type" :options="bloodTypeOptions" placeholder="未选择" />
                     </div>
                   </div>
                 </fieldset>
@@ -237,33 +217,59 @@
               </template>
 
               <template v-else>
-                <div class="grid">
-                  <div class="form-group">
-                    <label>头像</label>
-                    <div class="file-row">
-                      <a v-if="profile.avatar" :href="profile.avatar" target="_blank" rel="noreferrer">查看</a>
-                      <span v-else class="muted">未上传</span>
-                      <input type="file" accept="image/*" @change="onFileChange('avatar', $event)" disabled />
+                <div class="assets-grid is-horizontal">
+                  <!-- 头像 -->
+                  <div class="asset-item">
+                    <div class="asset-info-row">
+                      <label class="asset-label">头像</label>
                     </div>
-                    <small class="hint" v-if="selectedFiles.avatar">已选择：{{ selectedFiles.avatar.name }}</small>
+                    <div class="asset-info-row">
+                      <a v-if="profile.avatar" :href="profile.avatar" target="_blank" class="link-view">查看</a>
+                      <span v-else class="text-muted">未上传</span>
+                    </div>
+                    <div class="file-upload-wrapper">
+                      <label class="btn-upload">
+                        选择文件
+                        <input type="file" accept="image/*" @change="onFileChange('avatar', $event)" />
+                      </label>
+                      <span class="file-name" :title="selectedFiles.avatar?.name">{{ selectedFiles.avatar?.name || '未选择任何文件' }}</span>
+                    </div>
                   </div>
-                  <div class="form-group">
-                    <label>身份证人像面</label>
-                    <div class="file-row">
-                      <a v-if="profile.id_card_front" :href="profile.id_card_front" target="_blank" rel="noreferrer">查看</a>
-                      <span v-else class="muted">未上传</span>
-                      <input type="file" accept="image/*" @change="onFileChange('id_card_front', $event)" disabled />
+
+                  <!-- 身份证人像面 -->
+                  <div class="asset-item">
+                    <div class="asset-info-row">
+                      <label class="asset-label">身份证人像面</label>
                     </div>
-                    <small class="hint" v-if="selectedFiles.id_card_front">已选择：{{ selectedFiles.id_card_front.name }}</small>
+                    <div class="asset-info-row">
+                      <a v-if="profile.id_card_front" :href="profile.id_card_front" target="_blank" class="link-view">查看</a>
+                      <span v-else class="text-muted">未上传</span>
+                    </div>
+                    <div class="file-upload-wrapper">
+                      <label class="btn-upload">
+                        选择文件
+                        <input type="file" accept="image/*" @change="onFileChange('id_card_front', $event)" />
+                      </label>
+                      <span class="file-name" :title="selectedFiles.id_card_front?.name">{{ selectedFiles.id_card_front?.name || '未选择任何文件' }}</span>
+                    </div>
                   </div>
-                  <div class="form-group">
-                    <label>身份证国徽面</label>
-                    <div class="file-row">
-                      <a v-if="profile.id_card_back" :href="profile.id_card_back" target="_blank" rel="noreferrer">查看</a>
-                      <span v-else class="muted">未上传</span>
-                      <input type="file" accept="image/*" @change="onFileChange('id_card_back', $event)" disabled />
+
+                  <!-- 身份证国徽面 -->
+                  <div class="asset-item">
+                    <div class="asset-info-row">
+                      <label class="asset-label">身份证国徽面</label>
                     </div>
-                    <small class="hint" v-if="selectedFiles.id_card_back">已选择：{{ selectedFiles.id_card_back.name }}</small>
+                    <div class="asset-info-row">
+                      <a v-if="profile.id_card_back" :href="profile.id_card_back" target="_blank" class="link-view">查看</a>
+                      <span v-else class="text-muted">未上传</span>
+                    </div>
+                    <div class="file-upload-wrapper">
+                      <label class="btn-upload">
+                        选择文件
+                        <input type="file" accept="image/*" @change="onFileChange('id_card_back', $event)" />
+                      </label>
+                      <span class="file-name" :title="selectedFiles.id_card_back?.name">{{ selectedFiles.id_card_back?.name || '未选择任何文件' }}</span>
+                    </div>
                   </div>
                 </div>
               </template>
@@ -273,7 +279,7 @@
                   type="submit"
                   class="btn-primary btn-full"
                   :disabled="!profileDirty || profileLoading || hasProfileErrors"
-                  :aria-disabled="(!profileDirty || profileLoading || hasProfileErrors).toString()"
+                  :aria-disabled="!profileDirty || profileLoading || hasProfileErrors"
                 >
                   <span v-if="profileLoading" class="spinner" aria-hidden="true"></span>
                   {{ profileLoading ? '保存中...' : '保存资料' }}
@@ -374,6 +380,7 @@ import { ref, onMounted, computed, reactive, onBeforeUnmount } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { useRouter } from 'vue-router';
 import api from '../../utils/api';
+import CustomSelect from '../../components/CustomSelect.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -384,6 +391,29 @@ const tabs = [
   { id: 'detail', label: '详细档案' },
   { id: 'assets', label: '资产/证件' },
   { id: 'security', label: '安全设置' }
+];
+
+const genderOptions = [
+  { value: '', label: '未选择' },
+  { value: 'male', label: '男' },
+  { value: 'female', label: '女' },
+  { value: 'other', label: '其他' }
+];
+
+const maritalOptions = [
+  { value: '', label: '未选择' },
+  { value: 'single', label: '未婚' },
+  { value: 'married', label: '已婚' },
+  { value: 'divorced', label: '离异' }
+];
+
+const bloodTypeOptions = [
+  { value: '', label: '未选择' },
+  { value: 'A', label: 'A' },
+  { value: 'B', label: 'B' },
+  { value: 'O', label: 'O' },
+  { value: 'AB', label: 'AB' },
+  { value: 'other', label: '其他' }
 ];
 
 // 个人资料（员工档案 - 全字段）
@@ -397,7 +427,6 @@ const profile = reactive({
   email: '',
   address: '',
   id_card: '',
-  passport_no: '',
   marital_status: 'single',
 
   // 户籍信息
@@ -538,7 +567,7 @@ const hasSelectedFiles = computed(()=> {
 
 const editableFields = [
   'name','english_name','gender','birth_date',
-  'phone','email','address','id_card','passport_no','marital_status',
+  'phone','email','address','id_card','marital_status',
   'nationality','native_place','hukou_location','hukou_type','hukou_address',
   'ethnicity','political_status','party_date','blood_type',
   'emergency_contact','emergency_relation','emergency_phone',
@@ -581,7 +610,6 @@ async function loadMyEmployee(){
       profile.email = emp.email || profile.email;
       profile.address = emp.address || '';
       profile.id_card = emp.id_card || '';
-      profile.passport_no = emp.passport_no || '';
       profile.marital_status = emp.marital_status || 'single';
 
       profile.nationality = emp.nationality || '中国';
@@ -653,7 +681,7 @@ function validateProfile(){
 
   addressError.value = profile.address && profile.address.length > 200 ? '长度超过 200' : null;
 }
-const hasProfileErrors = computed(()=> nameError.value || phoneError.value || emergencyPhoneError.value || emailError.value || idCardError.value || addressError.value);
+const hasProfileErrors = computed(()=> !!(nameError.value || phoneError.value || emergencyPhoneError.value || emailError.value || idCardError.value || addressError.value));
 
 function onFileChange(key, evt){
   const file = evt?.target?.files?.[0] || null;
@@ -831,337 +859,224 @@ onBeforeUnmount(()=> { window.removeEventListener('beforeunload', beforeUnload);
 .account-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem 1.25rem;
-  background: radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.08), transparent 30%),
-              radial-gradient(circle at 80% 0%, rgba(14, 165, 233, 0.08), transparent 30%),
-              #f8fafc;
-  border-radius: 18px;
 }
 
+/* Hero Section */
 .hero-panel {
-  margin-bottom: 1.25rem;
-  padding: 1.35rem 1.6rem;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #eef2ff, #e0f2fe);
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  color: #0f172a;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.2rem;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  gap: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .hero-main {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex: 1 1 0;
+  gap: 1.25rem;
+  flex: 1;
 }
 
 .avatar-large {
   width: 64px;
   height: 64px;
-  border-radius: 14px;
-  background: #4f46e5;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.35);
+  box-shadow: var(--shadow-sm);
 }
 
 .hero-text-block {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
 .hero-title-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .hero-title-row h1 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
-.hero-subtitle,
-.hero-meta-line {
+.hero-subtitle {
   margin: 0;
   font-size: 13px;
-  color: #475569;
+  color: var(--color-text-secondary);
+}
+
+.hero-meta-line {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  opacity: 0.8;
 }
 
 .hero-side {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  font-size: 13px;
-  min-width: 140px;
+  gap: 0.75rem;
+  min-width: 150px;
+  border-left: 1px solid var(--color-border);
+  padding-left: 1.5rem;
 }
 
 .hero-item-label {
   display: block;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   font-size: 11px;
-  color: #94a3b8;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.5px;
 }
 
 .hero-item-value {
   display: block;
   font-size: 14px;
-  color: #0f172a;
+  font-weight: 500;
+  color: var(--color-text);
 }
 
+.badge.admin {
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-size: 11px;
+  background: var(--color-primary);
+  color: #fff;
+  opacity: 0.9;
+}
+
+/* Tabs */
 .tabs-header {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
-  margin: 0 0 1rem;
-  padding: 0.35rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-  backdrop-filter: blur(6px);
-  overflow-x: auto;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1px;
 }
 
 .tab-btn {
-  padding: 0.65rem 1.4rem;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  padding: 0.6rem 1rem;
   background: transparent;
-  color: #475569;
+  border: none;
   font-size: 14px;
-  font-weight: 600;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.18s ease;
-  white-space: nowrap;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  font-weight: 500;
 }
 
 .tab-btn:hover {
-  color: #312e81;
-  background: #eef2ff;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  background: var(--color-primary);
   color: #fff;
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35);
+  box-shadow: var(--shadow-sm);
 }
 
+/* Layout */
 .account-container {
   display: grid;
   grid-template-columns: 1fr 280px;
-  gap: 1.25rem;
+  gap: 1.5rem;
   align-items: start;
-}
-
-.account-content {
-  min-width: 0;
 }
 
 .account-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 @media (max-width: 900px) {
   .account-container {
     grid-template-columns: 1fr;
   }
-  .account-sidebar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
 }
 
-.card {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 12px;
-  padding: 1.35rem 1.5rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-}
-
-.card:hover {
-  border-color: rgba(99, 102, 241, 0.35);
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
-}
-
+/* Card */
 .card-profile h3,
 .card-password h3 {
   margin: 0 0 1.25rem;
   padding-bottom: 0.75rem;
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.stat-card {
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 12px;
-  padding: 1rem 1.15rem;
-  min-height: 110px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.35rem;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(4px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.12);
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.stat-main {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.stat-value {
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.1;
-}
-
-.progress {
-  height: 7px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-}
-
-.stat-card small {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.stat-positive {
-  background: #f8fafc;
-}
-
-.stat-warning {
-  background: #fff7ed;
-}
-
-.badge.admin {
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  font-size: 12px;
-  line-height: 1.2;
-  background: rgba(79, 70, 229, 0.12);
-  color: #4338ca;
-  border: 1px solid rgba(79, 70, 229, 0.3);
-}
-
-.hero-panel .badge.admin {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  color: #fff;
-}
-
-.form-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  align-items: start;
-}
-
+/* Forms */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-}
-
-.form-group.invalid input,
-.form-group.invalid select {
-  border-color: #ef4444;
-  background: #fef2f2;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: #64748b;
-}
-
-.required {
-  color: var(--color-danger);
+  color: var(--color-text);
 }
 
 .hint {
   font-size: 12px;
   color: var(--color-text-secondary);
+  margin-top: 0.25rem;
 }
 
-.error-hint {
-  color: #b91c1c;
+.required {
+  color: var(--color-danger);
+  margin-left: 2px;
 }
 
 .actions {
-  margin-top: 0.75rem;
-}
-
-.actions-inline {
+  margin-top: 1.5rem;
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.btn-full {
-  flex: 1 1 0;
-  text-align: center;
-}
-
-.btn-primary {
-  padding: 0.625rem 1.25rem;
-  border: none;
-  border-radius: 10px;
-  background: #4f46e5;
-  color: white;
+.btn-primary, .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
+  height: 36px;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #4338ca;
-  box-shadow: 0 10px 20px rgba(67, 56, 202, 0.25);
+  background: var(--color-primary-hover);
 }
 
 .btn-primary:disabled {
@@ -1170,222 +1085,158 @@ onBeforeUnmount(()=> { window.removeEventListener('beforeunload', beforeUnload);
 }
 
 .btn-secondary {
-  padding: 0.625rem 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 10px;
-  background: #fff;
-  color: #475569;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.2s;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: rgba(148, 163, 184, 0.6);
+  background: var(--color-surface-alt);
+  border-color: var(--color-border-strong);
 }
 
-.btn-secondary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+.btn-full {
+  width: 100%;
+}
+
+/* Stat Card */
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.progress {
+  height: 6px;
+  background: var(--color-surface-alt);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--color-success);
+}
+
+/* Assets & Documents */
+.assets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.asset-item {
+  background: var(--color-surface-alt);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+
+.asset-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.asset-label {
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.file-upload-wrapper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+}
+
+.file-upload-wrapper:hover {
+  border-color: var(--color-primary);
+}
+
+.btn-upload {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 0.25rem 0.5rem;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-upload:hover {
+  background: var(--color-border);
+}
+
+/* Input file hidden but clickable via parent label if configured, but here structure is button>input */
+.btn-upload input[type="file"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-name {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
 }
 
 .message {
   padding: 0.75rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   margin: 0;
 }
 
 .message.error {
-  background: rgba(254, 242, 242, 0.8);
-  color: #b91c1c;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: #fef2f2;
+  color: var(--color-danger);
+  border: 1px solid #fee2e2;
 }
 
 .message.success {
-  background: rgba(240, 253, 244, 0.8);
-  color: #15803d;
-  border: 1px solid rgba(74, 222, 128, 0.5);
+  background: #f0fdf4;
+  color: var(--color-success);
+  border: 1px solid #dcfce7;
 }
 
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 3px solid #fff;
-  border-right-color: transparent;
-  border-radius: 50%;
-  display: inline-block;
-  animation: spin 0.65s linear infinite;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.fade-msg-enter-active,
-.fade-msg-leave-active {
-  transition: opacity 0.35s;
-}
-
-.fade-msg-enter-from,
-.fade-msg-leave-to {
-  opacity: 0;
-}
-
-.fade-tab-enter-active,
-.fade-tab-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.fade-tab-enter-from,
-.fade-tab-leave-to {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.fieldset {
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 12px;
-  padding: 1rem;
-  margin: 0 0 1rem;
-  background: rgba(248, 250, 252, 0.75);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-.fieldset legend {
-  padding: 0 0.5rem;
-  font-size: 12px;
-  color: #64748b;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.file-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.muted {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.alert {
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  background: rgba(251, 191, 36, 0.12);
-  color: #92400e;
-}
-
-.alert strong {
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.alert p {
-  margin: 0;
-  font-size: 13px;
-}
-
-@media (max-width: 640px) {
-  .tabs-header { flex-wrap: wrap; }
-  .account-container { grid-template-columns: 1fr; }
-}
-
-[data-theme="dark"] .account-page {
-  background: radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.12), transparent 30%),
-              radial-gradient(circle at 80% 0%, rgba(14, 165, 233, 0.12), transparent 30%),
-              #0f172a;
-}
-
-[data-theme="dark"] .hero-panel {
-  background: linear-gradient(135deg, #0f172a, #111827);
-  border-color: rgba(99, 102, 241, 0.25);
-  color: #e2e8f0;
-}
-
-[data-theme="dark"] .hero-title-row h1 { color: #e2e8f0; }
-[data-theme="dark"] .hero-subtitle,
-[data-theme="dark"] .hero-meta-line { color: #cbd5e1; }
-[data-theme="dark"] .hero-item-value { color: #e2e8f0; }
-[data-theme="dark"] .avatar-large { background: #6366f1; }
-
-[data-theme="dark"] .tabs-header {
-  background: rgba(30, 41, 59, 0.8);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-[data-theme="dark"] .tab-btn { color: #cbd5e1; }
-[data-theme="dark"] .tab-btn:hover {
-  color: #e2e8f0;
-  background: rgba(99, 102, 241, 0.15);
-}
-[data-theme="dark"] .tab-btn.active {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  color: #fff;
-}
-
-[data-theme="dark"] .card,
-[data-theme="dark"] .stat-card {
-  background: rgba(30, 41, 59, 0.9);
-  border-color: rgba(148, 163, 184, 0.3);
-  color: #e2e8f0;
-}
-
-[data-theme="dark"] .stat-label { color: #cbd5e1; }
-[data-theme="dark"] .stat-value { color: #f1f5f9; }
-
-[data-theme="dark"] .form-group label { color: #cbd5e1; }
-[data-theme="dark"] .form-group input,
-[data-theme="dark"] .form-group select {
-  background: #1e293b;
-  border-color: rgba(148, 163, 184, 0.3);
-  color: #f1f5f9;
-}
-
-[data-theme="dark"] .form-group input:focus,
-[data-theme="dark"] .form-group select:focus {
-  background: #334155;
-  border-color: rgba(148, 163, 184, 0.5);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
-[data-theme="dark"] .hint,
-[data-theme="dark"] .muted { color: #94a3b8; }
-
-[data-theme="dark"] .btn-secondary {
-  background: #1e293b;
-  border-color: rgba(148, 163, 184, 0.3);
-  color: #f1f5f9;
-}
-
-[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
-  background: #334155;
-  border-color: rgba(148, 163, 184, 0.5);
-}
-
-[data-theme="dark"] .message.error {
-  background: rgba(127, 29, 29, 0.3);
-  color: #fca5a5;
-  border-color: rgba(248, 113, 113, 0.35);
-}
-
-[data-theme="dark"] .message.success {
-  background: rgba(20, 83, 45, 0.3);
-  color: #86efac;
-  border-color: rgba(74, 222, 128, 0.35);
-}
-
-[data-theme="dark"] .alert {
-  background: rgba(251, 191, 36, 0.14);
-  border-color: rgba(251, 191, 36, 0.26);
-  color: #fcd34d;
-}
+/* Dark mode tweaks handled by variables automatically */
 </style>

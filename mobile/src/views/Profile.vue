@@ -3,9 +3,9 @@
     <van-nav-bar title="完善资料" left-arrow @click-left="$router.back()" />
 
     <div class="form-container">
-      <van-notice-bar 
+      <van-notice-bar
         v-if="rejectReason"
-        color="#ee0a24" 
+        color="#ee0a24"
         background="#ffece8"
         left-icon="info-o"
         :text="`审核未通过：${rejectReason}，请修改后重新提交`"
@@ -23,7 +23,7 @@
           <van-field v-model="form.birth_date" is-link readonly label="出生日期" placeholder="请选择"
             @click="showDatePicker = true" />
           <van-field v-model="form.id_card" label="证件号码" placeholder="身份证号" />
-          <van-field v-model="form.passport_no" label="护照号码" placeholder="选填" />
+
           <van-field v-model="form.phone" label="手机号码" type="tel" placeholder="请输入" required
             :rules="[{ required: true, message: '请输入手机号码' }, { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }]" />
           <van-field v-model="form.email" label="电子邮箱" placeholder="请输入" readonly required
@@ -199,7 +199,6 @@ const form = ref({
   gender: '',
   birth_date: '',
   id_card: '',
-  passport_no: '',
   phone: '',
   email: '',
   nationality: '中国',
@@ -284,7 +283,6 @@ async function loadProfile() {
         gender: genderMap[data.gender] || '',
         birth_date: data.birth_date || '',
         id_card: data.id_card || '',
-        passport_no: data.passport_no || '',
         phone: data.phone || '',
         email: data.email || userStore.userInfo?.email || '',
         nationality: data.nationality || '中国',
@@ -312,7 +310,7 @@ async function loadProfile() {
         computer_brand: data.computer_brand || '',
       }
       rejectReason.value = data.onboard_reject_reason || ''
-      
+
       // 已有图片
       if (data.avatar) avatarList.value = [{ url: data.avatar, isImage: true }]
       if (data.id_card_front) idCardFrontList.value = [{ url: data.id_card_front, isImage: true }]
@@ -346,9 +344,9 @@ function onDateConfirm(field, { selectedValues }) {
 async function uploadFile(file, fieldName) {
   const formData = new FormData()
   formData.append(fieldName, file.file)
-  
+
   showLoadingToast({ message: '上传中...', forbidClick: true })
-  
+
   try {
     const res = await api.post('/api/onboarding/profile/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -376,20 +374,20 @@ async function handleSubmit() {
     showToast('请上传照片')
     return
   }
-  
+
   loading.value = true
-  
+
   // 转换性别和婚姻状况为后端值
   const genderValue = Object.entries(genderMap).find(([k, v]) => v === form.value.gender)?.[0] || ''
   const maritalValue = Object.entries(maritalMap).find(([k, v]) => v === form.value.marital_status)?.[0] || ''
-  
+
   try {
     const res = await userStore.updateProfile({
       ...form.value,
       gender: genderValue,
       marital_status: maritalValue,
     })
-    
+
     if (res.success) {
       showSuccessToast('提交成功')
       router.push('/status')

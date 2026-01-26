@@ -86,6 +86,12 @@ table tbody td { padding:.5rem .6rem; border-bottom:1px solid var(--color-border
 table tbody tr:hover { background: var(--color-surface-alt); }
 
 input, select, textarea { width:100%; border:1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding:0 0.65rem; height: 36px; box-sizing: border-box; font-size:14px; border-radius: var(--radius-md); outline:none; transition: var(--transition); }
+input:disabled, select:disabled, textarea:disabled {
+  cursor: url("/icons/stop.svg") 7 7, not-allowed;
+  opacity: 0.7;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+}
 input:focus, select:focus, textarea:focus { border-color: var(--color-primary); box-shadow: none; }
 textarea { height: auto; padding: 0.55rem 0.65rem; }
 
