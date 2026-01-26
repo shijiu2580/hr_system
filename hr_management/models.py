@@ -175,9 +175,22 @@ class Employee(models.Model):
         return f"{self.employee_id} - {self.name}"
 
     def save(self, *args, **kwargs):
-        """保存时自动生成员工编号"""
+        """保存时自动生成员工编号，并压缩头像"""
         if not self.employee_id:
             self.employee_id = self.generate_employee_id()
+
+        # 压缩头像
+        if self.avatar and hasattr(self.avatar, 'file'):
+            try:
+                from .file_utils import ImageProcessor
+                # 检查是否是新上传的文件（有 file 属性且可读取）
+                if hasattr(self.avatar.file, 'read'):
+                    compressed = ImageProcessor.process_avatar(self.avatar.file)
+                    if compressed and compressed != self.avatar.file:
+                        self.avatar = compressed
+            except Exception:
+                pass  # 压缩失败时保留原图
+
         super().save(*args, **kwargs)
 
     @classmethod

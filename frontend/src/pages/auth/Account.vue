@@ -2,7 +2,8 @@
   <div class="account-page">
     <section class="hero-panel">
       <div class="hero-main">
-        <div class="avatar-large">{{ avatarInitials }}</div>
+        <div class="avatar-large" v-if="!avatarUrl">{{ avatarInitials }}</div>
+        <img v-else :src="avatarUrl" alt="头像" class="avatar-large-img" />
         <div class="hero-text-block">
           <div class="hero-title-row">
             <h1>{{ displayName }}</h1>
@@ -516,13 +517,21 @@ const displayName = computed(()=> {
   return username;
 });
 
+const avatarUrl = computed(() => {
+  // 优先使用 profile 中的头像（员工详情接口返回的）
+  if (profile.avatar) return profile.avatar;
+  // 其次使用 auth.user 中的头像（/auth/me/ 接口返回的）
+  if (auth.user?.avatar) return auth.user.avatar;
+  return null;
+});
+
 const avatarInitials = computed(()=> {
   const base = profile.name || auth.user?.username || '';
   if(!base) return '?';
   const trimmed = String(base).trim();
   if(!trimmed) return '?';
-  // 中文优先取前 2 字；英文取前 2 个字母
-  return trimmed.slice(0,2).toUpperCase();
+  // 只显示第一个字
+  return trimmed.charAt(0).toUpperCase();
 });
 
 function formatDate(value){
@@ -893,6 +902,14 @@ onBeforeUnmount(()=> { window.removeEventListener('beforeunload', beforeUnload);
   justify-content: center;
   font-size: 24px;
   font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar-large-img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
   box-shadow: var(--shadow-sm);
 }
 

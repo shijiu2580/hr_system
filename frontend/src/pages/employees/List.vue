@@ -71,7 +71,8 @@
           <tr v-for="item in paged" :key="item.id" class="data-row">
             <td class="col-name">
               <div class="employee-cell">
-                <div class="avatar" :style="{ background: getAvatarColor(item.id) }">
+                <img v-if="item.avatar" :src="item.avatar" class="avatar avatar-img" alt="" />
+                <div v-else class="avatar" :style="{ background: getAvatarColor(item.id) }">
                   {{ item.name?.charAt(0) || '?' }}
                 </div>
                 <router-link :to="`/employees/${item.id}`" class="employee-link">
@@ -586,6 +587,10 @@ onMounted(loadData)
   font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
+}
+
+.avatar-img {
+  object-fit: cover;
 }
 
 .employee-link {

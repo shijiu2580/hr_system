@@ -13,34 +13,53 @@ from ...rbac import Permissions
 
 
 class DepartmentDistributionAPIView(views.APIView):
-    """部门人员分布统计"""
+    """部门人员分布统计 - 只统计顶级部门，子部门员工归入父部门"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.REPORT_EMPLOYEE]
-    
+
+    def _get_all_descendant_ids(self, dept):
+        """递归获取部门及其所有子部门的ID列表"""
+        ids = [dept.id]
+        for child in dept.children.all():
+            ids.extend(self._get_all_descendant_ids(child))
+        return ids
+
     def get(self, request):
-        # 按部门统计在职员工数量
-        dept_stats = Department.objects.annotate(
-            employee_count=Count('employee', filter=Q(employee__is_active=True))
-        ).values('id', 'name', 'employee_count').order_by('-employee_count')
-        
+        # 只统计顶级部门（parent为空），子部门员工数累加到父部门
+        top_level_depts = Department.objects.filter(parent__isnull=True)
+
         labels = []
         values = []
         colors = [
             '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
             '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1'
         ]
-        
-        for i, dept in enumerate(dept_stats):
-            if dept['employee_count'] > 0:
-                labels.append(dept['name'])
-                values.append(dept['employee_count'])
-        
+
+        dept_data = []
+        for dept in top_level_depts:
+            # 获取该部门及所有子部门的ID
+            all_dept_ids = self._get_all_descendant_ids(dept)
+            # 统计这些部门的所有在职员工
+            count = Employee.objects.filter(
+                is_active=True,
+                department_id__in=all_dept_ids
+            ).count()
+            if count > 0:
+                dept_data.append({'name': dept.name, 'count': count})
+
+        # 按人数降序排列
+        dept_data.sort(key=lambda x: x['count'], reverse=True)
+
+        for item in dept_data:
+            labels.append(item['name'])
+            values.append(item['count'])
+
         # 统计未分配部门的员工
         no_dept_count = Employee.objects.filter(is_active=True, department__isnull=True).count()
         if no_dept_count > 0:
             labels.append('未分配部门')
             values.append(no_dept_count)
-        
+
         return Response({
             'detail': 'ok',
             'labels': labels,
@@ -54,31 +73,31 @@ class MonthlySalaryAPIView(views.APIView):
     """月度薪资支出统计"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.REPORT_SALARY]
-    
+
     def get(self, request):
         months = int(request.query_params.get('months', 12))
         months = max(1, min(months, 24))
         include_current = str(request.query_params.get('include_current', '')).lower() in ('1', 'true', 'yes', 'y')
-        
+
         # 获取最近N个月的薪资数据
         today = timezone.now().date()
         # 默认不包含当月（当月工资通常尚未生成/发放，避免趋势图末尾出现 0 断崖）
         end_index = today.year * 12 + (today.month - 1)
         if not include_current:
             end_index -= 1
-        
+
         results = []
         for i in range(months - 1, -1, -1):
             target_index = end_index - i
             y = target_index // 12
             m = (target_index % 12) + 1
-            
+
             stats = SalaryRecord.objects.filter(year=y, month=m).aggregate(
                 total=Sum('net_salary'),
                 count=Count('id'),
                 avg=Avg('net_salary')
             )
-            
+
             results.append({
                 'year': y,
                 'month': m,
@@ -87,11 +106,11 @@ class MonthlySalaryAPIView(views.APIView):
                 'count': stats['count'] or 0,
                 'avg': float(stats['avg'] or 0)
             })
-        
+
         labels = [r['label'] for r in results]
         totals = [r['total'] for r in results]
         counts = [r['count'] for r in results]
-        
+
         return Response({
             'detail': 'ok',
             'months': months,
@@ -107,38 +126,60 @@ class AttendanceRateAPIView(views.APIView):
     """考勤率统计"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.REPORT_ATTENDANCE]
-    
+
     def get(self, request):
         days = int(request.query_params.get('days', 30))
         days = max(1, min(days, 90))
-        
+
         today = timezone.now().date()
         start_date = today - timedelta(days=days - 1)
-        
+
         # 统计各类型考勤
         qs = Attendance.objects.filter(date__gte=start_date, date__lte=today)
-        
-        type_stats = {}
-        for t, label in Attendance.ATTENDANCE_TYPE_CHOICES:
-            type_stats[t] = {'label': label, 'count': 0}
-        
+
+        # 考勤状态映射：将 check_in/check_out 视为"正常出勤"
+        status_mapping = {
+            'check_in': 'normal',
+            'check_out': 'normal',
+            'late': 'late',
+            'early_leave': 'early_leave',
+            'absent': 'absent',
+            'leave': 'leave',
+        }
+
+        # 统计用的分类
+        stats = {
+            'normal': {'label': '正常出勤', 'count': 0},
+            'late': {'label': '迟到', 'count': 0},
+            'early_leave': {'label': '早退', 'count': 0},
+            'absent': {'label': '缺勤', 'count': 0},
+            'leave': {'label': '请假', 'count': 0},
+        }
+
         for row in qs.values('attendance_type').annotate(cnt=Count('id')):
             t = row['attendance_type']
-            if t in type_stats:
-                type_stats[t]['count'] = row['cnt']
-        
-        total = sum(s['count'] for s in type_stats.values())
-        
-        # 计算出勤率（正常+迟到）
-        normal_count = type_stats.get('normal', {}).get('count', 0)
-        late_count = type_stats.get('late', {}).get('count', 0)
+            mapped = status_mapping.get(t, t)
+            if mapped in stats:
+                stats[mapped]['count'] += row['cnt']
+
+        total = sum(s['count'] for s in stats.values())
+
+        # 计算出勤率（正常+迟到+早退）/ 总数
+        present_count = stats['normal']['count'] + stats['late']['count'] + stats['early_leave']['count']
         attendance_rate = 0
         if total > 0:
-            attendance_rate = round((normal_count + late_count) / total * 100, 1)
-        
-        labels = [s['label'] for s in type_stats.values()]
-        values = [s['count'] for s in type_stats.values()]
-        
+            attendance_rate = round(present_count / total * 100, 1)
+
+        # 只返回有数据的项
+        labels = []
+        values = []
+        colors = ['#22c55e', '#f97316', '#eab308', '#ef4444', '#a855f7']
+
+        for i, (key, s) in enumerate(stats.items()):
+            if s['count'] > 0:
+                labels.append(s['label'])
+                values.append(s['count'])
+
         return Response({
             'detail': 'ok',
             'days': days,
@@ -146,7 +187,7 @@ class AttendanceRateAPIView(views.APIView):
             'values': values,
             'total': total,
             'attendance_rate': attendance_rate,
-            'stats': type_stats
+            'stats': stats
         })
 
 
@@ -154,19 +195,19 @@ class LeaveAnalysisAPIView(views.APIView):
     """请假分析统计"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.REPORT_LEAVE]
-    
+
     def get(self, request):
         days = int(request.query_params.get('days', 90))
         days = max(1, min(days, 365))
-        
+
         since = timezone.now() - timedelta(days=days)
         qs = LeaveRequest.objects.filter(created_at__gte=since)
-        
+
         # 按类型统计
         type_stats = {}
         for t, label in LeaveRequest.LEAVE_TYPE_CHOICES:
             type_stats[t] = {'label': label, 'count': 0, 'days': 0}
-        
+
         for row in qs.values('leave_type').annotate(
             cnt=Count('id'),
             total_days=Sum('days')
@@ -175,29 +216,29 @@ class LeaveAnalysisAPIView(views.APIView):
             if t in type_stats:
                 type_stats[t]['count'] = row['cnt']
                 type_stats[t]['days'] = row['total_days'] or 0
-        
+
         # 按状态统计
         status_stats = {}
         for s, label in LeaveRequest.STATUS_CHOICES:
             status_stats[s] = {'label': label, 'count': 0}
-        
+
         for row in qs.values('status').annotate(cnt=Count('id')):
             s = row['status']
             if s in status_stats:
                 status_stats[s]['count'] = row['cnt']
-        
+
         # 按月趋势
         monthly = qs.annotate(
             month=TruncMonth('created_at')
         ).values('month').annotate(cnt=Count('id')).order_by('month')
-        
+
         trend_labels = []
         trend_values = []
         for row in monthly:
             if row['month']:
                 trend_labels.append(row['month'].strftime('%Y-%m'))
                 trend_values.append(row['cnt'])
-        
+
         return Response({
             'detail': 'ok',
             'days': days,
@@ -212,34 +253,62 @@ class EmployeeGrowthAPIView(views.APIView):
     """员工增长趋势"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.REPORT_EMPLOYEE]
-    
+
     def get(self, request):
         months = int(request.query_params.get('months', 12))
         months = max(1, min(months, 24))
-        
+
         today = timezone.now().date()
-        
+
         results = []
+        # 按月份精确计算，从当前月往前推
         for i in range(months - 1, -1, -1):
-            target_date = today - timedelta(days=i * 30)
-            
-            # 统计截止该日期的员工数
-            total = Employee.objects.filter(hire_date__lte=target_date).count()
+            # 计算目标月份
+            target_index = today.year * 12 + today.month - 1 - i
+            target_year = target_index // 12
+            target_month = (target_index % 12) + 1
+
+            # 月末日期时间（包含整天）
+            if target_month == 12:
+                month_end_date = today.replace(year=target_year, month=12, day=31)
+            else:
+                from datetime import date
+                next_m = target_month + 1
+                next_y = target_year
+                if next_m > 12:
+                    next_m = 1
+                    next_y += 1
+                month_end_date = date(next_y, next_m, 1) - timedelta(days=1)
+
+            # 如果是当前月，用今天的日期
+            if target_year == today.year and target_month == today.month:
+                month_end_date = today
+
+            # 月末日期转换为datetime（含当天）
+            from datetime import datetime
+            month_end_dt = datetime.combine(month_end_date, datetime.max.time())
+            if timezone.is_aware(timezone.now()):
+                month_end_dt = timezone.make_aware(month_end_dt)
+
+            # 员工总数：根据记录创建时间统计（更准确，避免hire_date缺失问题）
+            total = Employee.objects.filter(created_at__lte=month_end_dt).count()
+            # 在职人数：创建于该月末之前且当前在职
+            # 注意：这里简化处理，假设员工一旦创建就计入，is_active表示当前状态
             active = Employee.objects.filter(
-                hire_date__lte=target_date,
+                created_at__lte=month_end_dt,
                 is_active=True
             ).count()
-            
+
             results.append({
-                'date': target_date.strftime('%Y-%m'),
+                'date': f'{target_year}-{str(target_month).zfill(2)}',
                 'total': total,
                 'active': active
             })
-        
+
         labels = [r['date'] for r in results]
         total_series = [r['total'] for r in results]
         active_series = [r['active'] for r in results]
-        
+
         return Response({
             'detail': 'ok',
             'months': months,
@@ -253,20 +322,20 @@ class PositionDistributionAPIView(views.APIView):
     """职位分布统计"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.REPORT_EMPLOYEE]
-    
+
     def get(self, request):
         pos_stats = Position.objects.annotate(
             employee_count=Count('employee', filter=Q(employee__is_active=True))
         ).values('id', 'name', 'employee_count').order_by('-employee_count')[:15]
-        
+
         labels = []
         values = []
-        
+
         for pos in pos_stats:
             if pos['employee_count'] > 0:
                 labels.append(pos['name'])
                 values.append(pos['employee_count'])
-        
+
         return Response({
             'detail': 'ok',
             'labels': labels,
@@ -279,7 +348,7 @@ class ReportOverviewAPIView(views.APIView):
     """报表总览数据"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms_any = [Permissions.REPORT_EMPLOYEE, Permissions.REPORT_SALARY, Permissions.REPORT_ATTENDANCE, Permissions.REPORT_LEAVE]
-    
+
     def get(self, request):
         today = timezone.now().date()
         this_month_start = today.replace(day=1)
@@ -294,7 +363,7 @@ class ReportOverviewAPIView(views.APIView):
         payroll_month = (payroll_index % 12) + 1
         prev_payroll_year = prev_payroll_index // 12
         prev_payroll_month = (prev_payroll_index % 12) + 1
-        
+
         # 员工统计
         emp_total = Employee.objects.count()
         emp_active = Employee.objects.filter(is_active=True).count()
@@ -304,7 +373,7 @@ class ReportOverviewAPIView(views.APIView):
             hire_date__gte=last_month_start,
             hire_date__lt=this_month_start
         ).count()
-        
+
         # 薪资统计
         salary_this_month = SalaryRecord.objects.filter(
             year=payroll_year,
@@ -316,22 +385,32 @@ class ReportOverviewAPIView(views.APIView):
             month=prev_payroll_month,
             paid=True,
         ).aggregate(total=Sum('net_salary'))['total'] or Decimal('0')
-        
+
         # 考勤统计 (本月)
         attendance_this_month = Attendance.objects.filter(
             date__gte=this_month_start, date__lte=today
+        ).count()
+        # 正常出勤包括 check_in, check_out, late, early_leave (都算到岗)
+        normal_attendance = Attendance.objects.filter(
+            date__gte=this_month_start, date__lte=today,
+            attendance_type__in=['check_in', 'check_out', 'late', 'early_leave']
         ).count()
         late_this_month = Attendance.objects.filter(
             date__gte=this_month_start, date__lte=today,
             attendance_type='late'
         ).count()
-        
+
+        # 出勤率 = 到岗人次 / 总记录数
+        attendance_rate = 0
+        if attendance_this_month > 0:
+            attendance_rate = round(normal_attendance / attendance_this_month * 100, 1)
+
         # 请假统计 (本月)
         leave_this_month = LeaveRequest.objects.filter(
             created_at__date__gte=this_month_start
         ).count()
         leave_pending = LeaveRequest.objects.filter(status='pending').count()
-        
+
         return Response({
             'detail': 'ok',
             'timestamp': timezone.now().isoformat(),
@@ -351,7 +430,7 @@ class ReportOverviewAPIView(views.APIView):
             'attendance': {
                 'this_month': attendance_this_month,
                 'late_this_month': late_this_month,
-                'rate': round((attendance_this_month - late_this_month) / max(attendance_this_month, 1) * 100, 1)
+                'rate': attendance_rate
             },
             'leaves': {
                 'this_month': leave_this_month,

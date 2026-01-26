@@ -11,6 +11,9 @@
             <button class="tab-btn" :class="{ active: activeTab === 'records' }" @click="activeTab = 'records'">
               我的考勤
             </button>
+            <button class="tab-btn" :class="{ active: activeTab === 'overtime' }" @click="activeTab = 'overtime'">
+              加班打卡
+            </button>
             <button class="tab-btn" :class="{ active: activeTab === 'supplement' }" @click="activeTab = 'supplement'">
               我的补签
             </button>
@@ -75,7 +78,7 @@
                 <td class="col-check"><input type="checkbox" class="checkbox" v-model="selected" :value="item.id" /></td>
                 <td class="col-date">
                   <a href="javascript:;" class="date-link">{{ formatDateWithWeek(item.date) }}</a>
-                  <span v-if="isWeekend(item.date)" class="weekend-icon">🏖️</span>
+                  <img v-if="isWeekend(item.date)" src="/icons/Rest.svg" alt="休息日" class="weekend-icon" />
                 </td>
                 <td class="col-time">{{ item.check_in_time ? formatDateTime(item.date, item.check_in_time) : '--' }}</td>
                 <td class="col-time">{{ item.check_out_time ? formatDateTime(item.date, item.check_out_time) : '--' }}</td>
@@ -129,6 +132,58 @@
             <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
             <button class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">›</button>
             <button class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(totalPages)">»</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 加班打卡 -->
+      <div v-if="activeTab === 'overtime'" class="tab-content">
+        <div class="section-title">加班打卡记录（休息日）</div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-date">日期</th>
+                <th class="col-time">签到时间</th>
+                <th class="col-time">签退时间</th>
+                <th class="col-absent">工作时长</th>
+                <th class="col-reason">备注</th>
+              </tr>
+            </thead>
+            <tbody v-if="paginatedOvertimeRecords.length">
+              <tr v-for="item in paginatedOvertimeRecords" :key="item.id" class="data-row">
+                <td class="col-date">
+                  {{ formatDateWithWeek(item.date) }}
+                  <img src="/icons/Rest.svg" alt="休息日" class="weekend-icon" />
+                </td>
+                <td class="col-time">{{ item.check_in_time ? formatTime(item.check_in_time) : '--' }}</td>
+                <td class="col-time">{{ item.check_out_time ? formatTime(item.check_out_time) : '--' }}</td>
+                <td class="col-absent">{{ calcOvertimeHours(item) }}</td>
+                <td class="col-reason">{{ item.notes || '加班' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="!overtimeRecords.length" class="empty-state">
+            暂无加班打卡记录
+          </div>
+        </div>
+        <!-- 加班打卡分页 -->
+        <div v-if="overtimeRecords.length" class="table-footer">
+          <span class="total-count">共{{ overtimeRecords.length }}条</span>
+          <div class="pagination">
+            <span class="page-size-label">每页</span>
+            <CustomSelect
+              v-model="overtimePageSize"
+              :options="pageSizeSelectOptions"
+              class="page-size-custom-select"
+              @change="overtimeCurrentPage = 1"
+            />
+            <span class="page-size-label">条</span>
+            <button class="page-btn" :disabled="overtimeCurrentPage <= 1" @click="overtimeGoToPage(1)">«</button>
+            <button class="page-btn" :disabled="overtimeCurrentPage <= 1" @click="overtimeGoToPage(overtimeCurrentPage - 1)">‹</button>
+            <span class="page-info">{{ overtimeCurrentPage }} / {{ overtimeTotalPages }}</span>
+            <button class="page-btn" :disabled="overtimeCurrentPage >= overtimeTotalPages" @click="overtimeGoToPage(overtimeCurrentPage + 1)">›</button>
+            <button class="page-btn" :disabled="overtimeCurrentPage >= overtimeTotalPages" @click="overtimeGoToPage(overtimeTotalPages)">»</button>
           </div>
         </div>
       </div>
@@ -347,6 +402,10 @@ const pageSizeSelectOptions = [
 const abnormalCurrentPage = ref(1);
 const abnormalPageSize = ref(20);
 
+// 分页相关（加班打卡记录）
+const overtimeCurrentPage = ref(1);
+const overtimePageSize = ref(20);
+
 // 分页相关（补签申请记录）
 const supplementCurrentPage = ref(1);
 const supplementPageSize = ref(20);
@@ -381,7 +440,8 @@ watch([dateFrom, dateTo], () => {
 });
 
 const filtered = computed(() => {
-  let result = items.value;
+  // 排除休息日（加班打卡），只显示工作日的考勤
+  let result = items.value.filter(i => !isWeekend(i.date));
 
   if (dateFrom.value) {
     result = result.filter(i => i.date >= dateFrom.value);
@@ -434,6 +494,62 @@ function abnormalGoToPage(page) {
   if (page >= 1 && page <= abnormalTotalPages.value) {
     abnormalCurrentPage.value = page;
   }
+}
+
+// 加班打卡记录（休息日的打卡）
+const overtimeRecords = computed(() => {
+  return items.value.filter(item => {
+    return isWeekend(item.date) && (item.check_in_time || item.check_out_time);
+  }).sort((a, b) => b.date.localeCompare(a.date));
+});
+
+// 加班打卡分页后的数据
+const paginatedOvertimeRecords = computed(() => {
+  const start = (overtimeCurrentPage.value - 1) * overtimePageSize.value;
+  const end = start + overtimePageSize.value;
+  return overtimeRecords.value.slice(start, end);
+});
+
+// 加班打卡总页数
+const overtimeTotalPages = computed(() => {
+  return Math.ceil(overtimeRecords.value.length / overtimePageSize.value) || 1;
+});
+
+// 加班打卡切换页码
+function overtimeGoToPage(page) {
+  if (page >= 1 && page <= overtimeTotalPages.value) {
+    overtimeCurrentPage.value = page;
+  }
+}
+
+// 计算加班工时
+function calcOvertimeHours(item) {
+  if (!item.check_in_time || !item.check_out_time) return '--';
+
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    let hours, minutes;
+    if (timeStr.includes('T') || timeStr.includes(' ')) {
+      const d = new Date(timeStr);
+      hours = d.getHours();
+      minutes = d.getMinutes();
+    } else {
+      const parts = timeStr.split(':');
+      hours = parseInt(parts[0]);
+      minutes = parseInt(parts[1]);
+    }
+    return hours * 60 + minutes;
+  };
+
+  const inMinutes = parseTimeToMinutes(item.check_in_time);
+  const outMinutes = parseTimeToMinutes(item.check_out_time);
+  const duration = outMinutes - inMinutes;
+
+  if (duration <= 0) return '--';
+
+  const hours = Math.floor(duration / 60);
+  const mins = duration % 60;
+  return hours > 0 ? `${hours}小时${mins}分钟` : `${mins}分钟`;
 }
 
 // 补签申请记录分页后的数据
@@ -639,6 +755,10 @@ async function load() {
   try {
     let url = '/attendance/';
     const queryParams = [];
+    // 只获取当前用户自己的考勤记录
+    if (auth.user?.employee_id) {
+      queryParams.push(`employee=${auth.user.employee_id}`);
+    }
     if (dateFrom.value) queryParams.push(`date_from=${dateFrom.value}`);
     if (dateTo.value) queryParams.push(`date_to=${dateTo.value}`);
     if (queryParams.length) url += '?' + queryParams.join('&');
@@ -1178,7 +1298,9 @@ async function handleApprove(id, action) {
 
 .weekend-icon {
   margin-left: 0.5rem;
-  font-size: 12px;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
 }
 
 .status-text {
