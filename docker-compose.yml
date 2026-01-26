@@ -12,7 +12,7 @@ services:
     environment:
       - DEBUG=False
       - SECRET_KEY=django-insecure-hr-system-production-2026
-      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,159.75.138.185,canway.site,www.canway.site
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,hr-backend,159.75.138.185,canway.site,www.canway.site
       - DATABASE_PATH=/app/data/db.sqlite3
       - SECURE_SSL_REDIRECT=False
       - EMAIL_HOST=smtp.qq.com
