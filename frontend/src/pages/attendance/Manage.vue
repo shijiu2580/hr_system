@@ -310,12 +310,19 @@
             </div>
             <div class="form-row">
               <label class="form-label">补签时间</label>
-              <input
-                type="time"
-                v-model="supplementForm.time"
-                class="form-input"
-                step="60"
-              />
+              <div class="time-picker">
+                <select v-model="supplementHour" @change="updateSupplementTime" class="form-select">
+                  <option v-for="opt in hourOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+                <span class="time-separator">:</span>
+                <select v-model="supplementMinute" @change="updateSupplementTime" class="form-select">
+                  <option v-for="opt in minuteOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
             </div>
             <div class="form-row">
               <label class="form-label">补签类型</label>
@@ -426,6 +433,27 @@ const supplementForm = ref({
   type: 'check_in',
   reason: ''
 });
+
+const supplementHour = ref('09');
+const supplementMinute = ref('00');
+const hourOptions = Array.from({ length: 24 }, (_, i) => ({ value: String(i).padStart(2, '0'), label: `${String(i).padStart(2, '0')}` }));
+const minuteOptions = Array.from({ length: 60 }, (_, i) => {
+  const m = String(i).padStart(2, '0');
+  return { value: m, label: m };
+});
+
+function updateSupplementTime() {
+  supplementForm.value.time = `${supplementHour.value}:${supplementMinute.value}`;
+}
+
+function resetSupplementForm() {
+  supplementForm.value = { date: '', time: '', type: 'check_in', reason: '' };
+  supplementHour.value = '09';
+  supplementMinute.value = '00';
+  updateSupplementTime();
+}
+
+resetSupplementForm();
 
 // 初始化日期范围为本月
 onMounted(() => {
@@ -810,7 +838,7 @@ async function submitSupplement() {
     if (resp.success) {
       showMessage('success', '补签申请已提交');
       showSupplementModal.value = false;
-      supplementForm.value = { date: '', time: '', type: 'check_in', reason: '' };
+      resetSupplementForm();
       // 重新加载补签记录
       await loadSupplements();
     } else {
@@ -818,6 +846,7 @@ async function submitSupplement() {
       if (resp.error?.code === 'duplicate') {
         showMessage('error', '该日期已有待审批的补签申请，请等待审批或撤销后重新提交');
         showSupplementModal.value = false;
+        resetSupplementForm();
       } else {
         showMessage('error', resp.error?.message || '提交失败');
       }
@@ -1620,6 +1649,31 @@ async function handleApprove(id, action) {
   border-radius: 6px;
   font-size: 14px;
   box-sizing: border-box;
+}
+
+.form-select {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-separator {
+  font-size: 16px;
+  color: #374151;
 }
 
 .form-input:focus {
