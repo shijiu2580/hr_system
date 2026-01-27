@@ -76,7 +76,7 @@
                 </div>
                 <div class="emp-meta">
                   <div class="emp-name">{{ group.employee?.name || '未知员工' }}</div>
-                  <div class="emp-dept">{{ group.employee?.department?.name || '未分配' }}</div>
+                  <div class="emp-dept">{{ group.employee?.department?.full_path || group.employee?.department?.name || '未分配' }}</div>
                 </div>
               </div>
               <div class="header-stats">
