@@ -286,6 +286,85 @@ async function loadData() {
   overflow: hidden;
 }
 
+.accordion-wrapper {
+  padding: 0 1rem 1rem;
+}
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.accordion-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.emp-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.emp-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.emp-dept {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.alert { background: #fee2e2; color: #b91c1c; }
+.badge.warning { background: #fff7ed; color: #c2410c; }
+
+.chevron {
+  font-size: 18px;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  padding: 0.5rem 1rem 1rem;
+}
+
 /* 顶部标签栏 */
 .tab-header {
   display: flex;
