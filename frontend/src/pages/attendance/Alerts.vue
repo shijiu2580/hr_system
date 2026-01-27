@@ -192,11 +192,12 @@ const groupedAlerts = computed(() => {
 })
 
 function toggleGroup(key) {
-  openGroups.value = { ...openGroups.value, [key]: !openGroups.value[key] }
+  const current = !!openGroups.value[key]
+  openGroups.value = { ...openGroups.value, [key]: !current }
 }
 
 function isOpen(key) {
-  return openGroups.value[key] !== false
+  return !!openGroups.value[key]
 }
 
 const avatarColors = [
@@ -251,15 +252,8 @@ async function loadData() {
     const res = await api.get('/attendance/alerts/', { params })
     if (res.data.success !== false) {
       alerts.value = res.data.data || res.data.results || res.data || []
-      // 默认全部展开
-      const nextOpen = {}
-      const keys = new Set()
-      alerts.value.forEach(item => {
-        const key = item.employee?.id ?? `unknown-${item.employee?.name || 'NA'}`
-        keys.add(key)
-      })
-      keys.forEach(k => { nextOpen[k] = true })
-      openGroups.value = nextOpen
+      // 默认收拢
+      openGroups.value = {}
     }
   } catch (e) {
     console.error('Load alerts error:', e)
