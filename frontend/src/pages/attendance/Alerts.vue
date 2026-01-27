@@ -116,7 +116,7 @@
         <!-- 空状态 -->
         <div v-if="!loading && !paginatedData.length" class="empty-state">
           <img src="/icons/success.svg" alt="success" class="empty-icon" />
-          <p>太棒了！暂无考勤异常记录</p>
+          <p>太棒了！暂无{{ emptyStateText }}记录</p>
         </div>
       </div>
 
@@ -174,6 +174,16 @@ const summary = computed(() => {
   const late = alerts.value.filter(a => a.attendance_type === 'late').length
   const early = alerts.value.filter(a => a.attendance_type === 'early_leave').length
   return { absent, late, early }
+})
+
+const emptyStateText = computed(() => {
+  const textMap = {
+    'all': '考勤异常',
+    'absent': '缺勤',
+    'late': '迟到',
+    'early_leave': '早退'
+  }
+  return textMap[typeFilter.value] || '考勤异常'
 })
 
 const totalPages = computed(() => {

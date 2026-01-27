@@ -310,7 +310,12 @@
             </div>
             <div class="form-row">
               <label class="form-label">补签时间</label>
-              <input type="text" v-model="supplementForm.time" class="form-input" placeholder="例如：09:00" />
+              <input
+                type="time"
+                v-model="supplementForm.time"
+                class="form-input"
+                step="60"
+              />
             </div>
             <div class="form-row">
               <label class="form-label">补签类型</label>
@@ -670,7 +675,10 @@ function getStatusLabel(item) {
     early_leave: '早退',
     absent: '缺勤'
   };
-  return map[status] || '正常';
+  const statusText = map[status] || '正常';
+  // 判断是否是补签数据
+  const isSupplement = item.notes && (item.notes.includes('补签到') || item.notes.includes('补签退'));
+  return isSupplement ? `补签:${statusText}` : statusText;
 }
 
 function getApprovalLabel(status) {
@@ -806,7 +814,13 @@ async function submitSupplement() {
       // 重新加载补签记录
       await loadSupplements();
     } else {
-      showMessage('error', resp.error?.message || '提交失败');
+      // 如果是重复申请，显示友好提示
+      if (resp.error?.code === 'duplicate') {
+        showMessage('error', '该日期已有待审批的补签申请，请等待审批或撤销后重新提交');
+        showSupplementModal.value = false;
+      } else {
+        showMessage('error', resp.error?.message || '提交失败');
+      }
     }
   } catch (e) {
     showMessage('error', '提交失败，请重试');
