@@ -764,6 +764,7 @@ def attendance_alerts(request):
                 'department': {
                     'id': att.employee.department.id,
                     'name': att.employee.department.name,
+                    'full_path': getattr(att.employee.department, 'full_path', None),
                 } if att.employee.department else None,
             }
         })
