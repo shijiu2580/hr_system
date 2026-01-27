@@ -54,89 +54,80 @@
         </button>
       </div>
 
-      <!-- 表格 -->
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="col-name">员工</th>
-              <th class="col-dept">部门</th>
-              <th class="col-date">考勤日期</th>
-              <th class="col-time">签到时间</th>
-              <th class="col-time">签退时间</th>
-              <th class="col-status">异常类型</th>
-              <th class="col-reason">备注</th>
-              <th class="col-action">操作</th>
-            </tr>
-          </thead>
-          <tbody v-if="!loading && paginatedData.length">
-            <tr v-for="item in paginatedData" :key="item.id" class="data-row">
-              <td class="col-name">
-                <div class="employee-cell">
-                  <div class="avatar" :style="{ background: getAvatarColor(item.employee?.id || 0) }">
-                    {{ item.employee?.name?.charAt(0) || '?' }}
-                  </div>
-                  <span class="name-text">{{ item.employee?.name || '-' }}</span>
-                </div>
-              </td>
-              <td class="col-dept">{{ item.employee?.department?.name || '未分配' }}</td>
-              <td class="col-date">
-                <span class="date-link">{{ item.date }}</span>
-                <span class="weekday">{{ getWeekday(item.date) }}</span>
-              </td>
-              <td class="col-time">{{ formatTime(item.check_in) }}</td>
-              <td class="col-time">{{ formatTime(item.check_out) }}</td>
-              <td class="col-status">
-                <span class="status-text" :class="'status-' + item.attendance_type">
-                  {{ getTypeText(item.attendance_type) }}
-                </span>
-              </td>
-              <td class="col-reason">
-                <template v-if="item.late_reason || item.early_leave_reason || item.notes">
-                  <div v-if="item.late_reason" class="reason-line">迟到：{{ item.late_reason }}</div>
-                  <div v-if="item.early_leave_reason" class="reason-line">早退：{{ item.early_leave_reason }}</div>
-                  <div v-if="item.notes && !item.late_reason && !item.early_leave_reason" class="reason-line">{{ item.notes }}</div>
-                </template>
-                <template v-else>--</template>
-              </td>
-              <td class="col-action">
-                <router-link :to="`/employees/${item.employee?.id}`" class="action-link">查看员工</router-link>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- 加载状态 -->
+      <!-- 折叠列表 -->
+      <div class="accordion-wrapper">
         <div v-if="loading" class="loading-dots">
           <span class="dot"></span>
           <span class="dot"></span>
           <span class="dot"></span>
         </div>
 
-        <!-- 空状态 -->
-        <div v-if="!loading && !paginatedData.length" class="empty-state">
+        <div v-else-if="!groupedAlerts.length" class="empty-state">
           <img src="/icons/success.svg" alt="success" class="empty-icon" />
           <p>太棒了！暂无{{ emptyStateText }}记录</p>
         </div>
-      </div>
 
-      <!-- 底部分页 -->
-      <div class="table-footer">
-        <span class="total-count">共{{ alerts.length }}条</span>
-        <div class="pagination">
-          <span class="page-size-label">每页</span>
-          <CustomSelect
-            v-model="pageSize"
-            :options="pageSizeOptions"
-            class="page-size-custom-select"
-            @change="currentPage = 1"
-          />
-          <span class="page-size-label">条</span>
-          <button class="page-btn" :disabled="currentPage <= 1" @click="goToPage(1)">«</button>
-          <button class="page-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
-          <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-          <button class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">›</button>
-          <button class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(totalPages)">»</button>
+        <div v-else class="accordion">
+          <div v-for="group in groupedAlerts" :key="group.key" class="accordion-item">
+            <div class="accordion-header" @click="toggleGroup(group.key)">
+              <div class="header-left">
+                <div class="avatar" :style="{ background: getAvatarColor(group.employee?.id || 0) }">
+                  {{ group.employee?.name?.charAt(0) || '?' }}
+                </div>
+                <div class="emp-meta">
+                  <div class="emp-name">{{ group.employee?.name || '未知员工' }}</div>
+                  <div class="emp-dept">{{ group.employee?.department?.name || '未分配' }}</div>
+                </div>
+              </div>
+              <div class="header-stats">
+                <span class="badge alert" v-if="group.counts.absent">缺勤 {{ group.counts.absent }}</span>
+                <span class="badge warning" v-if="group.counts.late">迟到 {{ group.counts.late }}</span>
+                <span class="badge warning" v-if="group.counts.early_leave">早退 {{ group.counts.early_leave }}</span>
+                <span class="chevron" :class="{ open: isOpen(group.key) }">⌄</span>
+              </div>
+            </div>
+
+            <transition name="fade">
+              <div v-if="isOpen(group.key)" class="accordion-body">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th class="col-date">考勤日期</th>
+                      <th class="col-time">签到时间</th>
+                      <th class="col-time">签退时间</th>
+                      <th class="col-status">异常类型</th>
+                      <th class="col-reason">备注</th>
+                      <th class="col-action">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in group.records" :key="item.id" class="data-row">
+                      <td class="col-date">
+                        <span class="date-link">{{ item.date }}</span>
+                        <span class="weekday">{{ getWeekday(item.date) }}</span>
+                      </td>
+                      <td class="col-time">{{ formatTime(item.check_in_time) }}</td>
+                      <td class="col-time">{{ formatTime(item.check_out_time) }}</td>
+                      <td class="col-status">
+                        <span class="status-text" :class="'status-' + item.attendance_type">
+                          {{ getTypeText(item.attendance_type) }}
+                        </span>
+                      </td>
+                      <td class="col-reason">
+                        <template v-if="item.notes">
+                          <div class="reason-line">{{ item.notes }}</div>
+                        </template>
+                        <template v-else>--</template>
+                      </td>
+                      <td class="col-action">
+                        <router-link :to="`/employees/${item.employee?.id}`" class="action-link">查看员工</router-link>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </transition>
+          </div>
         </div>
       </div>
     </div>
@@ -152,8 +143,7 @@ const loading = ref(false)
 const alerts = ref([])
 const typeFilter = ref('all')
 const daysFilter = ref('7')
-const currentPage = ref(1)
-const pageSize = ref(20)
+const openGroups = ref({})
 
 // 下拉选项
 const daysOptions = [
@@ -161,12 +151,6 @@ const daysOptions = [
   { value: '14', label: '最近14天' },
   { value: '30', label: '最近30天' },
   { value: '90', label: '最近90天' }
-]
-
-const pageSizeOptions = [
-  { value: 20, label: '20' },
-  { value: 50, label: '50' },
-  { value: 100, label: '100' }
 ]
 
 const summary = computed(() => {
@@ -186,20 +170,33 @@ const emptyStateText = computed(() => {
   return textMap[typeFilter.value] || '考勤异常'
 })
 
-const totalPages = computed(() => {
-  return Math.ceil(alerts.value.length / pageSize.value) || 1
+const groupedAlerts = computed(() => {
+  const map = {}
+  alerts.value.forEach(item => {
+    const key = item.employee?.id ?? `unknown-${item.employee?.name || 'NA'}`
+    if (!map[key]) {
+      map[key] = {
+        key,
+        employee: item.employee,
+        records: [],
+        counts: { absent: 0, late: 0, early_leave: 0 }
+      }
+    }
+    map[key].records.push(item)
+    if (item.attendance_type === 'absent') map[key].counts.absent += 1
+    if (item.attendance_type === 'late') map[key].counts.late += 1
+    if (item.attendance_type === 'early_leave') map[key].counts.early_leave += 1
+  })
+  return Object.values(map)
+    .sort((a, b) => (a.employee?.name || '').localeCompare(b.employee?.name || ''))
 })
 
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return alerts.value.slice(start, end)
-})
+function toggleGroup(key) {
+  openGroups.value = { ...openGroups.value, [key]: !openGroups.value[key] }
+}
 
-function goToPage(page) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
+function isOpen(key) {
+  return openGroups.value[key] !== false
 }
 
 const avatarColors = [
@@ -246,7 +243,6 @@ onMounted(() => {
 
 async function loadData() {
   loading.value = true
-  currentPage.value = 1
   try {
     const params = { days: daysFilter.value }
     if (typeFilter.value !== 'all') {
@@ -255,6 +251,15 @@ async function loadData() {
     const res = await api.get('/attendance/alerts/', { params })
     if (res.data.success !== false) {
       alerts.value = res.data.data || res.data.results || res.data || []
+      // 默认全部展开
+      const nextOpen = {}
+      const keys = new Set()
+      alerts.value.forEach(item => {
+        const key = item.employee?.id ?? `unknown-${item.employee?.name || 'NA'}`
+        keys.add(key)
+      })
+      keys.forEach(k => { nextOpen[k] = true })
+      openGroups.value = nextOpen
     }
   } catch (e) {
     console.error('Load alerts error:', e)
