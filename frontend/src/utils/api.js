@@ -80,21 +80,21 @@ let requestCount = 0; // 请求计数
 
 axiosInstance.interceptors.request.use(cfg => {
   requestCount++;
-  
+
   // 添加请求ID
   cfg.headers['X-Request-ID'] = `${Date.now()}-${requestCount}`;
-  
+
   // 添加认证头
   const auth = useAuthStore();
   if (auth.accessToken) {
     cfg.headers.Authorization = `Bearer ${auth.accessToken}`;
   }
-  
+
   // 防止重复请求（GET 请求）
   if (cfg.method === 'get' && !cfg.skipDuplicateCheck) {
     addPendingRequest(cfg);
   }
-  
+
   return cfg;
 }, err => Promise.reject(err));
 
@@ -107,12 +107,12 @@ axiosInstance.interceptors.response.use(
     if (err.config) {
       removePendingRequest(err.config);
     }
-    
+
     // 请求被取消
     if (axios.isCancel(err)) {
       return Promise.reject({ cancelled: true, message: err.message });
     }
-    
+
     const { response, config } = err;
     if (!response) {
       // 网络错误
@@ -121,7 +121,7 @@ axiosInstance.interceptors.response.use(
         networkError: true,
       });
     }
-    
+
     // 401 未授权：尝试刷新 token
     if (response.status === 401 && !config.__isRetry) {
       const auth = useAuthStore();
@@ -142,7 +142,7 @@ axiosInstance.interceptors.response.use(
       auth.forceLogout();
     }
   }
-  
+
   // 429 限流
   if (response.status === 429) {
     return Promise.reject({
@@ -151,14 +151,14 @@ axiosInstance.interceptors.response.use(
       retryAfter: response.headers['retry-after'],
     });
   }
-  
+
   return Promise.reject(err);
 });
 
 // ============ 统一请求方法 ============
 async function request(method, url, options = {}) {
   const cfg = { method, url, ...options };
-  
+
   // GET 请求使用缓存（除非明确指定 noCache）
   if (method === 'get' && !options.noCache) {
     const cacheKey = getCacheKey(url, options.params);
@@ -167,7 +167,7 @@ async function request(method, url, options = {}) {
       return cached;
     }
   }
-  
+
   try {
     const resp = await axiosInstance(cfg);
     const result = {
@@ -177,32 +177,33 @@ async function request(method, url, options = {}) {
       raw: resp,
       error: null,
     };
-    
+
     // 缓存 GET 请求结果
     if (method === 'get' && !options.noCache) {
       const cacheKey = getCacheKey(url, options.params);
       setCache(cacheKey, result);
     }
-    
+
     return result;
   } catch (err) {
     // 请求被取消
     if (err.cancelled) {
       return { success: false, data: null, error: { message: '请求已取消', cancelled: true } };
     }
-    
+
     const message = err.message
       || err.response?.data?.error?.message
       || err.response?.data?.detail
       || '请求失败';
-      
+
     return {
       success: false,
       data: null,
       detail: null,
       raw: err.response,
-      error: { 
-        message, 
+      error: {
+        message,
+        code: err.response?.data?.error?.code,
         status: err.response?.status,
         networkError: err.networkError,
         rateLimited: err.rateLimited,
@@ -216,14 +217,14 @@ async function request(method, url, options = {}) {
 async function uploadFile(url, file, options = {}) {
   const formData = new FormData();
   formData.append(options.fieldName || 'file', file);
-  
+
   // 添加额外字段
   if (options.data) {
     Object.entries(options.data).forEach(([key, value]) => {
       formData.append(key, value);
     });
   }
-  
+
   return request('post', url, {
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -254,10 +255,10 @@ const api = {
     clearCache(); // DELETE 后清除缓存
     return request('delete', url, { ...config });
   },
-  
+
   // 文件上传
   upload: uploadFile,
-  
+
   // 下载文件
   async download(url, filename, config = {}) {
     try {
@@ -267,7 +268,7 @@ const api = {
         responseType: 'blob',
         ...config,
       });
-      
+
       // 创建下载链接
       const blobUrl = window.URL.createObjectURL(resp.data);
       const link = document.createElement('a');
@@ -277,19 +278,19 @@ const api = {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
-      
+
       return { success: true };
     } catch (err) {
       return { success: false, error: { message: '下载失败' } };
     }
   },
-  
+
   // 暴露原始 axios 实例以兼容旧用法
   raw: axiosInstance,
-  
+
   // 手动清除缓存
   clearCache,
-  
+
   // 取消所有进行中的请求
   cancelAll() {
     for (const cancel of pendingRequests.values()) {

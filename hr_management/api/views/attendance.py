@@ -476,9 +476,10 @@ def attendance_supplement_list(request):
         # 检查是否已有相同日期和类型的待审批补签申请
         existing = AttendanceSupplement.objects.filter(
             employee=emp, date=date_obj, supplement_type=supplement_type, status='pending'
-        ).exists()
+        ).first()
         if existing:
-            return Response(api_error('该日期已有相同类型的待审批补签申请', code='duplicate'), status=400)
+            type_text = '补签到' if supplement_type == 'check_in' else '补签退'
+            return Response(api_error(f'{date_str} 已有待审批的{type_text}申请，请等待审批或撤销后重新提交', code='duplicate'), status=400)
 
         supplement = AttendanceSupplement.objects.create(
             employee=emp,
@@ -580,6 +581,37 @@ def attendance_supplement_approve(request, pk):
                 att_record.notes = f'补签退：{supplement.reason}'
             else:
                 att_record.notes += f'\n补签退：{supplement.reason}'
+
+        # 自动判断并更新考勤状态
+        import datetime
+        late_cutoff = datetime.time(9, 0, 0)
+        early_leave_cutoff = datetime.time(18, 0, 0)
+
+        check_in = att_record.check_in_time
+        check_out = att_record.check_out_time
+
+        # 判断考勤状态
+        is_late = check_in and check_in > late_cutoff
+        is_early_leave = check_out and check_out < early_leave_cutoff
+
+        if is_late:
+            att_record.attendance_type = 'late'
+        elif is_early_leave:
+            att_record.attendance_type = 'early_leave'
+        elif check_in and check_out:
+            # 签到签退都有且正常
+            att_record.attendance_type = 'check_out'
+        elif check_in:
+            # 只有签到
+            att_record.attendance_type = 'check_in'
+        # 如果原来是 absent 但现在有签到/签退记录，更新状态
+        if att_record.attendance_type == 'absent' and (check_in or check_out):
+            if is_late:
+                att_record.attendance_type = 'late'
+            elif is_early_leave:
+                att_record.attendance_type = 'early_leave'
+            elif check_in:
+                att_record.attendance_type = 'check_in'
 
         att_record.save()
         log_event(user=request.user, action='批准补签申请', detail=f'{supplement.employee.employee_id} {supplement.date}', ip=get_client_ip(request))

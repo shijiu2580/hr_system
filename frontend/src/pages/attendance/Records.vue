@@ -232,7 +232,10 @@ function getStatusLabel(item) {
     late_and_early: '迟到/早退',
     absent: '缺勤'
   };
-  return map[status] || '正常';
+  const statusText = map[status] || '正常';
+  // 判断是否是补签数据
+  const isSupplement = item.notes && (item.notes.includes('补签到') || item.notes.includes('补签退'));
+  return isSupplement ? `补签:${statusText}` : statusText;
 }
 
 // 计算缺勤时长（午休12:00-13:00不计算）
