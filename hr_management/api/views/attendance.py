@@ -689,12 +689,10 @@ def attendance_alerts(request):
 
     since = timezone.localdate() - timedelta(days=days)
 
-    # 查询异常考勤记录（排除管理员账号）
+    # 查询异常考勤记录（仅查询已入职员工）
     qs = Attendance.objects.filter(
         date__gte=since,
         attendance_type__in=['absent', 'late', 'early_leave'],
-        employee__user__is_staff=False,
-        employee__user__is_superuser=False,
         employee__onboard_status='onboarded',
     ).select_related('employee', 'employee__department', 'employee__position').order_by('-date', '-id')
 
@@ -724,10 +722,8 @@ def attendance_alerts(request):
             'id': att.id,
             'date': str(att.date),
             'attendance_type': att.attendance_type,
-            'check_in': att.check_in.isoformat() if att.check_in else None,
-            'check_out': att.check_out.isoformat() if att.check_out else None,
-            'late_reason': att.late_reason,
-            'early_leave_reason': att.early_leave_reason,
+            'check_in_time': att.check_in_time.isoformat() if att.check_in_time else None,
+            'check_out_time': att.check_out_time.isoformat() if att.check_out_time else None,
             'notes': att.notes,
             'employee': {
                 'id': att.employee.id,
