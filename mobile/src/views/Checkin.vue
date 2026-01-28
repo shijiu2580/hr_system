@@ -315,16 +315,18 @@ async function reverseGeocode(lat, lng) {
   try {
     // 使用 AbortController 设置超时
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000)
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
     // 高德API需要经度在前，纬度在后
-    const res = await fetch(
-      `https://restapi.amap.com/v3/geocode/regeo?key=${AMAP_KEY}&location=${lng},${lat}&extensions=base`,
-      { signal: controller.signal }
-    )
+    const url = `https://restapi.amap.com/v3/geocode/regeo?key=${AMAP_KEY}&location=${lng},${lat}&extensions=base`
+    console.log('请求高德API:', url)
+
+    const res = await fetch(url, { signal: controller.signal })
     clearTimeout(timeoutId)
 
     const data = await res.json()
+    console.log('高德API响应:', data)
+
     if (data.status === '1' && data.regeocode) {
       const info = data.regeocode.addressComponent
       // 显示：区 + 街道 + 道路/POI
@@ -343,6 +345,8 @@ async function reverseGeocode(lat, lng) {
       // 保存到缓存
       if (result) saveAddressToCache(lat, lng, result)
       return result
+    } else {
+      console.warn('高德API返回错误:', data.info || data)
     }
   } catch (e) {
     if (e.name === 'AbortError') {
@@ -351,7 +355,8 @@ async function reverseGeocode(lat, lng) {
       console.warn('逆地理编码失败:', e)
     }
   }
-  return null
+  // 返回坐标作为备选
+  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
 }
 
 function getLocation() {
