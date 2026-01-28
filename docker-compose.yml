@@ -7,13 +7,13 @@ services:
       - "8000:8000"
     volumes:
       - ./media:/app/media
-      - ./data:/app/data
+      - ./db.sqlite3:/app/db.sqlite3
     mem_limit: 256m
     environment:
       - DEBUG=False
       - SECRET_KEY=django-insecure-hr-system-production-2026
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend,hr-backend,159.75.138.185,canway.site,www.canway.site
-      - DATABASE_PATH=/app/data/db.sqlite3
+      - DATABASE_PATH=/app/db.sqlite3
       - SECURE_SSL_REDIRECT=False
       - EMAIL_HOST=smtp.qq.com
       - EMAIL_PORT=465
