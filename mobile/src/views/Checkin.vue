@@ -339,19 +339,23 @@ function getLocation() {
       return
     }
 
+    console.error('定位失败:', err.code, err.message)
+    
+    let errorMsg = ''
     switch (err.code) {
       case 1:
-        locationError.value = '请允许获取位置权限'
+        errorMsg = '请在手机设置中开启定位权限'
         break
       case 2:
-        locationError.value = '无法获取位置信息'
+        errorMsg = '无法获取位置，请检查GPS是否开启'
         break
       case 3:
-        locationError.value = '获取位置超时'
+        errorMsg = '定位超时，请到信号好的地方重试'
         break
       default:
-        locationError.value = '获取位置失败'
+        errorMsg = '获取位置失败'
     }
+    
     // 定位失败时使用默认位置，但保留提示
     if (!latitude.value) {
       latitude.value = 22.5431
@@ -360,7 +364,7 @@ function getLocation() {
       locationError.value = ''
       // 弹出提示引导用户
       showToast({
-        message: '无法获取位置，请检查定位权限',
+        message: errorMsg,
         position: 'top',
         duration: 3000,
       })
@@ -368,7 +372,7 @@ function getLocation() {
   }
 
   // 策略：先快速获取低精度位置，再尝试获取高精度位置
-  // 低精度定位（使用网络/基站，速度快）
+  // 增加超时时间适应室内/信号弱环境
   navigator.geolocation.getCurrentPosition(
     onSuccess,
     // 低精度失败时尝试高精度
@@ -376,10 +380,10 @@ function getLocation() {
       navigator.geolocation.getCurrentPosition(
         onSuccess,
         onError,
-        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
       )
     },
-    { enableHighAccuracy: false, timeout: 1500, maximumAge: 10 * 60 * 1000 }
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 }
   )
 }
 
