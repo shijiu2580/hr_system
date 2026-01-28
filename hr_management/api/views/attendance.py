@@ -748,8 +748,23 @@ def attendance_alerts(request):
     if alert_type:
         qs = qs.filter(attendance_type=alert_type)
 
+    def get_dept_path(dept):
+        if not dept:
+            return None
+        # 优先使用存储的全路径
+        if getattr(dept, 'full_path', None):
+            return dept.full_path
+        # 回退：向上拼接父级名称
+        names = [dept.name]
+        parent = getattr(dept, 'parent', None)
+        while parent:
+            names.append(parent.name)
+            parent = getattr(parent, 'parent', None)
+        return '/'.join(reversed(names))
+
     data = []
     for att in qs[:100]:  # 限制最多100条
+        dept = att.employee.department if hasattr(att.employee, 'department') else None
         data.append({
             'id': att.id,
             'date': str(att.date),
@@ -762,10 +777,10 @@ def attendance_alerts(request):
                 'name': att.employee.name,
                 'employee_id': att.employee.employee_id,
                 'department': {
-                    'id': att.employee.department.id,
-                    'name': att.employee.department.name,
-                    'full_path': getattr(att.employee.department, 'full_path', None),
-                } if att.employee.department else None,
+                    'id': dept.id,
+                    'name': dept.name,
+                    'full_path': get_dept_path(dept),
+                } if dept else None,
             }
         })
 
