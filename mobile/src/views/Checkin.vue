@@ -278,7 +278,31 @@ function updateTime() {
   const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
   currentDate.value = `${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]}`
 }
-
+// 逆地理编码：将经纬度转换为地址名称
+async function reverseGeocode(lat, lng) {
+  try {
+    // 使用 OpenStreetMap Nominatim 免费服务
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      { headers: { 'Accept-Language': 'zh-CN,zh' } }
+    )
+    const data = await res.json()
+    if (data && data.address) {
+      const addr = data.address
+      // 优先显示：区/街道 + 道路/建筑
+      const parts = []
+      if (addr.suburb || addr.district) parts.push(addr.suburb || addr.district)
+      if (addr.road) parts.push(addr.road)
+      if (addr.building || addr.amenity) parts.push(addr.building || addr.amenity)
+      if (parts.length > 0) return parts.join(' ')
+      // 备选：显示完整地址的前几部分
+      return data.display_name?.split(',').slice(0, 3).join(' ') || null
+    }
+  } catch (e) {
+    console.warn('逆地理编码失败:', e)
+  }
+  return null
+}
 function getLocation() {
   locationLoading.value = true
   locationError.value = ''
@@ -290,9 +314,15 @@ function getLocation() {
   if (cached) {
     latitude.value = cached.lat
     longitude.value = cached.lng
-    locationName.value = `上次位置 ${cached.lat.toFixed(4)}, ${cached.lng.toFixed(4)}`
+    locationName.value = '使用上次位置...'
     locationLoading.value = false
     locationRefreshing.value = true
+    // 异步获取缓存位置的地址
+    reverseGeocode(cached.lat, cached.lng).then(addr => {
+      if (addr && locationRefreshing.value) {
+        locationName.value = addr + '（更新中）'
+      }
+    })
   }
 
   // 检查是否为非安全环境（HTTP 非 localhost）
@@ -320,13 +350,19 @@ function getLocation() {
   }
 
   // 定位成功回调
-  const onSuccess = (pos) => {
+  const onSuccess = async (pos) => {
     latitude.value = pos.coords.latitude
     longitude.value = pos.coords.longitude
     locationLoading.value = false
     locationRefreshing.value = false
-    locationName.value = `${latitude.value.toFixed(4)}, ${longitude.value.toFixed(4)}`
     writeLocationCache(latitude.value, longitude.value)
+    
+    // 先显示"定位成功"，然后异步获取地址
+    locationName.value = '定位成功'
+    const address = await reverseGeocode(latitude.value, longitude.value)
+    if (address) {
+      locationName.value = address
+    }
   }
 
   // 定位失败回调
@@ -340,7 +376,7 @@ function getLocation() {
     }
 
     console.error('定位失败:', err.code, err.message)
-    
+
     let errorMsg = ''
     switch (err.code) {
       case 1:
@@ -355,7 +391,7 @@ function getLocation() {
       default:
         errorMsg = '获取位置失败'
     }
-    
+
     // 定位失败时使用默认位置，但保留提示
     if (!latitude.value) {
       latitude.value = 22.5431
