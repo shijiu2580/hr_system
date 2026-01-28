@@ -463,19 +463,15 @@ function getLocation() {
     }
   }
 
-  // 策略：先快速获取低精度位置，再尝试获取高精度位置
-  // 增加超时时间适应室内/信号弱环境
+  // 直接使用高精度GPS定位
   navigator.geolocation.getCurrentPosition(
     onSuccess,
-    // 低精度失败时尝试高精度
-    () => {
-      navigator.geolocation.getCurrentPosition(
-        onSuccess,
-        onError,
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
-      )
-    },
-    { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 }
+    onError,
+    { 
+      enableHighAccuracy: true,  // 强制使用GPS高精度
+      timeout: 15000,            // 15秒超时
+      maximumAge: 0              // 不使用缓存，获取实时位置
+    }
   )
 }
 
