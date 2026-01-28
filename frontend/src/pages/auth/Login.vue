@@ -6,7 +6,7 @@
       <div class="circle circle-2"></div>
       <div class="circle circle-3"></div>
     </div>
-    
+
     <div class="login-card">
       <!-- Logo/品牌区 -->
       <div class="brand">
@@ -17,7 +17,7 @@
         <h1 class="brand-title"><img src="/icons/logo.svg" alt="HR" class="title-logo" /> 管理系统</h1>
         <p class="brand-subtitle">欢迎回来，请登录您的账号</p>
       </div>
-      
+
       <form @submit.prevent="submit">
         <div v-if="error" class="error-box">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -25,32 +25,32 @@
           </svg>
           {{ error }}
         </div>
-        
+
         <div class="form-group">
           <label class="form-label">用户名</label>
           <div class="form-row" :class="{invalid: validationError === 'username'}">
             <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
-            <input 
-              v-model.trim="username" 
-              type="text" 
+            <input
+              v-model.trim="username"
+              type="text"
               placeholder="请输入用户名或邮箱"
               @input="validationError = ''"
             />
           </div>
           <span v-if="validationError === 'username'" class="field-error">请输入对应的账号</span>
         </div>
-        
+
         <div class="form-group">
           <label class="form-label">密码</label>
           <div class="form-row" :class="{invalid: validationError === 'password'}">
             <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
             </svg>
-            <input 
-              v-model="password" 
-              :type="showPwd?'text':'password'" 
+            <input
+              v-model="password"
+              :type="showPwd?'text':'password'"
               placeholder="请输入密码"
               @input="validationError = ''"
             />
@@ -65,16 +65,24 @@
           </div>
           <span v-if="validationError === 'password'" class="field-error">请输入对应的密码</span>
         </div>
-        
+
         <button class="btn" :disabled="loading">
           <span v-if="loading" class="loading-spinner"></span>
           {{ loading ? '登录中...' : '登 录' }}
         </button>
       </form>
-      
+
       <div class="footer-links">
         <router-link to="/forgot-password" class="link">忘记密码？</router-link>
       </div>
+    </div>
+
+    <!-- ICP备案号 -->
+    <div class="icp-footer">
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">
+        <svg class="icp-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span>蜀ICP备2026004175号-1</span>
+      </a>
     </div>
   </div>
 </template>
@@ -410,5 +418,57 @@ form { display: flex; flex-direction: column; gap: 18px; }
   .brand-title {
     font-size: 22px;
   }
+}
+
+/* ICP备案 */
+.icp-footer {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  animation: fadeIn 1s ease-out 0.5s backwards;
+}
+
+.icp-footer a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.icp-footer a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.icp-icon {
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+.icp-footer a:hover .icp-icon {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 </style>

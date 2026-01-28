@@ -26,9 +26,9 @@
       <div v-if="currentStep === 1" class="step-content">
         <div class="form-group">
 		  <label>邮箱地址</label>
-          <input 
-            v-model="email" 
-            type="email" 
+          <input
+            v-model="email"
+            type="email"
             placeholder="请输入注册时的邮箱"
             @keyup.enter="sendCode"
           />
@@ -44,9 +44,9 @@
         <p class="hint">验证码已发送到 <strong>{{ email }}</strong></p>
         <div class="form-group">
 		  <label>验证码</label>
-          <input 
-            v-model="code" 
-            type="text" 
+          <input
+            v-model="code"
+            type="text"
 			placeholder="请输入6位验证码"
             maxlength="6"
             @keyup.enter="nextStep"
@@ -67,18 +67,18 @@
       <div v-if="currentStep === 3" class="step-content">
         <div class="form-group">
 		  <label>新密码</label>
-          <input 
-            v-model="newPassword" 
-            type="password" 
+          <input
+            v-model="newPassword"
+            type="password"
 			placeholder="至少 8 位，包含字母和数字"
             @keyup.enter="submitReset"
           />
         </div>
         <div class="form-group">
           <label>确认密码</label>
-          <input 
-            v-model="confirmPassword" 
-            type="password" 
+          <input
+            v-model="confirmPassword"
+            type="password"
 			placeholder="再次输入新密码"
             @keyup.enter="submitReset"
           />
@@ -95,6 +95,14 @@
       <div class="footer">
         <router-link to="/login" class="link">返回登录</router-link>
       </div>
+    </div>
+
+    <!-- ICP备案号 -->
+    <div class="icp-footer">
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">
+        <svg class="icp-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span>蜀ICP备2026004175号-1</span>
+      </a>
     </div>
   </div>
 </template>
@@ -131,31 +139,31 @@ function startCountdown() {
 
 async function sendCode() {
   error.value = '';
-  
+
   if (!email.value) {
     error.value = '请输入邮箱地址';
     return;
   }
-  
+
   if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.value)) {
     error.value = '邮箱格式不正确';
     return;
   }
-  
+
   sending.value = true;
-  
+
   const result = await api.post('/auth/send_code/', {
     email: email.value,
     code_type: 'reset_password'
   });
-  
+
   if (result.success) {
     currentStep.value = 2;
     startCountdown();
   } else {
 	  error.value = result.error?.message || '发送失败';
   }
-  
+
   sending.value = false;
 }
 
@@ -179,42 +187,42 @@ function nextStep() {
 
 async function submitReset() {
   error.value = '';
-  
+
   if (!newPassword.value || !confirmPassword.value) {
 	error.value = '请填写完整信息';
     return;
   }
-  
+
   if (newPassword.value !== confirmPassword.value) {
 	error.value = '两次输入的密码不一致';
     return;
   }
-  
+
   if (newPassword.value.length < 8) {
 	error.value = '密码长度至少 8 位';
     return;
   }
-  
+
   if (!(/[a-zA-Z]/.test(newPassword.value) && /\d/.test(newPassword.value))) {
 	error.value = '密码需包含字母和数字';
     return;
   }
-  
+
   resetting.value = true;
-  
+
   const result = await api.post('/auth/reset_password/', {
     email: email.value,
     code: code.value,
     new_password: newPassword.value
   });
-  
+
   if (result.success) {
   alert('密码重置成功！请使用新密码登录');
     router.replace('/login');
   } else {
     error.value = result.error?.message || '重置失败';
   }
-  
+
   resetting.value = false;
 }
 </script>
@@ -506,13 +514,66 @@ async function submitReset() {
   .forgot-card {
     padding: 1.5rem;
   }
-  
+
   .step-label {
     font-size: 10px;
   }
-  
+
   .actions {
     grid-template-columns: 1fr;
   }
+}
+
+/* ICP备案 */
+.icp-footer {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  animation: fadeIn 1s ease-out 0.5s backwards;
+}
+
+.icp-footer a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.icp-footer a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.icp-icon {
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+.icp-footer a:hover .icp-icon {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
 }
 </style>
