@@ -240,16 +240,16 @@ if config('ENABLE_THROTTLE', default=True, cast=bool):
     ]
     REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
         # 基础限流
-        'anon': config('THROTTLE_ANON_RATE', default='30/min'),
-        'user': config('THROTTLE_USER_RATE', default='120/min'),
+        'anon': config('THROTTLE_ANON_RATE', default='100/min'),
+        'user': config('THROTTLE_USER_RATE', default='300/min'),
         # 自定义限流
-        'burst': config('THROTTLE_BURST_RATE', default='60/min'),
+        'burst': config('THROTTLE_BURST_RATE', default='120/min'),
         'sustained': config('THROTTLE_SUSTAINED_RATE', default='10000/day'),
-        'login': config('THROTTLE_LOGIN_RATE', default='5/min'),
-        'password_reset': config('THROTTLE_PASSWORD_RESET_RATE', default='3/hour'),
-        'export': config('THROTTLE_EXPORT_RATE', default='10/hour'),
-        'upload': config('THROTTLE_UPLOAD_RATE', default='30/hour'),
-        'report': config('THROTTLE_REPORT_RATE', default='20/hour'),
+        'login': config('THROTTLE_LOGIN_RATE', default='30/min'),
+        'password_reset': config('THROTTLE_PASSWORD_RESET_RATE', default='10/hour'),
+        'export': config('THROTTLE_EXPORT_RATE', default='30/hour'),
+        'upload': config('THROTTLE_UPLOAD_RATE', default='60/hour'),
+        'report': config('THROTTLE_REPORT_RATE', default='60/hour'),
     }
 
 # Production Security
