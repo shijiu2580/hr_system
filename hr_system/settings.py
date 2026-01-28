@@ -256,7 +256,7 @@ if config('ENABLE_THROTTLE', default=True, cast=bool):
 if not DEBUG:
     if SECRET_KEY == 'django-insecure-your-secret-key-here':
         raise RuntimeError('Production requires secure SECRET_KEY in environment')
-    
+
     # 只有在启用 SSL 重定向时才要求安全 Cookie
     _ssl_redirect = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
     SESSION_COOKIE_SECURE = _ssl_redirect
