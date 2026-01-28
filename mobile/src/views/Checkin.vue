@@ -80,7 +80,7 @@
         <span v-if="locationLoading">正在获取位置...</span>
         <span v-else-if="locationError" class="error">{{ locationError }}</span>
         <span v-else-if="isDefaultLocation" class="warning">
-          定位失败，点击重试
+          {{ locationName || '定位失败' }}，点击重试
           <van-icon name="replay" style="margin-left: 4px;" />
         </span>
         <span v-else>
@@ -304,52 +304,63 @@ function saveAddressToCache(lat, lng, address) {
   } catch { /* ignore */ }
 }
 
-// 逆地理编码：将经纬度转换为地址名称（使用 OpenStreetMap）
+// 高德地图 Web服务 API Key
+const AMAP_KEY = 'c66f75e5da10fa69ee4c5e6a8d2997e7'
+
+// 逆地理编码：将经纬度转换为地址名称（使用高德地图）
 async function reverseGeocode(lat, lng) {
   // 先检查缓存
   const cached = getAddressFromCache(lat, lng)
   if (cached) return cached
 
   try {
-    // 使用 AbortController 设置超时
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 8000)
 
+    // 高德坐标顺序是 lng,lat
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      {
-        headers: { 'Accept-Language': 'zh-CN,zh' },
-        signal: controller.signal
-      }
+      `https://restapi.amap.com/v3/geocode/regeo?key=${AMAP_KEY}&location=${lng},${lat}&extensions=base`,
+      { signal: controller.signal }
     )
     clearTimeout(timeoutId)
 
-    const data = await res.json()
-    if (data && data.address) {
-      const addr = data.address
-      // 优先显示：区/街道 + 道路/建筑
-      const parts = []
-      if (addr.suburb || addr.district) parts.push(addr.suburb || addr.district)
-      if (addr.road) parts.push(addr.road)
-      if (addr.building || addr.amenity) parts.push(addr.building || addr.amenity)
-
-      let result = parts.length > 0 ? parts.join(' ') : null
-      if (!result) {
-        result = data.display_name?.split(',').slice(0, 3).join(' ') || null
-      }
-      // 保存到缓存
-      if (result) saveAddressToCache(lat, lng, result)
-      return result
+    if (!res.ok) {
+      console.warn('高德逆地理编码HTTP错误:', res.status)
+      return '位置已获取'
     }
+
+    const data = await res.json()
+    console.log('高德逆地理编码返回:', data)
+
+    if (data.status === '1' && data.regeocode) {
+      const regeo = data.regeocode
+      // 优先使用格式化地址，去掉省市前缀
+      let address = regeo.formatted_address || ''
+      // 提取区+街道+路名部分
+      const comp = regeo.addressComponent
+      if (comp) {
+        const parts = []
+        if (comp.district) parts.push(comp.district)
+        if (comp.township) parts.push(comp.township)
+        if (comp.street) parts.push(comp.street)
+        if (parts.length > 0) {
+          address = parts.join(' ')
+        }
+      }
+      if (address) {
+        saveAddressToCache(lat, lng, address)
+        return address
+      }
+    }
+    return '位置已获取'
   } catch (e) {
     if (e.name === 'AbortError') {
       console.warn('逆地理编码超时')
     } else {
-      console.warn('逆地理编码失败:', e)
+      console.warn('逆地理编码失败:', e.message)
     }
+    return '位置已获取'
   }
-  // 返回坐标作为备选
-  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
 }
 
 function getLocation() {
@@ -369,7 +380,7 @@ function getLocation() {
     // 异步获取缓存位置的地址
     reverseGeocode(cached.lat, cached.lng).then(addr => {
       if (addr && locationRefreshing.value) {
-        locationName.value = addr + '（更新中）'
+        locationName.value = addr
       }
     })
   }
@@ -424,34 +435,34 @@ function getLocation() {
       return
     }
 
-    console.error('定位失败:', err.code, err.message)
+    console.error('定位失败:', err.code, err.message, 'isSecureContext:', window.isSecureContext)
 
     let errorMsg = ''
     switch (err.code) {
       case 1:
-        errorMsg = '请在手机设置中开启定位权限'
+        errorMsg = '定位权限被拒绝'
         break
       case 2:
-        errorMsg = '无法获取位置，请检查GPS是否开启'
+        errorMsg = 'GPS不可用: ' + (err.message || '位置服务关闭')
         break
       case 3:
-        errorMsg = '定位超时，请到信号好的地方重试'
+        errorMsg = '定位超时，请开启GPS'
         break
       default:
-        errorMsg = '获取位置失败'
+        errorMsg = err.message || '定位失败'
     }
 
     // 定位失败时使用默认位置，但保留提示
     if (!latitude.value) {
       latitude.value = 22.5431
       longitude.value = 114.0579
-      locationName.value = '默认位置'
+      locationName.value = errorMsg  // 直接显示错误原因
       locationError.value = ''
       // 弹出提示引导用户
       showToast({
         message: errorMsg,
         position: 'top',
-        duration: 3000,
+        duration: 4000,
       })
     }
   }
