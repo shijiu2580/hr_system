@@ -278,31 +278,82 @@ function updateTime() {
   const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
   currentDate.value = `${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]}`
 }
-// 逆地理编码：将经纬度转换为地址名称
-async function reverseGeocode(lat, lng) {
+
+// 地址缓存
+const ADDRESS_CACHE_KEY = 'hr_mobile_address_cache_v1'
+function getAddressFromCache(lat, lng) {
   try {
-    // 使用 OpenStreetMap Nominatim 免费服务
+    const raw = localStorage.getItem(ADDRESS_CACHE_KEY)
+    if (!raw) return null
+    const cache = JSON.parse(raw)
+    // 经纬度四舍五入到小数点后3位作为key（约100米精度）
+    const key = `${lat.toFixed(3)},${lng.toFixed(3)}`
+    return cache[key] || null
+  } catch { return null }
+}
+function saveAddressToCache(lat, lng, address) {
+  try {
+    const raw = localStorage.getItem(ADDRESS_CACHE_KEY)
+    const cache = raw ? JSON.parse(raw) : {}
+    const key = `${lat.toFixed(3)},${lng.toFixed(3)}`
+    cache[key] = address
+    // 只保留最近10个地址
+    const keys = Object.keys(cache)
+    if (keys.length > 10) delete cache[keys[0]]
+    localStorage.setItem(ADDRESS_CACHE_KEY, JSON.stringify(cache))
+  } catch { /* ignore */ }
+}
+
+// 逆地理编码：将经纬度转换为地址名称（使用高德地图API）
+const AMAP_KEY = 'a854e5d1b219fe66f65d64dd26b0f0b2'
+
+async function reverseGeocode(lat, lng) {
+  // 先检查缓存
+  const cached = getAddressFromCache(lat, lng)
+  if (cached) return cached
+
+  try {
+    // 使用 AbortController 设置超时
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000)
+
+    // 高德API需要经度在前，纬度在后
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      { headers: { 'Accept-Language': 'zh-CN,zh' } }
+      `https://restapi.amap.com/v3/geocode/regeo?key=${AMAP_KEY}&location=${lng},${lat}&extensions=base`,
+      { signal: controller.signal }
     )
+    clearTimeout(timeoutId)
+
     const data = await res.json()
-    if (data && data.address) {
-      const addr = data.address
-      // 优先显示：区/街道 + 道路/建筑
+    if (data.status === '1' && data.regeocode) {
+      const info = data.regeocode.addressComponent
+      // 显示：区 + 街道 + 道路/POI
       const parts = []
-      if (addr.suburb || addr.district) parts.push(addr.suburb || addr.district)
-      if (addr.road) parts.push(addr.road)
-      if (addr.building || addr.amenity) parts.push(addr.building || addr.amenity)
-      if (parts.length > 0) return parts.join(' ')
-      // 备选：显示完整地址的前几部分
-      return data.display_name?.split(',').slice(0, 3).join(' ') || null
+      if (info.district) parts.push(info.district)
+      if (info.township) parts.push(info.township)
+      if (info.streetNumber?.street) parts.push(info.streetNumber.street)
+
+      let result = parts.length > 0 ? parts.join(' ') : null
+      if (!result && data.regeocode.formatted_address) {
+        // 备选：使用格式化地址，去掉省市
+        result = data.regeocode.formatted_address
+          .replace(/^.+?(省|市|自治区)/, '')
+          .replace(/^.+?市/, '')
+      }
+      // 保存到缓存
+      if (result) saveAddressToCache(lat, lng, result)
+      return result
     }
   } catch (e) {
-    console.warn('逆地理编码失败:', e)
+    if (e.name === 'AbortError') {
+      console.warn('逆地理编码超时')
+    } else {
+      console.warn('逆地理编码失败:', e)
+    }
   }
   return null
 }
+
 function getLocation() {
   locationLoading.value = true
   locationError.value = ''
@@ -356,7 +407,7 @@ function getLocation() {
     locationLoading.value = false
     locationRefreshing.value = false
     writeLocationCache(latitude.value, longitude.value)
-    
+
     // 先显示"定位成功"，然后异步获取地址
     locationName.value = '定位成功'
     const address = await reverseGeocode(latitude.value, longitude.value)
