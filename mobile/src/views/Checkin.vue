@@ -305,7 +305,7 @@ function saveAddressToCache(lat, lng, address) {
 }
 
 // 逆地理编码：将经纬度转换为地址名称（使用高德地图API）
-const AMAP_KEY = 'a854e5d1b219fe66f65d64dd26b0f0b2'
+const AMAP_KEY = 'c66f75e5da10fa69ee4c5e6a8d2997e7'
 
 async function reverseGeocode(lat, lng) {
   // 先检查缓存
