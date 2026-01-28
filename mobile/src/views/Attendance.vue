@@ -47,11 +47,17 @@
           <div class="record-info">
             <div class="time-row">
               <span class="time-label">签到</span>
-              <span class="time-value">{{ item.check_in_time?.slice(0, 5) || '--:--' }}</span>
+              <span class="time-value">
+                {{ item.check_in_time?.slice(0, 5) || '--:--' }}
+                <van-tag v-if="item.notes && item.notes.includes('补签到')" type="primary" size="mini" style="margin-left: 4px;">补</van-tag>
+              </span>
             </div>
             <div class="time-row">
               <span class="time-label">签退</span>
-              <span class="time-value">{{ item.check_out_time?.slice(0, 5) || '--:--' }}</span>
+              <span class="time-value">
+                {{ item.check_out_time?.slice(0, 5) || '--:--' }}
+                <van-tag v-if="item.notes && item.notes.includes('补签退')" type="primary" size="mini" style="margin-left: 4px;">补</van-tag>
+              </span>
             </div>
           </div>
           <div class="record-status">
@@ -111,7 +117,7 @@ onMounted(() => {
 async function fetchRecords() {
   const startDate = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-01`
   const endDate = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-31`
-  
+
   try {
     const res = await api.get('/api/attendance/my/', {
       params: { date_from: startDate, date_to: endDate }
@@ -123,7 +129,7 @@ async function fetchRecords() {
   } catch (e) {
     console.error(e)
   }
-  
+
   refreshing.value = false
   listLoading.value = false
   finished.value = true
