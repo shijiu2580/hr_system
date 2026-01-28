@@ -89,9 +89,24 @@
 
     <!-- 底部导航 -->
     <van-tabbar v-model="activeTab" fixed>
-      <van-tabbar-item icon="home-o" to="/home">首页</van-tabbar-item>
-      <van-tabbar-item icon="location-o" to="/checkin">打卡</van-tabbar-item>
-      <van-tabbar-item icon="user-o" to="/me">我的</van-tabbar-item>
+      <van-tabbar-item to="/home">
+        <span>首页</span>
+        <template #icon="{ active }">
+          <svg-icon name="dashboard" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
+      <van-tabbar-item to="/checkin">
+        <span>打卡</span>
+        <template #icon="{ active }">
+          <svg-icon name="attendance" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
+      <van-tabbar-item to="/me">
+        <span>我的</span>
+        <template #icon="{ active }">
+          <svg-icon name="account" :color="active ? '#1989fa' : '#646566'" size="20" />
+        </template>
+      </van-tabbar-item>
     </van-tabbar>
   </div>
 </template>
@@ -133,10 +148,10 @@ async function handlePasswordDialogClose(action) {
   if (action === 'cancel') {
     return true  // 允许关闭
   }
-  
+
   // 点击确认按钮
   const { old_password, new_password, confirm_password } = passwordForm.value
-  
+
   if (!old_password || !new_password || !confirm_password) {
     await showDialog({ title: '提示', message: '请填写完整信息' })
     return false  // 不关闭弹窗
@@ -149,7 +164,7 @@ async function handlePasswordDialogClose(action) {
     await showDialog({ title: '提示', message: '两次密码不一致' })
     return false
   }
-  
+
   try {
     const res = await api.post('/api/auth/change_password/', {
       old_password,

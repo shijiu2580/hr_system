@@ -317,9 +317,9 @@ async function reverseGeocode(lat, lng) {
 
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      { 
+      {
         headers: { 'Accept-Language': 'zh-CN,zh' },
-        signal: controller.signal 
+        signal: controller.signal
       }
     )
     clearTimeout(timeoutId)
@@ -332,7 +332,7 @@ async function reverseGeocode(lat, lng) {
       if (addr.suburb || addr.district) parts.push(addr.suburb || addr.district)
       if (addr.road) parts.push(addr.road)
       if (addr.building || addr.amenity) parts.push(addr.building || addr.amenity)
-      
+
       let result = parts.length > 0 ? parts.join(' ') : null
       if (!result) {
         result = data.display_name?.split(',').slice(0, 3).join(' ') || null
