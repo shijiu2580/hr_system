@@ -22,7 +22,7 @@ fi
 install_certbot() {
     echo ""
     echo ">>> 安装 Certbot..."
-    
+
     if command -v apt-get &> /dev/null; then
         # Debian/Ubuntu
         apt-get update
@@ -35,7 +35,7 @@ install_certbot() {
         echo "不支持的系统，请手动安装 certbot"
         exit 1
     fi
-    
+
     echo "✓ Certbot 安装完成"
 }
 
@@ -44,7 +44,7 @@ request_cert() {
     echo ""
     echo ">>> 申请 SSL 证书..."
     echo "域名: $DOMAIN, www.$DOMAIN, m.$DOMAIN, api.$DOMAIN"
-    
+
     # 使用 webroot 模式或 nginx 模式申请
     certbot certonly \
         --nginx \
@@ -56,7 +56,7 @@ request_cert() {
         --agree-tos \
         --non-interactive \
         --expand
-    
+
     echo "✓ 证书申请成功"
     echo ""
     echo "证书位置:"
@@ -68,17 +68,17 @@ request_cert() {
 setup_auto_renew() {
     echo ""
     echo ">>> 配置自动续期..."
-    
+
     # 创建续期钩子脚本
     cat > /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh << 'EOF'
 #!/bin/bash
 systemctl reload nginx
 EOF
     chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
-    
+
     # 添加 cron 定时任务 (每天凌晨3点检查)
     (crontab -l 2>/dev/null | grep -v certbot; echo "0 3 * * * certbot renew --quiet") | crontab -
-    
+
     echo "✓ 自动续期已配置 (每天 3:00 检查)"
 }
 
@@ -86,13 +86,13 @@ EOF
 enable_https() {
     echo ""
     echo ">>> 启用 HTTPS 配置..."
-    
+
     NGINX_CONF="/etc/nginx/sites-available/canway.site.conf"
-    
+
     if [ -f "$NGINX_CONF" ]; then
         # 备份原配置
         cp $NGINX_CONF ${NGINX_CONF}.bak
-        
+
         # 替换配置 - 取消 SSL 相关注释
         sed -i 's/# listen 443 ssl http2;/listen 443 ssl http2;/g' $NGINX_CONF
         sed -i 's/# ssl_certificate /ssl_certificate /g' $NGINX_CONF
@@ -100,10 +100,10 @@ enable_https() {
         sed -i 's/# ssl_protocols /ssl_protocols /g' $NGINX_CONF
         sed -i 's/# ssl_ciphers /ssl_ciphers /g' $NGINX_CONF
         sed -i 's/# ssl_prefer_server_ciphers /ssl_prefer_server_ciphers /g' $NGINX_CONF
-        
+
         # 启用 HTTP -> HTTPS 重定向
         # 这部分需要手动启用，因为多行注释处理复杂
-        
+
         echo "✓ HTTPS 配置已启用"
         echo ""
         echo "请手动编辑 $NGINX_CONF 启用 HTTP->HTTPS 重定向部分"
@@ -118,11 +118,11 @@ test_config() {
     echo ""
     echo ">>> 测试 Nginx 配置..."
     nginx -t
-    
+
     echo ""
     echo ">>> 重载 Nginx..."
     systemctl reload nginx
-    
+
     echo "✓ Nginx 重载完成"
 }
 
