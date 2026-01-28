@@ -75,10 +75,14 @@
       </div>
 
       <!-- 位置信息 -->
-      <div class="location-info card">
+      <div class="location-info card" @click="handleLocationClick">
         <svg-icon name="attendance" color="#1989fa" />
         <span v-if="locationLoading">正在获取位置...</span>
         <span v-else-if="locationError" class="error">{{ locationError }}</span>
+        <span v-else-if="isDefaultLocation" class="warning">
+          定位失败，点击重试
+          <van-icon name="replay" style="margin-left: 4px;" />
+        </span>
         <span v-else>
           {{ locationName || '已获取位置' }}
           <span v-if="locationRefreshing" class="location-hint">（更新中）</span>
@@ -189,6 +193,7 @@ const checkInTime = computed(() => todayRecord.value?.check_in_time?.slice(0, 5)
 const checkOutTime = computed(() => todayRecord.value?.check_out_time?.slice(0, 5) || '')
 const isLate = computed(() => todayRecord.value?.attendance_type === 'late')
 const isEarlyLeave = computed(() => todayRecord.value?.attendance_type === 'early_leave')
+const isDefaultLocation = computed(() => locationName.value === '默认位置' || (latitude.value === 22.5431 && longitude.value === 114.0579))
 
 const buttonIcon = computed(() => {
   if (hasCheckedIn.value && hasCheckedOut.value) return 'attendance'
@@ -347,12 +352,18 @@ function getLocation() {
       default:
         locationError.value = '获取位置失败'
     }
-    // 定位失败时也使用默认位置
+    // 定位失败时使用默认位置，但保留提示
     if (!latitude.value) {
       latitude.value = 22.5431
       longitude.value = 114.0579
       locationName.value = '默认位置'
       locationError.value = ''
+      // 弹出提示引导用户
+      showToast({
+        message: '无法获取位置，请检查定位权限',
+        position: 'top',
+        duration: 3000,
+      })
     }
   }
 
@@ -461,6 +472,21 @@ async function handleCheckin() {
   } finally {
     pendingToast?.close?.()
     loading.value = false
+  }
+}
+
+// 点击位置卡片
+function handleLocationClick() {
+  if (isDefaultLocation.value || locationError.value) {
+    showToast({
+      message: '正在重新获取位置...',
+      duration: 1000,
+    })
+    // 重置并重新获取
+    latitude.value = null
+    longitude.value = null
+    locationName.value = ''
+    getLocation()
   }
 }
 </script>
@@ -663,6 +689,12 @@ async function handleCheckin() {
 
 .location-info .error {
   color: #ee0a24;
+}
+
+.location-info .warning {
+  color: #ff976a;
+  display: flex;
+  align-items: center;
 }
 
 /* 休息日样式 */
