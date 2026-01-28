@@ -189,6 +189,13 @@
         <div v-if="globalError" style="background:#fee2e2;color:#991b1b;padding:.6rem .75rem;border:1px solid #fecaca;border-radius:6px;font-size:13px;margin-bottom:1rem;">发生脚本错误：{{ globalError }}</div>
         <slot />
       </div>
+      <!-- ICP备案号 -->
+      <footer class="icp-footer">
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">
+          <svg class="icp-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>蜀ICP备2026004175号-1</span>
+        </a>
+      </footer>
     </div>
   </div>
 </template>
@@ -359,8 +366,12 @@ window.addEventListener('error', (e) => { globalError.value = e.message; });
 .theme-toggle, .user-box button{padding:.45rem .75rem;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;}
 .user-box button:hover,.theme-toggle:hover{filter:brightness(.95);}
 .page-wrapper{padding:1rem 1.5rem;overflow:auto;flex:1;}
+.icp-footer{text-align:center;padding:1.5rem 0 .5rem;font-size:12px;color:#94a3b8;}
+.icp-footer a{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;color:#94a3b8;text-decoration:none;transition:all .2s;}
+.icp-footer a:hover{color:#3b82f6;background:#eff6ff;}
 [data-theme=dark] .layout-shell{background:#0f172a;}
 [data-theme=dark] .page-wrapper{background:#0f172a;}
+[data-theme=dark] .icp-footer a:hover{background:#1e293b;color:#60a5fa;}
 [data-theme=dark] .logo-title{color:#f8fafc;}
 [data-theme=dark] .nav-group a .icon{filter:brightness(0) invert(1) opacity(.85);}
 </style>
