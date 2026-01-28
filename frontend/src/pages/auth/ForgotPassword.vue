@@ -575,5 +575,4 @@ async function submitReset() {
   from { opacity: 0; transform: translate(-50%, 10px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
-}
 </style>
