@@ -304,9 +304,7 @@ function saveAddressToCache(lat, lng, address) {
   } catch { /* ignore */ }
 }
 
-// 逆地理编码：将经纬度转换为地址名称（使用高德地图API）
-const AMAP_KEY = 'c66f75e5da10fa69ee4c5e6a8d2997e7'
-
+// 逆地理编码：将经纬度转换为地址名称（使用 OpenStreetMap）
 async function reverseGeocode(lat, lng) {
   // 先检查缓存
   const cached = getAddressFromCache(lat, lng)
@@ -317,36 +315,31 @@ async function reverseGeocode(lat, lng) {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-    // 高德API需要经度在前，纬度在后
-    const url = `https://restapi.amap.com/v3/geocode/regeo?key=${AMAP_KEY}&location=${lng},${lat}&extensions=base`
-    console.log('请求高德API:', url)
-
-    const res = await fetch(url, { signal: controller.signal })
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      { 
+        headers: { 'Accept-Language': 'zh-CN,zh' },
+        signal: controller.signal 
+      }
+    )
     clearTimeout(timeoutId)
 
     const data = await res.json()
-    console.log('高德API响应:', data)
-
-    if (data.status === '1' && data.regeocode) {
-      const info = data.regeocode.addressComponent
-      // 显示：区 + 街道 + 道路/POI
+    if (data && data.address) {
+      const addr = data.address
+      // 优先显示：区/街道 + 道路/建筑
       const parts = []
-      if (info.district) parts.push(info.district)
-      if (info.township) parts.push(info.township)
-      if (info.streetNumber?.street) parts.push(info.streetNumber.street)
-
+      if (addr.suburb || addr.district) parts.push(addr.suburb || addr.district)
+      if (addr.road) parts.push(addr.road)
+      if (addr.building || addr.amenity) parts.push(addr.building || addr.amenity)
+      
       let result = parts.length > 0 ? parts.join(' ') : null
-      if (!result && data.regeocode.formatted_address) {
-        // 备选：使用格式化地址，去掉省市
-        result = data.regeocode.formatted_address
-          .replace(/^.+?(省|市|自治区)/, '')
-          .replace(/^.+?市/, '')
+      if (!result) {
+        result = data.display_name?.split(',').slice(0, 3).join(' ') || null
       }
       // 保存到缓存
       if (result) saveAddressToCache(lat, lng, result)
       return result
-    } else {
-      console.warn('高德API返回错误:', data.info || data)
     }
   } catch (e) {
     if (e.name === 'AbortError') {
@@ -467,7 +460,7 @@ function getLocation() {
   navigator.geolocation.getCurrentPosition(
     onSuccess,
     onError,
-    { 
+    {
       enableHighAccuracy: true,  // 强制使用GPS高精度
       timeout: 15000,            // 15秒超时
       maximumAge: 0              // 不使用缓存，获取实时位置
