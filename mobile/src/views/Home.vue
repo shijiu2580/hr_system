@@ -141,9 +141,12 @@ const checkinTime = computed(() => {
   // 工作日
   if (!todayAttendance.value) return '点击进行签到'
   if (todayAttendance.value.check_out_time) {
-    return `签退时间 ${todayAttendance.value.check_out_time.slice(0, 5)}`
+    return `签退时间 ${todayAttendance.value.check_out_time?.slice(0, 5) || ''}`
   }
-  return `签到时间 ${todayAttendance.value.check_in_time.slice(0, 5)}`
+  if (todayAttendance.value.check_in_time) {
+    return `签到时间 ${todayAttendance.value.check_in_time.slice(0, 5)}`
+  }
+  return '点击进行签到'
 })
 
 // 签到卡片图标
