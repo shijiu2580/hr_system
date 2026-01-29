@@ -303,17 +303,17 @@ window.addEventListener('error', (e) => { globalError.value = e.message; });
 </script>
 <style scoped>
 .layout-shell{display:flex;min-height:100vh;background:#f8fafc;}
-.layout-sidebar{width:160px;background:#ffffff;border-right:1px solid #e2e8f0;padding:1rem 0 2rem;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:50;transition:width .4s cubic-bezier(.25,.8,.25,1),box-shadow .4s ease;box-shadow:0 0 0 rgba(0,0,0,0);scrollbar-width:none;-ms-overflow-style:none;}
+.layout-sidebar{width:160px;background:#ffffff;border-right:1px solid #e2e8f0;padding:1rem 0 0;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:50;transition:width .4s cubic-bezier(.25,.8,.25,1),box-shadow .4s ease;box-shadow:0 0 0 rgba(0,0,0,0);scrollbar-width:none;-ms-overflow-style:none;}
 .layout-sidebar::-webkit-scrollbar{display:none;}
 .layout-sidebar.collapsed{width:64px;}
 .layout-sidebar:not(.collapsed){box-shadow:0 4px 18px -4px rgba(0,0,0,.18),0 2px 8px -2px rgba(0,0,0,.12);}
-.logo-title{font-size:18px;margin:0 0 .8rem;font-weight:600;line-height:1;white-space:nowrap;display:flex;align-items:center;}
+.logo-title{font-size:18px;margin:0 0 .8rem;font-weight:600;line-height:1;white-space:nowrap;display:flex;align-items:center;flex-shrink:0;}
 .logo-hr{width:64px;min-width:64px;text-align:center;flex-shrink:0;}
 .logo-text{transition:opacity .3s ease,transform .3s ease;opacity:1;transform:translateX(0);}
 .layout-sidebar.collapsed .logo-text{opacity:0;transform:translateX(-8px);pointer-events:none;}
 .layout-sidebar.collapsed .logo-title{font-size:18px;}
 [data-theme=dark] .layout-sidebar{background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);border-right-color:#334155;color:#e2e8f0;}
-.nav-group{display:flex;flex-direction:column;gap:.25rem;margin-top:.4rem;flex:1;}
+.nav-group{display:flex;flex-direction:column;gap:.25rem;margin-top:.4rem;flex:1;min-height:0;}
 .nav-group a.nav-item{display:flex;align-items:center;padding:.55rem 0;border-radius:6px;text-decoration:none;color:#1e293b;font-size:14px;line-height:1.2;white-space:nowrap;width:100%;box-sizing:border-box;}
 .nav-group a .icon-box,.nav-item-parent .icon-box{width:64px;min-width:64px;display:flex;justify-content:center;align-items:center;flex-shrink:0;}
 .nav-group a .icon,.nav-item-parent .icon{width:20px;height:20px;object-fit:contain;}
