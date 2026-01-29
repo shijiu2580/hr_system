@@ -313,7 +313,7 @@ window.addEventListener('error', (e) => { globalError.value = e.message; });
 .layout-sidebar.collapsed .logo-text{opacity:0;transform:translateX(-8px);pointer-events:none;}
 .layout-sidebar.collapsed .logo-title{font-size:18px;}
 [data-theme=dark] .layout-sidebar{background:linear-gradient(180deg,#0f172a 0%,#1e293b 100%);border-right-color:#334155;color:#e2e8f0;}
-.nav-group{display:flex;flex-direction:column;gap:.25rem;margin-top:.4rem;}
+.nav-group{display:flex;flex-direction:column;gap:.25rem;margin-top:.4rem;flex:1;}
 .nav-group a.nav-item{display:flex;align-items:center;padding:.55rem 0;border-radius:6px;text-decoration:none;color:#1e293b;font-size:14px;line-height:1.2;white-space:nowrap;width:100%;box-sizing:border-box;}
 .nav-group a .icon-box,.nav-item-parent .icon-box{width:64px;min-width:64px;display:flex;justify-content:center;align-items:center;flex-shrink:0;}
 .nav-group a .icon,.nav-item-parent .icon{width:20px;height:20px;object-fit:contain;}
