@@ -203,6 +203,7 @@
           :options="pageSizeSelectOptions"
           class="page-size-custom-select"
           @change="currentPage = 1"
+          :dropUp="true"
         />
         <span class="page-size-label">条</span>
         <button class="page-btn" :disabled="currentPage <= 1" @click="goToPage(1)">«</button>
@@ -1563,18 +1564,7 @@ function resetFilters() {
   border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   z-index: 1001;
-  margin-top: 4px;
-}
-
-.employee-option {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  font-size: 14px;
-  color: #374151;
-  cursor: pointer;
-  transition: background 0.15s;
+  margin-top: 0;
 }
 
 .employee-option:hover {

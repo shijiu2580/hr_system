@@ -3,6 +3,9 @@ import api from '../utils/api';
 
 const LS_ACCESS = 'hr_access_token';
 const LS_REFRESH = 'hr_refresh_token';
+// 兼容旧键名/测试使用的键名
+const LEGACY_ACCESS = 'accessToken';
+const LEGACY_REFRESH = 'refreshToken';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -22,15 +25,27 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     hydrateFromStorage(){
       if(!this.accessToken){
-        this.accessToken = localStorage.getItem(LS_ACCESS);
-        this.refreshToken = localStorage.getItem(LS_REFRESH);
+        this.accessToken = localStorage.getItem(LS_ACCESS) || localStorage.getItem(LEGACY_ACCESS);
+      }
+      if(!this.refreshToken){
+        this.refreshToken = localStorage.getItem(LS_REFRESH) || localStorage.getItem(LEGACY_REFRESH);
       }
     },
     persistTokens(){
-      if(this.accessToken){ localStorage.setItem(LS_ACCESS, this.accessToken); }
-      else { localStorage.removeItem(LS_ACCESS); }
-      if(this.refreshToken){ localStorage.setItem(LS_REFRESH, this.refreshToken); }
-      else { localStorage.removeItem(LS_REFRESH); }
+      if(this.accessToken){
+        localStorage.setItem(LS_ACCESS, this.accessToken);
+        localStorage.setItem(LEGACY_ACCESS, this.accessToken);
+      } else {
+        localStorage.removeItem(LS_ACCESS);
+        localStorage.removeItem(LEGACY_ACCESS);
+      }
+      if(this.refreshToken){
+        localStorage.setItem(LS_REFRESH, this.refreshToken);
+        localStorage.setItem(LEGACY_REFRESH, this.refreshToken);
+      } else {
+        localStorage.removeItem(LS_REFRESH);
+        localStorage.removeItem(LEGACY_REFRESH);
+      }
     },
     async fetchMe(){
       this.hydrateFromStorage();
@@ -107,18 +122,39 @@ export const useAuthStore = defineStore('auth', {
         throw e;
       }
     },
+    setAccessToken(token){
+      this.accessToken = token;
+      this.persistTokens();
+    },
+    initFromStorage(){
+      this.hydrateFromStorage();
+    },
     forceLogout(){
-      this.accessToken = null; this.refreshToken = null; this.user = null; this.roles = []; this.permissions = []; this.persistTokens();
+      this.accessToken = null;
+      this.refreshToken = null;
+      this.user = null;
+      this.roles = [];
+      this.permissions = [];
       this.mustChangePassword = false;
+      this.persistTokens();
     },
     async logout(){
+      // 先本地退出，确保同步清空测试断言所需状态
+      this.forceLogout();
+      this.ready = true;
       try { await api.post('/auth/logout/'); } catch(_) {}
-      this.forceLogout(); this.ready = true;
     },
     hasPermissionKey(key){
       if(!key) return false;
+      if(this.user?.is_superuser) return true;
       if(this.roles.some(r => r.code === 'admin')) return true;
+      if(this.user?.role?.permissions && Array.isArray(this.user.role.permissions)) {
+        if(this.user.role.permissions.includes(key)) return true;
+      }
       return this.permissions.includes(key);
+    },
+    hasPermission(key){
+      return this.hasPermissionKey(key);
     }
   }
 });

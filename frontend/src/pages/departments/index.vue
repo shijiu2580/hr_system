@@ -4,46 +4,41 @@
     <div class="page-header">
       <div class="header-left">
         <div class="header-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7" rx="1"/>
-            <rect x="14" y="3" width="7" height="7" rx="1"/>
-            <rect x="3" y="14" width="7" height="7" rx="1"/>
-            <rect x="14" y="14" width="7" height="7" rx="1"/>
-          </svg>
+          <img src="/icons/departments.svg" alt="" />
         </div>
         <span class="header-title">部门管理</span>
       </div>
-      <button class="btn-apply" @click="showCreateModal = true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        新建部门
-      </button>
+      <div class="header-right">
+        <div class="stat-badges">
+          <span class="stat-badge">
+            <span class="stat-value">{{ items.length }}</span>
+            <span class="stat-label">部门总数</span>
+          </span>
+          <span class="stat-badge active">
+            <span class="stat-value">{{ treeData.length }}</span>
+            <span class="stat-label">顶级部门</span>
+          </span>
+        </div>
+        <button class="btn-primary" @click="showCreateModal = true">
+          <img src="/icons/add.svg" alt="" style="width: 16px; height: 16px; filter: brightness(0) invert(1);" />
+          新建部门
+        </button>
+      </div>
     </div>
 
     <!-- 筛选栏 -->
     <div class="filters-bar">
-      <div class="tree-actions">
-        <button class="btn-expand-all" @click="expandAll">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-          全部展开
-        </button>
-        <button class="btn-collapse-all" @click="collapseAll">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="18 15 12 9 6 15"/>
-          </svg>
-          全部收起
-        </button>
+      <div class="filter-item search-item">
+        <img src="/icons/search.svg" class="search-icon" alt="" />
+        <input v-model="searchKeyword" type="text" placeholder="搜索部门名称..." class="filter-input" />
       </div>
-      <div class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="M21 21l-4.35-4.35"/>
-        </svg>
-        <input v-model="searchKeyword" type="text" placeholder="搜索部门名称..." />
+      <div class="filter-actions">
+        <button class="btn-outline" @click="expandAll">
+          展开全部
+        </button>
+        <button class="btn-outline" @click="collapseAll">
+          折叠全部
+        </button>
       </div>
     </div>
 
@@ -812,13 +807,15 @@ onMounted(loadData)
 
 <style scoped>
 .page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
   min-height: 100vh;
   background: #f8fafc;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 /* 顶部标题栏 */
@@ -826,7 +823,7 @@ onMounted(loadData)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 0;
+  margin-bottom: 1rem;
 }
 
 .header-left {
@@ -836,19 +833,24 @@ onMounted(loadData)
 }
 
 .header-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  width: 40px;
+  height: 40px;
+  background: #eff6ff;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.header-icon img {
+  width: 24px;
+  height: 24px;
+}
+
 .header-icon svg {
   width: 20px;
   height: 20px;
-  color: #fff;
+  color: #2563eb;
 }
 
 .header-title {
@@ -857,108 +859,150 @@ onMounted(loadData)
   color: #1e293b;
 }
 
-.btn-apply {
+.header-right {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  gap: 1rem;
+}
+
+/* 统计徽章 */
+.stat-badges {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  background: #f1f5f9;
+  min-width: 90px;
+}
+
+.stat-badge.active {
+  background: #eff6ff;
+}
+
+.stat-badge.active .stat-value {
+  color: #2563eb;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #2563eb;
   color: #fff;
-  border: none;
-  border-radius: 10px;
+  border: 0;
+  padding: 0.5rem 1rem;
   font-size: 14px;
-  font-weight: 500;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
 }
 
-.btn-apply svg {
-  width: 16px;
-  height: 16px;
-}
-
-.btn-apply:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+.btn-primary:hover {
+  background: #1d4ed8;
 }
 
 /* 筛选栏 */
 .filters-bar {
   display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.tree-actions {
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.search-item {
+  position: relative;
+  max-width: 320px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.filter-actions {
   display: flex;
   gap: 0.5rem;
 }
 
-.btn-expand-all,
-.btn-collapse-all {
-  display: flex;
+.btn-outline {
+  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.45rem 0.9rem;
   background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
   font-size: 13px;
-  color: #64748b;
+  color: #475569;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-expand-all:hover,
-.btn-collapse-all:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #334155;
-}
-
-.btn-expand-all svg,
-.btn-collapse-all svg {
-  width: 14px;
-  height: 14px;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0 0.75rem;
-  background: #fff;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 10px;
-  flex: 1;
-  max-width: 300px;
-  height: 36px;
-  box-sizing: border-box;
-}
-
-.search-box svg {
-  width: 16px;
-  height: 16px;
-  color: #94a3b8;
-}
-
-.search-box input {
-  border: none;
-  outline: none;
-  font-size: 14px;
-  flex: 1;
-  background: transparent;
-  height: 100%;
-  padding: 0;
+.btn-outline:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b;
 }
 
 /* 表格容器 */
 .table-container {
   background: #fff;
-  border-radius: 12px;
   border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -969,68 +1013,69 @@ onMounted(loadData)
 
 .data-table thead {
   background: #f8fafc;
-}
-
-.data-table th {
-  padding: 0.85rem 1rem;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
   border-bottom: 1px solid #e2e8f0;
 }
 
+.data-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .data-table td {
-  padding: 0.85rem 1rem;
-  font-size: 14px;
-  color: #334155;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 14px;
+  vertical-align: middle;
 }
 
 .data-row:hover td {
   background: #f8fafc;
 }
 
-.col-name { min-width: 260px; }
-.col-desc { min-width: 180px; max-width: 250px; }
-.col-supervisors { min-width: 80px; }
-.col-employees { min-width: 80px; }
-.col-actions { min-width: 260px; }
+.col-name { min-width: 280px; width: 35%; }
+.col-desc { width: 25%; }
+.col-supervisors { width: 15%; }
+.col-employees { width: 10%; }
+.col-actions { width: 15%; min-width: 140px; }
 
 /* 描述文本 */
 .desc-text {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   color: #64748b;
   font-size: 13px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* 树形结构样式 */
 .expand-btn {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-  flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #94a3b8;
+  margin-right: 4px;
+  transition: color 0.2s;
 }
 
 .expand-btn:hover {
-  background: #e0f2fe;
+  color: #475569;
 }
 
 .expand-btn svg {
   width: 14px;
   height: 14px;
-  color: #64748b;
   transition: transform 0.2s;
 }
 
@@ -1040,48 +1085,30 @@ onMounted(loadData)
 
 .expand-placeholder {
   width: 24px;
-  flex-shrink: 0;
+  display: inline-block;
 }
 
 /* 树线 */
 .tree-line {
-  position: relative;
-  width: 20px;
+  position: absolute;
+  left: 21px;
+  top: -50%;
+  width: 1px;
   height: 100%;
-  flex-shrink: 0;
+  border-left: 1px dashed #cbd5e1;
 }
 
 .tree-line::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: -16px;
-  width: 1px;
-  height: calc(100% + 16px);
-  background: #cbd5e1;
-}
-
-.tree-line::after {
-  content: '';
-  position: absolute;
-  left: 0;
   top: 50%;
+  left: 0;
   width: 12px;
-  height: 1px;
-  background: #cbd5e1;
+  border-top: 1px dashed #cbd5e1;
 }
 
-.tree-line.last-child::before {
-  height: calc(50% + 16px);
-}
-
-.tree-line.level2::before {
-  left: -32px;
-}
-
-.tree-line.level2::after {
-  left: -32px;
-  width: 44px;
+.tree-line.last-child {
+  height: 50%;
 }
 
 /* 行样式 */
@@ -1776,28 +1803,27 @@ onMounted(loadData)
 .btn-icon {
   width: 28px;
   height: 28px;
-  padding: 4px;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .btn-icon:hover {
-  background: #f1f5f9;
-  color: #2563eb;
   border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 .btn-icon.danger:hover {
+  border-color: #fecaca;
   background: #fef2f2;
   color: #ef4444;
-  border-color: #fecaca;
 }
 
 .btn-icon svg {

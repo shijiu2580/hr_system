@@ -441,8 +441,12 @@ onMounted(loadData)
 
 /* CustomSelect 统一样式 */
 .filter-dropdown :deep(.select-trigger) {
-  padding: 0 0.75rem;
-  padding-right: 2rem;
+  height: 36px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-sizing: border-box;
+  padding: 0 0.75rem !important;
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
   background: #fff;

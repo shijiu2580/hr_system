@@ -273,10 +273,7 @@
           <div class="filter-field">
             <span class="filter-label">关键字搜索</span>
             <div class="search-input-wrapper">
-              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
+              <img class="search-icon" src="/icons/search.svg" alt="" />
               <input v-model.trim="logKeyword" placeholder="搜索动作或详情..." class="search-input" />
             </div>
           </div>
@@ -366,7 +363,7 @@ const backupStats = computed(() => {
   const list = backups.value || []
   const totalSize = list.reduce((sum, item) => sum + (item.size || 0), 0)
   const latest = list[0] || null
-  
+
   return {
     count: list.length,
     totalSize,
@@ -378,7 +375,7 @@ const backupStats = computed(() => {
 async function loadBackups() {
   loadingBackups.value = true
   errorBackup.value = ''
-  
+
   try {
     const { data } = await api.get('/backups/')
     backups.value = data.backups || []
@@ -393,7 +390,7 @@ async function createBackup() {
   creating.value = true
   errorBackup.value = ''
   successBackup.value = ''
-  
+
   try {
     const { data } = await api.post('/backups/create/')
     successBackup.value = data.detail || '创建成功'
@@ -407,11 +404,11 @@ async function createBackup() {
 
 async function cleanBackups() {
   if (!confirm('确认清理旧备份，保留最近 5 个？')) return
-  
+
   cleaning.value = true
   errorBackup.value = ''
   successBackup.value = ''
-  
+
   try {
     const { data } = await api.post('/backups/clean/', { keep: 5 })
     successBackup.value = data.detail || '清理完成'
@@ -425,11 +422,11 @@ async function cleanBackups() {
 
 async function restore(b) {
   if (!confirm(`确认将 ${b.name} 恢复？将生成自动备份副本。`)) return
-  
+
   restoringName.value = b.name
   errorBackup.value = ''
   successBackup.value = ''
-  
+
   try {
     const { data } = await api.post('/backups/restore/', { filename: b.name })
     successBackup.value = data.detail || '恢复成功'
@@ -453,18 +450,18 @@ const logKeyword = ref('')
 // 用户列表选项（从日志中提取）
 const userOptions = computed(() => {
   const users = new Set()
-  
+
   logs.value.forEach(l => {
     if (l.user?.username) users.add(l.user.username)
   })
-  
+
   const options = [
     { value: '', label: '全部用户' },
     { value: 'system', label: '系统' }
   ]
-  
+
   users.forEach(u => options.push({ value: u, label: u }))
-  
+
   return options
 })
 
@@ -478,7 +475,7 @@ function clearFilters() {
 
 const logStats = computed(() => {
   const list = logs.value || []
-  
+
   return {
     total: list.length,
     errorCount: list.filter(item => item.level === 'ERROR').length,
@@ -489,7 +486,7 @@ const logStats = computed(() => {
 async function reloadLogs() {
   loadingLogs.value = true
   errorLogs.value = ''
-  
+
   try {
     const params = levelFilter.value ? { level: levelFilter.value } : {}
     const { data } = await api.get('/logs/', { params })
@@ -503,11 +500,11 @@ async function reloadLogs() {
 
 async function clearLogs() {
   if (!confirm('确认清空当前筛选范围日志？')) return
-  
+
   clearingLogs.value = true
   errorLogs.value = ''
   successLogs.value = ''
-  
+
   try {
     const payload = levelFilter.value ? { level: levelFilter.value } : {}
     const { data } = await api.post('/logs/clear/', payload)
@@ -522,7 +519,7 @@ async function clearLogs() {
 
 const filteredLogs = computed(() => {
   let result = logs.value
-  
+
   // 用户筛选
   if (userFilter.value) {
     if (userFilter.value === 'system') {
@@ -531,16 +528,16 @@ const filteredLogs = computed(() => {
       result = result.filter(l => l.user?.username === userFilter.value)
     }
   }
-  
+
   // 关键字筛选
   const kw = logKeyword.value.trim().toLowerCase()
   if (kw) {
-    result = result.filter(l => 
-      (l.action && l.action.toLowerCase().includes(kw)) || 
+    result = result.filter(l =>
+      (l.action && l.action.toLowerCase().includes(kw)) ||
       (l.detail && l.detail.toLowerCase().includes(kw))
     )
   }
-  
+
   return result
 })
 
@@ -562,7 +559,7 @@ function formatTs(ts) {
 
 function formatSize(bytes = 0) {
   if (!bytes) return '0 MB'
-  
+
   const mb = bytes / 1024 / 1024
   if (mb < 1) {
     return `${(bytes / 1024).toFixed(1)} KB`
@@ -589,7 +586,7 @@ const healthStatus = computed(() => {
 
 async function loadHealth() {
   loadingHealth.value = true
-  
+
   try {
     const { data } = await api.get('/health/')
     healthData.value = data
@@ -1493,19 +1490,19 @@ onMounted(() => {
   .card {
     padding: 1.3rem;
   }
-  
+
   .hero-panel {
     padding: 1.4rem;
   }
-  
+
   .metrics-grid {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
-  
+
   .system-info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }

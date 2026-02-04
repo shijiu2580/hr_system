@@ -326,7 +326,9 @@ function updateClock() {
 
 async function handleCheckIn() {
   const now = new Date();
-  const isLate = now.getHours() >= 9; // 9点后算迟到
+  const hours = now.getHours();
+  // 9:00-18:00之间签到算迟到，需要填原因；18:00后是加班签到，不需要原因
+  const isLate = hours >= 9 && hours < 18;
 
   if (isLate) {
     // 迟到需要填写原因
@@ -336,14 +338,16 @@ async function handleCheckIn() {
     pendingAction.value = 'check_in';
     showReasonModal.value = true;
   } else {
-    // 正常签到
+    // 正常签到或加班签到
     await doCheckIn('');
   }
 }
 
 async function handleCheckOut() {
   const now = new Date();
-  const isEarlyLeave = now.getHours() < 18; // 18点前算早退
+  const hours = now.getHours();
+  // 18:00前签退算早退，需要填原因；18:00后是正常/加班签退，不需要原因
+  const isEarlyLeave = hours < 18;
   const isUpdate = todayRecord.value && todayRecord.value.check_out_time;
 
   if (isEarlyLeave && !isUpdate) {
@@ -357,7 +361,7 @@ async function handleCheckOut() {
     // 更新签退时间
     await doUpdateCheckOut();
   } else {
-    // 正常签退
+    // 正常签退或加班签退
     await doCheckOut('');
   }
 }
