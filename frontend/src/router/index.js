@@ -46,6 +46,30 @@ const ResignationProgress = () => import('../pages/resignation/Progress.vue');
 const ResignationApply = () => import('../pages/resignation/Apply.vue');
 const ResignationApproval = () => import('../pages/resignation/Approval.vue');
 
+// 预加载：用于侧边栏二级菜单展开时提前加载对应页面模块，减少点击后的首开等待。
+const SUBMENU_PRELOADERS = {
+  employees: [Employees, EmployeeList, EmployeeOnboarding, EmployeeCreate, EmployeeEdit, EmployeeDetail],
+  attendance: [AttendanceRecords, AttendanceManage, AttendanceApproval, AttendanceLocations, AttendanceAlerts, AttendanceForm],
+  leaves: [LeaveApply, LeaveApproval, LeaveCreate, BusinessTrip, BusinessTripCreate],
+  salaries: [Salaries, SalaryCreate, SalaryRecords, TravelExpense, ExpenseApproval],
+  resignation: [ResignationProgress, ResignationApply, ResignationApproval],
+};
+
+export function preloadSubmenu(name) {
+  const loaders = SUBMENU_PRELOADERS[name];
+  if (!loaders || loaders.length === 0) return Promise.resolve();
+
+  return Promise.allSettled(
+    loaders.map((loader) => {
+      try {
+        return loader();
+      } catch (e) {
+        return Promise.resolve();
+      }
+    })
+  ).then(() => undefined);
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [

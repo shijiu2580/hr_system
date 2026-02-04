@@ -6,11 +6,12 @@
     <div class="pagination-controls">
       <div class="page-size-select">
         <label>每页</label>
-        <CustomSelect 
-          :modelValue="pageSize" 
+        <CustomSelect
+          :modelValue="pageSize"
           @update:modelValue="$emit('update:pageSize', Number($event))"
           :options="pageSizeSelectOptions"
           class="size-dropdown"
+          :dropUp="true"
         />
       </div>
       <div class="page-btns">

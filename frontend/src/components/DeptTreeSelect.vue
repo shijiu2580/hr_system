@@ -132,11 +132,19 @@ const displayValue = computed(() => {
 function updateDropdownPosition() {
   if (!selectRef.value) return
   const rect = selectRef.value.getBoundingClientRect()
+
+  // 处理 body zoom (Fix: zoom 导致坐标偏移)
+  let zoom = 1
+  const bodyZoom = getComputedStyle(document.body).zoom
+  if (bodyZoom) {
+    zoom = parseFloat(bodyZoom) || 1
+  }
+
   dropdownStyle.value = {
     position: 'fixed',
-    top: `${rect.bottom + 4}px`,
-    left: `${rect.left}px`,
-    width: `${Math.max(rect.width, 200)}px`,
+    top: `${rect.bottom / zoom}px`,
+    left: `${rect.left / zoom}px`,
+    width: `${Math.max(rect.width / zoom, 200)}px`,
     zIndex: 9999
   }
 }
@@ -182,16 +190,17 @@ onUnmounted(() => {
 }
 
 .select-trigger {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
   padding: 0 12px;
-  height: 38px;
+  padding-right: 32px;
+  height: 36px;
   background: #fff;
   border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
+  box-sizing: border-box;
   transition: border-color 0.15s;
 }
 
@@ -214,15 +223,19 @@ onUnmounted(() => {
 }
 
 .select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
   color: #94a3b8;
   transition: transform 0.2s;
-  flex-shrink: 0;
+  pointer-events: none;
 }
 
 .dept-tree-select.open .select-arrow {
-  transform: rotate(180deg);
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .select-dropdown {

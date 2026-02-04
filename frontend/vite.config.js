@@ -6,7 +6,7 @@ import { resolve } from 'path';
 // strictPort: true 端口被占用时直接报错，便于我们明确解决冲突。
 export default defineConfig({
   plugins: [vue()],
-  
+
   // 路径别名
   resolve: {
     alias: {
@@ -17,7 +17,7 @@ export default defineConfig({
       '@stores': resolve(__dirname, 'src/stores'),
     },
   },
-  
+
   server: {
     host: '0.0.0.0',
     port: 5173,
@@ -34,7 +34,11 @@ export default defineConfig({
       }
     }
   },
-  
+
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'pinia', 'axios', 'xlsx']
+  },
+
   // 构建优化
   build: {
     // 代码分割策略
@@ -66,12 +70,7 @@ export default defineConfig({
     // CSS 代码分割
     cssCodeSplit: true,
   },
-  
-  // 依赖预构建优化
-  optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'axios'],
-  },
-  
+
   // 测试配置
   test: {
     globals: true,

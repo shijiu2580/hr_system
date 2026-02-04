@@ -92,6 +92,7 @@
             :options="pageSizeOptions"
             class="page-size-custom-select"
             @change="currentPage = 1"
+            :dropUp="true"
           />
           <span class="page-size-label">条</span>
           <button class="page-btn" :disabled="currentPage <= 1" @click="goToPage(1)">«</button>

@@ -104,6 +104,7 @@
             :options="pageSizeSelectOptions"
             class="page-size-custom-select"
             @change="currentPage = 1"
+            :dropUp="true"
           />
           <span class="page-size-label">条</span>
           <button class="page-btn" :disabled="currentPage <= 1" @click="goToPage(1)">«</button>
@@ -385,6 +386,10 @@ async function handleApprove(id, action) {
   color: #1e293b;
 }
 
+.tab-btn:active {
+  transform: scale(0.96);
+}
+
 .tab-btn.active {
   color: #2563eb;
   border-bottom-color: #2563eb;
@@ -407,6 +412,10 @@ async function handleApprove(id, action) {
 
 .btn-refresh:hover:not(:disabled) {
   background: #e2e8f0;
+}
+
+.btn-refresh:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .btn-refresh:disabled {
@@ -583,6 +592,10 @@ async function handleApprove(id, action) {
 
 .batch-approve-btn:hover:not(:disabled) {
   background: #f1f5f9;
+}
+
+.batch-approve-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .batch-approve-btn:disabled {
@@ -767,6 +780,10 @@ async function handleApprove(id, action) {
   background: #059669;
 }
 
+.btn-approve:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
 .btn-reject {
   padding: 0.375rem 0.75rem;
   font-size: 12px;
@@ -779,6 +796,10 @@ async function handleApprove(id, action) {
 
 .btn-reject:hover:not(:disabled) {
   background: #dc2626;
+}
+
+.btn-reject:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .btn-approve:disabled,
@@ -956,6 +977,10 @@ async function handleApprove(id, action) {
 .page-btn:hover:not(:disabled) {
   background: #f3f4f6;
   border-color: #9ca3af;
+}
+
+.page-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .page-btn:disabled {

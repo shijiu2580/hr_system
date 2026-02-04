@@ -64,14 +64,11 @@
 		<section class="filter-bar">
 			<div class="filter-row">
 				<div class="search-wrapper">
-					<svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-						<circle cx="11" cy="11" r="7" />
-						<path d="M21 21l-4.35-4.35" />
-					</svg>
-					<input 
-						v-model.trim="filters.search" 
-						type="text" 
-						placeholder="搜索文档标题或上传人..." 
+					<img class="search-icon" src="/icons/search.svg" alt="" />
+					<input
+						v-model.trim="filters.search"
+						type="text"
+						placeholder="搜索文档标题或上传人..."
 						class="search-input"
 					/>
 				</div>
@@ -118,10 +115,10 @@
 						<div class="doc-version">v{{ doc.version }}</div>
 						<span v-if="!doc.is_active" class="doc-status inactive">已停用</span>
 					</div>
-					
+
 					<h3 class="doc-title">{{ doc.title }}</h3>
 					<p class="doc-desc">{{ doc.description || '暂无描述信息' }}</p>
-					
+
 					<div class="doc-meta">
 						<div class="meta-item">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -137,7 +134,7 @@
 							<span>{{ formatDate(doc.updated_at) }}</span>
 						</div>
 					</div>
-					
+
 					<div class="doc-actions">
 						<button class="action-btn download" @click="downloadDoc(doc)">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -173,7 +170,7 @@
 					</div>
 				</article>
 			</div>
-			
+
 			<!-- 空状态 -->
 			<div v-else class="empty-state">
 				<div class="empty-icon">
@@ -953,29 +950,29 @@ onMounted(() => loadDocuments())
 		flex-direction: column;
 		align-items: flex-start;
 	}
-	
+
 	.filter-row {
 		flex-direction: column;
 		align-items: stretch;
 		gap: 0.75rem;
 	}
-	
+
 	.search-wrapper {
 		width: 100%;
 	}
-	
+
 	.filter-toggle {
 		margin-left: 0;
 	}
-	
+
 	.doc-grid {
 		grid-template-columns: 1fr;
 	}
-	
+
 	.doc-actions {
 		flex-direction: column;
 	}
-	
+
 	.action-btn {
 		justify-content: center;
 	}

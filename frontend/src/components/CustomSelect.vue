@@ -84,13 +84,20 @@ function updateDropdownPosition() {
   const scrollX = window.scrollX || window.pageXOffset;
   const scrollY = window.scrollY || window.pageYOffset;
 
+  // 处理 body zoom (Fix: zoom 导致坐标偏移)
+  let zoom = 1;
+  const bodyZoom = getComputedStyle(document.body).zoom;
+  if (bodyZoom) {
+    zoom = parseFloat(bodyZoom) || 1;
+  }
+
   if (props.dropUp) {
     // 向上展开
     dropdownStyle.value = {
       position: 'absolute',
-      top: `${rect.top + scrollY - 4}px`,
-      left: `${rect.left + scrollX}px`,
-      width: `${rect.width}px`,
+      top: `${(rect.top + scrollY) / zoom}px`,
+      left: `${(rect.left + scrollX) / zoom}px`,
+      width: `${rect.width / zoom}px`,
       zIndex: 99999,
       transform: 'translateY(-100%)'
     };
@@ -98,9 +105,9 @@ function updateDropdownPosition() {
     // 默认向下展开
     dropdownStyle.value = {
       position: 'absolute',
-      top: `${rect.bottom + scrollY + 4}px`,
-      left: `${rect.left + scrollX}px`,
-      width: `${rect.width}px`,
+      top: `${(rect.bottom + scrollY) / zoom}px`,
+      left: `${(rect.left + scrollX) / zoom}px`,
+      width: `${rect.width / zoom}px`,
       zIndex: 99999
     };
   }
@@ -209,13 +216,13 @@ onUnmounted(() => {
 }
 
 .select-trigger {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 0.75rem;
   padding-right: 2.2rem;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -257,6 +264,8 @@ onUnmounted(() => {
 .select-arrow {
   position: absolute;
   right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
   width: 14px;
   height: 14px;
   color: #6b7280;
@@ -265,7 +274,7 @@ onUnmounted(() => {
 }
 
 .custom-select.open .select-arrow {
-  transform: rotate(180deg);
+  transform: translateY(-50%) rotate(180deg);
 }
 
 /* 暗黑模式 */

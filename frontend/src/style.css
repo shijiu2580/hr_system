@@ -61,12 +61,14 @@ a:hover { color: var(--color-primary-hover); }
 .nav-group a { padding:.55rem .7rem; border-radius: var(--radius-sm); color: var(--color-text-secondary); font-size:14px; }
 .nav-group a.router-link-active { background: var(--color-primary); color:#fff; box-shadow: var(--shadow-sm); }
 .nav-group a:hover { background: var(--color-surface-alt); color: var(--color-text); }
+.nav-group a:active { transform: scale(0.98); }
 
 .layout-main { flex:1; display:flex; flex-direction:column; }
 .top-bar { height:54px; background: var(--color-surface); border-bottom:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between; padding:0 1rem; box-shadow: var(--shadow-sm); }
 .top-bar .user-box { display:flex; align-items:center; gap:.75rem; font-size:14px; }
 .top-bar button { background: var(--color-primary); color:#fff; border:0; padding:.45rem .9rem; border-radius: var(--radius-sm); cursor:pointer; font-size:14px; transition: var(--transition); }
 .top-bar button:hover { background: var(--color-primary-hover); }
+.top-bar button:active { transform: scale(0.96); }
 .theme-toggle { background: var(--color-surface-alt); color: var(--color-text-secondary); }
 .theme-toggle:hover { background: var(--color-primary); color:#fff; }
 
@@ -149,6 +151,7 @@ label { font-size:13px; color: var(--color-text-secondary); margin-bottom:.3rem;
 /* 按钮 */
 .btn { display:inline-flex; align-items:center; gap:.35rem; background: var(--color-primary); color:#fff; border:0; padding:.5rem .9rem; font-size:14px; border-radius: var(--radius-sm); cursor:pointer; transition: var(--transition); text-decoration:none; }
 .btn:hover { background: var(--color-primary-hover); }
+.btn:active { transform: scale(0.96); }
 .btn.outline { background: transparent; color: var(--color-primary); border:1px solid var(--color-primary); }
 .btn.outline:hover { background: var(--color-primary); color:#fff; }
 .btn.danger { background: var(--color-danger); }
@@ -287,5 +290,20 @@ label { font-size:13px; color: var(--color-text-secondary); margin-bottom:.3rem;
 .empty-state p {
   margin: 0;
   font-size: 14px;
+}
+
+/* 小屏幕下的通用收紧与排版优化 */
+@media (max-width: 960px) {
+  .page-grid { grid-template-columns: 1fr; }
+  .card { padding: 0.9rem 0.95rem 1rem; }
+  .page-wrapper { padding: 1rem 1rem 1.6rem; }
+  .top-bar { flex-wrap: wrap; gap: 0.5rem; }
+}
+
+@media (max-width: 640px) {
+  body { zoom: 1; }
+  table { display: block; overflow-x: auto; }
+  table thead, table tbody { width: max-content; min-width: 640px; }
+  input, select, textarea { font-size: 13px; height: 34px; }
 }
 

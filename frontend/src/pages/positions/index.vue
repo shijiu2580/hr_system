@@ -104,6 +104,7 @@
           :options="[{value:10,label:'10'},{value:20,label:'20'},{value:50,label:'50'}]"
           class="page-size-select"
           @change="currentPage = 1"
+          :dropUp="true"
         />
         <span class="page-size-label">条</span>
         <button class="page-btn" :disabled="currentPage <= 1" @click="currentPage = 1">«</button>

@@ -220,11 +220,12 @@ const showNotesInput = computed(() => {
   const minutes = now.getMinutes()
 
   if (!hasCheckedIn.value) {
-    // 9点后签到需要填写迟到原因
-    return hours > 9 || (hours === 9 && minutes > 0)
+    // 9:00-18:00之间签到算迟到，需要填原因；18:00后是加班签到，不需要原因
+    const isLateTime = hours > 9 || (hours === 9 && minutes > 0)
+    return isLateTime && hours < 18
   }
   if (!hasCheckedOut.value) {
-    // 18点前签退需要填写早退原因
+    // 18点前签退需要填写早退原因；18点后是正常/加班签退，不需要原因
     return hours < 18
   }
   return false
