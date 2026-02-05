@@ -200,17 +200,17 @@ function getStatus(item) {
   if (!item.check_in_time && !item.check_out_time) {
     return 'absent'
   }
-  
+
   let isLate = false
   let isEarlyLeave = false
-  
+
   // 判断迟到（9:00后签到）
   if (item.check_in_time) {
     const parts = item.check_in_time.split(':')
     const checkInMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1])
     isLate = checkInMinutes > 9 * 60
   }
-  
+
   // 判断早退（没签退 或 18:00前签退）
   if (!item.check_out_time && item.check_in_time) {
     // 有签到但没签退，视为早退
@@ -220,11 +220,11 @@ function getStatus(item) {
     const checkOutMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1])
     isEarlyLeave = checkOutMinutes < 18 * 60
   }
-  
+
   if (isLate && isEarlyLeave) return 'late_and_early'
   if (isLate) return 'late'
   if (isEarlyLeave) return 'early_leave'
-  
+
   return 'normal'
 }
 

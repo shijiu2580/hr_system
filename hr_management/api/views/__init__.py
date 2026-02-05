@@ -25,7 +25,7 @@ from .leaves import (
     BusinessTripListCreateAPIView, BusinessTripDetailAPIView, BusinessTripApproveAPIView, BusinessTripCancelAPIView,
     TravelExpenseListCreateAPIView, TravelExpenseDetailAPIView, TravelExpenseApproveAPIView, TravelExpensePayAPIView
 )
-from .salaries import SalaryListCreateAPIView, SalaryDetailAPIView
+from .salaries import SalaryListCreateAPIView, SalaryDetailAPIView, salary_disburse, salary_pending
 from .organization import (
     DepartmentListCreateAPIView, DepartmentDetailAPIView,
     PositionListCreateAPIView, PositionDetailAPIView
@@ -48,9 +48,9 @@ from .import_data import (
     ImportTemplateAPIView
 )
 from .base import (
-    LoggingMixin, OptimizedQueryMixin, DepartmentScopeMixin, 
+    LoggingMixin, OptimizedQueryMixin, DepartmentScopeMixin,
     StandardResponseMixin, DateRangeFilterMixin, PaginationMixin,
-    SearchFilterMixin, OrderingMixin, 
+    SearchFilterMixin, OrderingMixin,
     EnhancedListCreateView, EnhancedRetrieveUpdateDestroyView
 )
 from .reports import (

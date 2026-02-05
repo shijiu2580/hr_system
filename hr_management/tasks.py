@@ -11,7 +11,7 @@ from typing import Callable, Any, Dict, Optional
 from functools import wraps
 from queue import Queue
 import time
-from datetime import timedelta
+from datetime import timedelta, date
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -374,6 +374,195 @@ def mark_absent_today():
     return mark_absent_for_date.sync(today)
 
 
+# ============ 自动发薪任务 ============
+
+@async_task
+def auto_disburse_salary(year: int = None, month: int = None):
+    """
+    自动发放指定月份的薪资
+
+    默认发放上个月的薪资（每月5号执行）
+    """
+    from .models import SalaryRecord, SystemLog
+    from .notifications import notify_salary_issued
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+
+    # 默认发放上个月薪资
+    if year is None or month is None:
+        today = timezone.localdate()
+        if today.month == 1:
+            year = today.year - 1
+            month = 12
+        else:
+            year = today.year
+            month = today.month - 1
+
+    # 查询待发放记录
+    records = SalaryRecord.objects.filter(year=year, month=month, paid=False)
+
+    if not records.exists():
+        logger.info(f"No pending salary records for {year}-{month:02d}")
+        return {'year': year, 'month': month, 'count': 0, 'message': '无待发放记录'}
+
+    count = records.count()
+    now = timezone.now()
+
+    # 获取发放记录的ID列表（在update前获取）
+    record_ids = list(records.values_list('id', flat=True))
+
+    # 批量更新为已发放
+    records.update(paid=True, paid_at=now)
+
+    # 发送通知给每位员工
+    notified = 0
+    for record in SalaryRecord.objects.filter(id__in=record_ids).select_related('employee', 'employee__user'):
+        if record.employee.user:
+            try:
+                notify_salary_issued(
+                    record.employee.user,
+                    f'{record.year}年{record.month}月',
+                    float(record.net_salary)
+                )
+                notified += 1
+            except Exception as e:
+                logger.warning(f"Failed to notify {record.employee.name}: {e}")
+
+    # 记录系统日志（使用系统用户）
+    try:
+        system_user = User.objects.filter(is_superuser=True).first()
+        SystemLog.objects.create(
+            user=system_user,
+            action='自动发薪',
+            detail=f'自动发放 {year}年{month}月 薪资：{count}人，通知{notified}人'
+        )
+    except Exception as e:
+        logger.warning(f"Failed to create system log: {e}")
+
+    logger.info(f"Auto disbursed salary for {year}-{month:02d}: {count} records, {notified} notified")
+    return {
+        'year': year,
+        'month': month,
+        'count': count,
+        'notified': notified,
+        'paid_at': now.isoformat()
+    }
+
+
+def check_and_disburse_salary():
+    """
+    检查是否需要发放薪资（每月5号自动执行）
+
+    发薪日配置可通过 settings.SALARY_DISBURSE_DAY 设置，默认为5
+    """
+    today = timezone.localdate()
+    disburse_day = getattr(settings, 'SALARY_DISBURSE_DAY', 5)
+
+    if today.day != disburse_day:
+        logger.debug(f"Today is {today.day}, not salary disburse day ({disburse_day})")
+        return None
+
+    logger.info(f"Today is salary disburse day ({disburse_day}), running auto disburse...")
+    return auto_disburse_salary.sync()
+
+
+# ============ 自动创建薪资条任务 ============
+
+@async_task
+def auto_generate_salary_records(year: int = None, month: int = None):
+    """
+    自动为所有在职员工生成薪资条
+
+    默认生成上个月的薪资条（每月1号执行）
+    薪资计算规则：
+    - 基本工资：取员工档案中的 salary 字段
+    - 奖金/津贴/加班费：默认为0，需要HR手动调整
+    """
+    from .models import SalaryRecord, Employee, SystemLog
+    from django.contrib.auth import get_user_model
+    from decimal import Decimal
+
+    User = get_user_model()
+
+    # 默认生成上个月薪资条
+    if year is None or month is None:
+        today = timezone.localdate()
+        if today.month == 1:
+            year = today.year - 1
+            month = 12
+        else:
+            year = today.year
+            month = today.month - 1
+
+    # 获取所有在职员工（已入职状态）
+    active_employees = Employee.objects.filter(
+        is_active=True,
+        onboard_status='onboarded'
+    )
+
+    created_count = 0
+    skipped_count = 0
+
+    for emp in active_employees:
+        # 检查是否已存在该月薪资记录
+        if SalaryRecord.objects.filter(employee=emp, year=year, month=month).exists():
+            skipped_count += 1
+            continue
+
+        # 获取基本工资（从员工档案）
+        basic_salary = emp.salary or Decimal('0')
+
+        # 创建薪资记录
+        SalaryRecord.objects.create(
+            employee=emp,
+            year=year,
+            month=month,
+            basic_salary=basic_salary,
+            bonus=Decimal('0'),
+            overtime_pay=Decimal('0'),
+            allowance=Decimal('0'),
+            paid=False
+        )
+        created_count += 1
+
+    # 记录系统日志
+    try:
+        system_user = User.objects.filter(is_superuser=True).first()
+        SystemLog.objects.create(
+            user=system_user,
+            action='自动生成薪资条',
+            detail=f'自动生成 {year}年{month}月 薪资条：新建{created_count}条，跳过{skipped_count}条（已存在）'
+        )
+    except Exception as e:
+        logger.warning(f"Failed to create system log: {e}")
+
+    logger.info(f"Auto generated salary records for {year}-{month:02d}: created {created_count}, skipped {skipped_count}")
+    return {
+        'year': year,
+        'month': month,
+        'created': created_count,
+        'skipped': skipped_count
+    }
+
+
+def check_and_generate_salary():
+    """
+    检查是否需要生成薪资条（每月1号自动执行）
+
+    生成日配置可通过 settings.SALARY_GENERATE_DAY 设置，默认为1
+    """
+    today = timezone.localdate()
+    generate_day = getattr(settings, 'SALARY_GENERATE_DAY', 1)
+
+    if today.day != generate_day:
+        logger.debug(f"Today is {today.day}, not salary generate day ({generate_day})")
+        return None
+
+    logger.info(f"Today is salary generate day ({generate_day}), running auto generate...")
+    return auto_generate_salary_records.sync()
+
+
 # ============ 定时任务调度器（简化版）============
 
 class SimpleScheduler:
@@ -463,6 +652,12 @@ def setup_scheduled_tasks():
 
     # 每小时刷新缓存
     scheduler.register('refresh_cache', _refresh_cache, 3600)
+
+    # 每天检查是否为生成薪资条日（每天执行一次，1号时自动生成）
+    scheduler.register('auto_generate_salary', check_and_generate_salary, 86400)
+
+    # 每天检查是否为发薪日（每天执行一次，5号时自动发薪）
+    scheduler.register('auto_disburse_salary', check_and_disburse_salary, 86400)
 
 
 def _refresh_cache():

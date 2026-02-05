@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import (
 )
 from .api.views import (
     # Auth
-    LogoutAPIView, ChangePasswordAPIView, AdminResetPasswordAPIView, 
+    LogoutAPIView, ChangePasswordAPIView, AdminResetPasswordAPIView,
     UserProfileUpdateAPIView, CurrentUserAPIView, CustomTokenObtainView,
     send_verification_code, verify_code_and_reset_password, HealthAPIView,
     # Onboarding (员工自助入职)
@@ -32,7 +32,7 @@ from .api.views import (
     BusinessTripListCreateAPIView, BusinessTripDetailAPIView, BusinessTripApproveAPIView, BusinessTripCancelAPIView,
     TravelExpenseListCreateAPIView, TravelExpenseDetailAPIView, TravelExpenseApproveAPIView, TravelExpensePayAPIView,
     # Salaries
-    SalaryListCreateAPIView, SalaryDetailAPIView,
+    SalaryListCreateAPIView, SalaryDetailAPIView, salary_disburse, salary_pending,
     # System
     SystemLogListAPIView, system_log_clear,
     CompanyDocumentListCreateAPIView, CompanyDocumentDetailAPIView,
@@ -43,7 +43,7 @@ from .api.views import (
     PermissionListAPIView, PermissionListCreateAPIView, PermissionDetailAPIView,
     PermissionGroupsAPIView,
     # Users
-    
+
     UserListAPIView, UserListCreateAPIView, UserDetailAPIView,
     # Organization
     DepartmentListCreateAPIView, DepartmentDetailAPIView,
@@ -131,6 +131,8 @@ urlpatterns = [
 
     path('salaries/', SalaryListCreateAPIView.as_view(), name='api_salaries'),
     path('salaries/<int:pk>/', SalaryDetailAPIView.as_view(), name='api_salary_detail'),
+    path('salaries/disburse/', salary_disburse, name='api_salary_disburse'),
+    path('salaries/pending/', salary_pending, name='api_salary_pending'),
     path('logs/', SystemLogListAPIView.as_view(), name='api_system_logs'),
     path('logs/clear/', system_log_clear, name='api_system_log_clear'),
 
@@ -155,16 +157,16 @@ urlpatterns = [
     path('backups/create/', backup_create, name='api_backup_create'),
     path('backups/clean/', backup_clean, name='api_backup_clean'),
     path('backups/restore/', backup_restore, name='api_backup_restore'),
-    
+
     # System Monitoring
     path('system/health/', health_check, name='api_health_check'),
     path('system/health/report/', health_report, name='api_health_report'),
     path('system/metrics/', system_metrics, name='api_system_metrics'),
-    
+
     # Company Documents
     path('documents/', CompanyDocumentListCreateAPIView.as_view(), name='api_company_documents'),
     path('documents/<int:pk>/', CompanyDocumentDetailAPIView.as_view(), name='api_company_document_detail'),
-    
+
     # Export
     path('export/employees/', export_employees, name='api_export_employees'),
     path('export/salaries/', export_salaries, name='api_export_salaries'),
@@ -172,24 +174,24 @@ urlpatterns = [
     path('export/salary-template/', export_salary_template, name='api_export_salary_template'),
     path('export/attendance/', export_attendance, name='api_export_attendance'),
     path('export/leaves/', export_leaves, name='api_export_leaves'),
-    
+
     # Import
     path('import/employees/', EmployeeImportAPIView.as_view(), name='api_import_employees'),
     path('import/attendance/', AttendanceImportAPIView.as_view(), name='api_import_attendance'),
     path('import/salaries/', SalaryImportAPIView.as_view(), name='api_import_salaries'),
     path('import/template/<str:template_type>/', ImportTemplateAPIView.as_view(), name='api_import_template'),
-    
+
     # Notifications
     path('notifications/', notification_list, name='api_notifications'),
     path('notifications/unread-count/', notification_unread_count, name='api_notification_unread_count'),
     path('notifications/<str:notification_id>/read/', notification_mark_read, name='api_notification_mark_read'),
     path('notifications/read-all/', notification_mark_all_read, name='api_notification_mark_all_read'),
     path('notifications/clear/', notification_clear, name='api_notification_clear'),
-    
+
     # API Version Info
     path('versions/', api_versions, name='api_versions'),
     path('changelog/', api_changelog, name='api_changelog'),
-    
+
     # Onboarding (员工自助入职 - H5端使用)
     path('onboarding/register/', SelfRegisterAPIView.as_view(), name='api_self_register'),
     path('onboarding/send-code/', send_register_code, name='api_send_register_code'),

@@ -15,43 +15,58 @@ def get_managed_department_ids(user):
 
 def user_has_rbac_permission(user, permission_key):
     """检查用户是否拥有指定的RBAC权限
-    
+
     Args:
         user: Django User 对象
         permission_key: 权限键字符串
-        
+
     Returns:
         bool: 是否拥有权限
     """
     if not user or not user.is_authenticated:
         return False
-    
+
     # 超级管理员拥有所有权限
     if user.is_superuser:
         return True
-    
+
     # 系统管理员(is_staff)拥有所有权限
     if user.is_staff:
         return True
-    
+
     # admin角色拥有所有权限
     if hasattr(user, 'roles'):
         if user.roles.filter(code='admin').exists():
             return True
-    
-    # 检查用户角色中是否包含该权限
-    from .models import Role
-    return Role.objects.filter(
-        users=user, 
+
+    # 检查用户直接关联的角色中是否包含该权限
+    from .models import Role, Employee
+    if Role.objects.filter(
+        users=user,
         permissions__key=permission_key
-    ).exists()
+    ).exists():
+        return True
+
+    # 检查用户通过职位继承的角色中是否包含该权限
+    try:
+        employee = Employee.objects.select_related('position').get(user=user)
+        if employee.position:
+            if Role.objects.filter(
+                positions=employee.position,
+                permissions__key=permission_key
+            ).exists():
+                return True
+    except Employee.DoesNotExist:
+        pass
+
+    return False
 
 
 class HasRBACPermission(BasePermission):
     """基于RBAC的权限检查
-    
+
     支持多种配置方式:
-    
+
     1. 字典形式（按HTTP方法）:
         rbac_perms = {
             'GET': ['employee.view'],
@@ -60,11 +75,11 @@ class HasRBACPermission(BasePermission):
             'PATCH': ['employee.edit'],
             'DELETE': ['employee.delete'],
         }
-        
+
     2. 列表形式（所有方法使用相同权限）:
         rbac_perms = ['employee.view']  # 需要所有列出的权限
         rbac_perms_any = ['employee.view', 'admin']  # 任一权限即可
-        
+
     3. 通过 get_rbac_permissions() 方法动态获取:
         def get_rbac_permissions(self):
             if self.request.method == 'POST':
@@ -72,17 +87,17 @@ class HasRBACPermission(BasePermission):
             return ['employee.view']
     """
     message = '权限不足'
-    
+
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        
+
         # 超级管理员和管理员直接放行
         if request.user.is_superuser or request.user.is_staff:
             return True
-        
+
         method = request.method
-        
+
         # 优先使用 get_rbac_permissions 方法获取权限
         if hasattr(view, 'get_rbac_permissions') and callable(view.get_rbac_permissions):
             required_perms = view.get_rbac_permissions()
@@ -91,34 +106,34 @@ class HasRBACPermission(BasePermission):
                     if not user_has_rbac_permission(request.user, perm):
                         return False
                 return True
-        
+
         # 获取视图上配置的权限
         rbac_perms = getattr(view, 'rbac_perms', {})
         rbac_perms_any = getattr(view, 'rbac_perms_any', {})
-        
+
         # 处理 rbac_perms (需要所有权限)
         if isinstance(rbac_perms, dict):
             required_perms = rbac_perms.get(method, [])
         else:
             # 列表形式，所有方法使用相同权限
             required_perms = rbac_perms if isinstance(rbac_perms, list) else []
-        
+
         if required_perms:
             for perm in required_perms:
                 if not user_has_rbac_permission(request.user, perm):
                     return False
-        
+
         # 处理 rbac_perms_any (只需任一权限)
         if isinstance(rbac_perms_any, dict):
             any_perms = rbac_perms_any.get(method, [])
         else:
             # 列表形式，所有方法使用相同权限
             any_perms = rbac_perms_any if isinstance(rbac_perms_any, list) else []
-        
+
         if any_perms:
             if not any(user_has_rbac_permission(request.user, perm) for perm in any_perms):
                 return False
-        
+
         return True
 
 
@@ -178,7 +193,7 @@ class IsStaffOrOwner(BasePermission):
     def has_permission(self, request, view):
         # 所有认证用户可以列表和创建
         return request.user and request.user.is_authenticated
-    
+
     def has_object_permission(self, request, view, obj):
         # 管理员完全访问
         if request.user and request.user.is_staff:
