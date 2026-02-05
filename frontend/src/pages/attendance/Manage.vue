@@ -690,9 +690,35 @@ function getStatus(item) {
   if (!item.check_in_time && !item.check_out_time) {
     return isWeekend(item.date) ? 'normal' : 'absent';
   }
-  if (item.attendance_type === 'late') return 'late';
-  if (item.attendance_type === 'early_leave') return 'early_leave';
-  if (item.attendance_type === 'absent') return 'absent';
+  
+  // 解析签到签退时间
+  const checkInTime = item.check_in_time;
+  const checkOutTime = item.check_out_time;
+  
+  let isLate = false;
+  let isEarlyLeave = false;
+  
+  // 判断迟到（9:00后签到）
+  if (checkInTime) {
+    const parts = checkInTime.split(':');
+    const checkInMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    isLate = checkInMinutes > 9 * 60;
+  }
+  
+  // 判断早退（没签退 或 18:00前签退）
+  if (!checkOutTime && checkInTime) {
+    // 有签到但没签退，视为早退
+    isEarlyLeave = true;
+  } else if (checkOutTime) {
+    const parts = checkOutTime.split(':');
+    const checkOutMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    isEarlyLeave = checkOutMinutes < 18 * 60;
+  }
+  
+  if (isLate && isEarlyLeave) return 'late_and_early';
+  if (isLate) return 'late';
+  if (isEarlyLeave) return 'early_leave';
+  
   return 'normal';
 }
 
@@ -702,6 +728,7 @@ function getStatusLabel(item) {
     normal: '正常',
     late: '迟到',
     early_leave: '早退',
+    late_and_early: '迟到/早退',
     absent: '缺勤'
   };
   const statusText = map[status] || '正常';
@@ -1361,6 +1388,10 @@ async function handleApprove(id, action) {
 
 .status-text.status-early_leave {
   color: #d97706;
+}
+
+.status-text.status-late_and_early {
+  color: #dc2626;
 }
 
 .status-text.status-absent {
