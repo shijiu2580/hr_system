@@ -627,10 +627,16 @@ const isResignationActive = computed(() => route.path.startsWith('/resignation')
 
 let pendingInterval = null;
 
+// 错误处理函数（用于正确清理）
+function handleGlobalError(e) {
+  globalError.value = e.message;
+}
+
 onMounted(() => {
   applyTheme();
   updateIsMobile();
   window.addEventListener('resize', updateIsMobile);
+  window.addEventListener('error', handleGlobalError);
 
   // 获取待审批数量（如果有审批权限）
   if (auth.user && (canApproveAttendance.value || canApproveLeave.value || canApproveExpense.value)) {
@@ -640,12 +646,9 @@ onMounted(() => {
   }
 });
 
-window.addEventListener('error', (e) => {
-  globalError.value = e.message;
-});
-
 onUnmounted(() => {
   window.removeEventListener('resize', updateIsMobile);
+  window.removeEventListener('error', handleGlobalError);
   if (pendingInterval) {
     clearInterval(pendingInterval);
     pendingInterval = null;

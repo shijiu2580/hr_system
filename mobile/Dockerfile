@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:20-alpine as builder
+FROM node:22-alpine as builder
 
 WORKDIR /app
 
@@ -12,9 +12,11 @@ RUN npm install
 # 复制源码
 COPY . .
 
-# 设置 API 地址环境变量（构建时）
+# 设置环境变量（构建时）
 ARG VITE_API_BASE_URL=/api
+ARG VITE_AMAP_KEY=c66f75e5da10fa69ee4c5e6a8d2997e7
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_AMAP_KEY=$VITE_AMAP_KEY
 
 # 构建
 RUN npm run build
