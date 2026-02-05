@@ -116,7 +116,9 @@ onMounted(() => {
 
 async function fetchRecords() {
   const startDate = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-01`
-  const endDate = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-31`
+  // 计算该月的最后一天
+  const lastDay = new Date(currentYear.value, currentMonth.value, 0).getDate()
+  const endDate = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
 
   try {
     const res = await api.get('/api/attendance/my/', {
