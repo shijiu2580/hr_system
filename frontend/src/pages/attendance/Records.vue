@@ -258,6 +258,7 @@ function getStatusLabel(item) {
     late_and_early: '迟到/早退',
     absent: '缺勤',
     not_checked_in: '未签到'
+  };
   const statusText = map[status] || '正常';
   // 判断是否是补签数据
   const isSupplement = item.notes && (item.notes.includes('补签到') || item.notes.includes('补签退'));
