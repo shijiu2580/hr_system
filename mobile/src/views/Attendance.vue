@@ -61,8 +61,8 @@
             </div>
           </div>
           <div class="record-status">
-            <van-tag :type="getStatusType(item.attendance_type)">
-              {{ getStatusText(item.attendance_type) }}
+            <van-tag :type="getStatusType(getStatus(item))">
+              {{ getStatusText(getStatus(item)) }}
             </van-tag>
           </div>
         </div>
@@ -195,12 +195,47 @@ function getWeekDay(dateStr) {
   return weekDays[new Date(dateStr).getDay()]
 }
 
+// 根据签到签退时间判断考勤状态
+function getStatus(item) {
+  if (!item.check_in_time && !item.check_out_time) {
+    return 'absent'
+  }
+  
+  let isLate = false
+  let isEarlyLeave = false
+  
+  // 判断迟到（9:00后签到）
+  if (item.check_in_time) {
+    const parts = item.check_in_time.split(':')
+    const checkInMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1])
+    isLate = checkInMinutes > 9 * 60
+  }
+  
+  // 判断早退（没签退 或 18:00前签退）
+  if (!item.check_out_time && item.check_in_time) {
+    // 有签到但没签退，视为早退
+    isEarlyLeave = true
+  } else if (item.check_out_time) {
+    const parts = item.check_out_time.split(':')
+    const checkOutMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1])
+    isEarlyLeave = checkOutMinutes < 18 * 60
+  }
+  
+  if (isLate && isEarlyLeave) return 'late_and_early'
+  if (isLate) return 'late'
+  if (isEarlyLeave) return 'early_leave'
+  
+  return 'normal'
+}
+
 function getStatusType(type) {
   const map = {
+    'normal': 'success',
     'check_in': 'primary',
     'check_out': 'success',
     'late': 'warning',
     'early_leave': 'danger',
+    'late_and_early': 'danger',
     'absent': 'danger',
     'leave': 'primary',
   }
@@ -209,10 +244,12 @@ function getStatusType(type) {
 
 function getStatusText(type) {
   const map = {
+    'normal': '正常',
     'check_in': '已签到',
     'check_out': '正常',
     'late': '迟到',
     'early_leave': '早退',
+    'late_and_early': '迟到/早退',
     'absent': '缺勤',
     'leave': '请假',
   }
