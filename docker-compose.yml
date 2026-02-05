@@ -8,7 +8,8 @@ services:
     volumes:
       - ./media:/app/media
       - ./db.sqlite3:/app/db.sqlite3
-    mem_limit: 256m
+    mem_limit: 200m
+    mem_reservation: 100m
     env_file:
       - .env
     restart: unless-stopped
@@ -21,7 +22,7 @@ services:
       - "3000:80"
     depends_on:
       - backend
-    mem_limit: 32m
+    mem_limit: 24m
     restart: unless-stopped
 
   # Vue Mobile H5 移动端
@@ -32,5 +33,5 @@ services:
       - "3001:80"
     depends_on:
       - backend
-    mem_limit: 32m
+    mem_limit: 24m
     restart: unless-stopped
