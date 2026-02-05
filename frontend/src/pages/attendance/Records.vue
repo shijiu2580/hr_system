@@ -203,12 +203,38 @@ function parseTime(timeStr) {
   return { hours, minutes, totalMinutes: hours * 60 + minutes };
 }
 
+// 是否为工作日（从后端获取）
+const isWorkday = ref(true);
+
+async function checkWorkday() {
+  try {
+    const resp = await api.get('/attendance/workday/');
+    if (resp.success) {
+      isWorkday.value = resp.data?.is_workday ?? true;
+    }
+  } catch {
+    // 默认为工作日
+    isWorkday.value = true;
+  }
+}
+
 function getStatus(item) {
-  if (!item) return 'normal';
+  if (!item) return isWorkday.value ? 'not_checked_in' : 'normal';
   if (item.attendance_type === 'absent') return 'absent';
 
   // 检查是否迟到（9:00后签到）
   const checkIn = parseTime(item.check_in_time);
+
+  // 工作日：没签到且当前时间超过9点，视为迟到
+  if (isWorkday.value && !checkIn) {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    if (currentMinutes > 9 * 60) {
+      return 'late';
+    }
+    return 'not_checked_in';
+  }
+
   const isLate = checkIn && checkIn.totalMinutes > 9 * 60;
 
   // 检查是否早退（18:00前签退）
@@ -223,15 +249,15 @@ function getStatus(item) {
 }
 
 function getStatusLabel(item) {
-  if (!item) return '正常';
+  if (!item) return isWorkday.value ? '未签到' : '休息日';
   const status = getStatus(item);
   const map = {
     normal: '正常',
     late: '迟到',
     early_leave: '早退',
     late_and_early: '迟到/早退',
-    absent: '缺勤'
-  };
+    absent: '缺勤',
+    not_checked_in: '未签到'
   const statusText = map[status] || '正常';
   // 判断是否是补签数据
   const isSupplement = item.notes && (item.notes.includes('补签到') || item.notes.includes('补签退'));
@@ -435,6 +461,7 @@ async function confirmReason() {
 }
 
 onMounted(() => {
+  checkWorkday();
   loadToday();
   updateClock();
   timer = setInterval(updateClock, 1000);
@@ -652,6 +679,7 @@ onUnmounted(() => {
 .status-text.status-early_leave { color: #d97706; }
 .status-text.status-late_and_early { color: #dc2626; }
 .status-text.status-absent { color: #dc2626; }
+.status-text.status-not_checked_in { color: #d97706; }
 
 /* 加载状态 */
 .loading-state {
