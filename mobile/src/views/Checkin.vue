@@ -305,8 +305,8 @@ function saveAddressToCache(lat, lng, address) {
   } catch { /* ignore */ }
 }
 
-// 高德地图 Web服务 API Key
-const AMAP_KEY = 'c66f75e5da10fa69ee4c5e6a8d2997e7'
+// 高德地图 Web服务 API Key（从环境变量读取）
+const AMAP_KEY = import.meta.env.VITE_AMAP_KEY || 'c66f75e5da10fa69ee4c5e6a8d2997e7'
 
 // 逆地理编码：将经纬度转换为地址名称（使用高德地图）
 async function reverseGeocode(lat, lng) {
@@ -331,7 +331,6 @@ async function reverseGeocode(lat, lng) {
     }
 
     const data = await res.json()
-    console.log('高德逆地理编码返回:', data)
 
     if (data.status === '1' && data.regeocode) {
       const regeo = data.regeocode
