@@ -9,6 +9,17 @@
         <span class="header-title">薪资记录</span>
       </div>
       <div class="header-right">
+        <!-- 发放薪资按钮（仅财务/管理员可见） -->
+        <button
+          v-if="canDisburse && (unpaidCount > 0 || selectedUnpaidIds.length > 0)"
+          type="button"
+          class="btn-disburse"
+          :class="{ 'btn-disburse-selected': selectedUnpaidIds.length > 0 }"
+          @click="openDisburseModal"
+          :disabled="disbursing"
+        >
+          {{ disbursing ? '发放中...' : disburseButtonText }}
+        </button>
         <button
           type="button"
           class="btn-export"
@@ -138,13 +149,14 @@
           </tr>
         </thead>
         <tbody v-if="!loading && paged.length">
-          <tr v-for="item in paged" :key="item.id" class="data-row" :class="{ 'row-selected': selectedIds.has(item.id) }">
+          <tr v-for="item in paged" :key="item.id" class="data-row" :class="{ 'row-selected': selectedIds.has(item.id), 'row-unpaid': !item.paid && canDisburse }">
             <td class="col-checkbox">
               <input
                 type="checkbox"
                 :checked="selectedIds.has(item.id)"
                 @change="toggleSelect(item.id)"
                 class="checkbox"
+                :class="{ 'checkbox-unpaid': !item.paid && canDisburse }"
               />
             </td>
             <td class="col-employee">
@@ -174,7 +186,7 @@
             <td class="col-paid-at">{{ item.paid_at ? formatDateTime(item.paid_at) : '--' }}</td>
             <td class="col-actions">
               <a href="javascript:;" class="action-link" @click="showDetail(item)">详情</a>
-              <a href="javascript:;" class="action-link" @click="openEdit(item)">编辑</a>
+              <a v-if="!item.paid" href="javascript:;" class="action-link" @click="openEdit(item)">编辑</a>
             </td>
           </tr>
         </tbody>
@@ -267,7 +279,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" @click="detailItem = null">关闭</button>
-          <button class="btn-primary" @click="editFromDetail">编辑</button>
+          <button v-if="!detailItem.paid" class="btn-primary" @click="editFromDetail">编辑</button>
         </div>
       </div>
     </div>
@@ -324,6 +336,87 @@
         </div>
       </div>
     </div>
+
+    <!-- 发放薪资确认弹窗 -->
+    <div v-if="showDisburseModal" class="modal-overlay" @click.self="showDisburseModal = false">
+      <div class="modal-content modal-disburse">
+        <div class="modal-header">
+          <h3>发放薪资</h3>
+          <button class="modal-close" @click="showDisburseModal = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="disburse-info">
+            <div class="disburse-summary">
+              <div class="summary-item">
+                <span class="summary-label">待发放月份</span>
+                <div class="summary-months">
+                  <span v-for="p in pendingSummary" :key="`${p.year}-${p.month}`" class="month-tag">
+                    {{ p.year }}年{{ p.month }}月 ({{ p.count }}人)
+                  </span>
+                </div>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">待发放人数</span>
+                <span class="summary-value">{{ unpaidCount }} 人</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">待发放总额</span>
+                <span class="summary-value total">¥{{ formatMoney(unpaidTotal) }}</span>
+              </div>
+            </div>
+            <div class="disburse-options">
+              <label class="option-label">选择发放范围：</label>
+              <div class="option-group">
+                <div class="custom-radio-option" :class="{ active: disburseMode === 'all' }" @click="disburseMode = 'all'">
+                  <div class="radio-header">
+                    <div class="radio-circle">
+                      <span class="radio-dot" :class="{ show: disburseMode === 'all' }"></span>
+                    </div>
+                    <span>全部待发放记录</span>
+                  </div>
+                </div>
+
+                <div class="custom-radio-option" :class="{ active: disburseMode === 'month' }" @click="disburseMode = 'month'">
+                  <div class="radio-header">
+                    <div class="radio-circle">
+                      <span class="radio-dot" :class="{ show: disburseMode === 'month' }"></span>
+                    </div>
+                    <span>按月份发放</span>
+                  </div>
+                  <div v-if="disburseMode === 'month'" class="radio-content" @click.stop>
+                    <CustomSelect
+                      v-model="disburseYearMonth"
+                      :options="disburseMonthOptions"
+                      placeholder="请选择月份"
+                      class="full-width-select"
+                    />
+                  </div>
+                </div>
+
+                <div v-if="selectedUnpaidIds.length > 0" class="custom-radio-option" :class="{ active: disburseMode === 'selected' }" @click="disburseMode = 'selected'">
+                  <div class="radio-header">
+                    <div class="radio-circle">
+                      <span class="radio-dot" :class="{ show: disburseMode === 'selected' }"></span>
+                    </div>
+                    <span>仅选中记录 ({{ selectedUnpaidIds.length }}条)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="disburse-warning" :class="{ 'warning-error': disburseMode === 'month' && !disburseYearMonth }">
+              <span v-if="disburseMode === 'month' && !disburseYearMonth">请选择月份</span>
+              <span v-else>发放后将自动通知相关员工，请确认无误后再发放。</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showDisburseModal = false">取消</button>
+          <button class="btn-primary btn-confirm" @click="confirmDisburse" :disabled="disbursing || !canConfirmDisburse">
+            {{ disbursing ? '发放中...' : '确认发放' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -331,6 +424,133 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import CustomSelect from '../../components/CustomSelect.vue';
 import api from '../../utils/api';
+import { useAuthStore } from '../../stores/auth';
+import { hasPermission, isAdmin, Permissions } from '../../utils/permissions';
+
+// 权限
+const auth = useAuthStore();
+const canDisburse = computed(() =>
+  isAdmin() || hasPermission(Permissions.SALARY_DISBURSE)
+);
+
+// 发放薪资相关
+const showDisburseModal = ref(false);
+const disbursing = ref(false);
+const disburseMode = ref('all'); // 'all' | 'month' | 'selected'
+const disburseYearMonth = ref('');
+
+// 待发放记录统计
+const unpaidRecords = computed(() => records.value.filter(r => !r.paid));
+const unpaidCount = computed(() => unpaidRecords.value.length);
+const unpaidTotal = computed(() =>
+  unpaidRecords.value.reduce((sum, r) => sum + calcNetSalary(r), 0)
+);
+
+// 选中的未发放记录
+const selectedUnpaidIds = computed(() =>
+  Array.from(selectedIds.value).filter(id => {
+    const r = records.value.find(rec => rec.id === id);
+    return r && !r.paid;
+  })
+);
+
+// 按月份汇总待发放记录
+const pendingSummary = computed(() => {
+  const map = new Map();
+  unpaidRecords.value.forEach(r => {
+    const key = `${r.year}-${r.month}`;
+    if (!map.has(key)) {
+      map.set(key, { year: r.year, month: r.month, count: 0, total: 0 });
+    }
+    const item = map.get(key);
+    item.count++;
+    item.total += calcNetSalary(r);
+  });
+  return Array.from(map.values()).sort((a, b) => {
+    if (a.year !== b.year) return b.year - a.year;
+    return b.month - a.month;
+  });
+});
+
+// 下拉框选项
+const disburseMonthOptions = computed(() => {
+  return [
+    { value: '', label: '请选择月份' },
+    ...pendingSummary.value.map(p => ({
+      value: `${p.year}-${p.month}`,
+      label: `${p.year}年${p.month}月 - ${p.count}人 / ¥${formatMoney(p.total)}`
+    }))
+  ];
+});
+
+// 是否可以确认发放
+const canConfirmDisburse = computed(() => {
+  if (disburseMode.value === 'all') return unpaidCount.value > 0;
+  if (disburseMode.value === 'month') return !!disburseYearMonth.value;
+  if (disburseMode.value === 'selected') return selectedUnpaidIds.value.length > 0;
+  return false;
+});
+
+// 发放按钮文字
+const disburseButtonText = computed(() => {
+  if (selectedUnpaidIds.value.length > 0) {
+    return `发放选中(${selectedUnpaidIds.value.length})`;
+  }
+  return `发放薪资(${unpaidCount.value})`;
+});
+
+// 打开发放弹窗
+function openDisburseModal() {
+  // 如果有选中未发放记录，默认选择"仅选中记录"模式
+  if (selectedUnpaidIds.value.length > 0) {
+    disburseMode.value = 'selected';
+  } else {
+    disburseMode.value = 'all';
+  }
+  disburseYearMonth.value = '';
+  showDisburseModal.value = true;
+}
+
+// 确认发放薪资
+async function confirmDisburse() {
+  if (!canConfirmDisburse.value) return;
+
+  disbursing.value = true;
+  try {
+    let payload = {};
+
+    if (disburseMode.value === 'all') {
+      // 发放所有待发放记录
+      payload.ids = unpaidRecords.value.map(r => r.id);
+    } else if (disburseMode.value === 'month') {
+      // 按月份发放
+      const [year, month] = disburseYearMonth.value.split('-').map(Number);
+      payload.year = year;
+      payload.month = month;
+    } else if (disburseMode.value === 'selected') {
+      // 发放选中的记录
+      payload.ids = selectedUnpaidIds.value;
+    }
+
+    const resp = await api.post('/salaries/disburse/', payload);
+
+    if (resp.success) {
+      showMessage('success', resp.detail || `成功发放 ${resp.data?.count || 0} 条薪资记录`);
+      showDisburseModal.value = false;
+      // 清空选择
+      selectedIds.value = new Set();
+    } else {
+      showMessage('error', resp.error?.message || '发放失败');
+    }
+  } catch (err) {
+    console.error('发放薪资错误:', err);
+    showMessage('error', err?.response?.data?.error?.message || '发放失败');
+  } finally {
+    disbursing.value = false;
+    // 无论成功失败，都重新加载数据
+    fetchData().catch(() => {});
+  }
+}
 
 // 数据状态
 const loading = ref(false);
@@ -1085,6 +1305,19 @@ function resetFilters() {
   background: #dbeafe;
 }
 
+/* 未发放记录高亮提示 */
+.data-row.row-unpaid {
+  background: linear-gradient(90deg, #fef3c7 0%, transparent 8%);
+}
+
+.data-row.row-unpaid:hover {
+  background: linear-gradient(90deg, #fde68a 0%, #fafafa 8%);
+}
+
+.data-row.row-unpaid.row-selected {
+  background: linear-gradient(90deg, #fde68a 0%, #eff6ff 8%);
+}
+
 /* 勾选框列 */
 .col-checkbox {
   width: 40px;
@@ -1731,5 +1964,253 @@ function resetFilters() {
 .btn-primary:disabled {
   background: #93c5fd;
   cursor: not-allowed;
+}
+
+/* 发放薪资按钮 */
+.btn-disburse {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--color-success, #16a34a);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-disburse:hover {
+  background: #15803d; /* green-700 */
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-disburse:active {
+  transform: translateY(0);
+}
+
+.btn-disburse:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 选中记录后的发放按钮 - 保持绿色但加深，去掉突兀的橙色和动画 */
+.btn-disburse-selected {
+  background: var(--color-success, #16a34a);
+  position: relative;
+}
+
+.btn-disburse-selected::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-warning, #f59e0b);
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+/* 发放薪资弹窗 */
+.modal-disburse {
+  max-width: 520px;
+}
+
+.disburse-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.disburse-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.summary-label {
+  min-width: 80px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.summary-value.total {
+  font-size: 18px;
+  color: #059669;
+}
+
+.summary-months {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.month-tag {
+  padding: 4px 10px;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.disburse-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-label {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.custom-radio-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.custom-radio-option:hover {
+  border-color: var(--color-primary-light);
+  background: var(--color-bg-hover);
+}
+
+.custom-radio-option.active {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+}
+
+.radio-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.radio-content {
+  margin-top: 12px;
+  padding-left: 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.radio-circle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.custom-radio-option.active .radio-circle {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.radio-dot {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.2s;
+}
+
+.radio-dot.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.hidden-radio {
+  display: none;
+}
+
+.full-width-select {
+  width: 100%;
+}
+
+.disburse-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 12px;
+  transition: all 0.3s;
+  margin-top: 8px;
+}
+
+.disburse-warning.warning-error {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+}
+
+.disburse-warning.warning-error svg {
+  stroke: #ef4444;
+}
+
+.disburse-warning svg {
+  flex-shrink: 0;
+  stroke: #9ca3af;
+}
+
+.btn-confirm {
+  background: var(--color-success, #16a34a);
+  color: white;
+  border: 1px solid transparent;
+}
+
+.btn-confirm:hover {
+  background: #15803d; /* green-700 */
+}
+
+.btn-confirm:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 </style>

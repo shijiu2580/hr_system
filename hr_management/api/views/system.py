@@ -15,7 +15,7 @@ from ...permissions import IsStaffOrOwner, HasRBACPermission, user_has_rbac_perm
 from ...rbac import Permissions
 from ...utils import api_error, api_success, log_event
 from ..serializers import (
-    SystemLogSerializer, 
+    SystemLogSerializer,
     CompanyDocumentSerializer, CompanyDocumentWriteSerializer
 )
 
@@ -27,7 +27,7 @@ class SystemLogListAPIView(generics.ListAPIView):
     serializer_class = SystemLogSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.SYSTEM_LOG_VIEW]
-    
+
     def get_queryset(self):
         qs = SystemLog.objects.select_related('user').all().order_by('-timestamp')
         level = self.request.query_params.get('level')
@@ -43,7 +43,7 @@ def system_log_clear(request):
     # 权限检查
     if not (request.user.is_superuser or user_has_rbac_permission(request.user, Permissions.SYSTEM_LOG_CLEAR)):
         return Response(api_error('无清除日志权限', code='forbidden'), status=403)
-    
+
     level = request.data.get('level')
     qs = SystemLog.objects.all()
     if level:
@@ -51,10 +51,10 @@ def system_log_clear(request):
     count = qs.count()
     qs.delete()
     log_event(
-        user=request.user, 
-        action='清空系统日志', 
-        level='WARNING', 
-        detail=f'{count} rows (level={level or "*"})', 
+        user=request.user,
+        action='清空系统日志',
+        level='WARNING',
+        detail=f'{count} rows (level={level or "*"})',
         ip=request.META.get('REMOTE_ADDR')
     )
     return Response(api_success(detail=f'已删除 {count} 条日志'))
@@ -69,7 +69,7 @@ def backups_list(request):
     # 权限检查
     if not (request.user.is_superuser or user_has_rbac_permission(request.user, Permissions.SYSTEM_BACKUP_VIEW)):
         return Response(api_error('无查看备份权限', code='forbidden'), status=403)
-    
+
     backup_dir = Path(settings.MEDIA_ROOT) / 'backups'
     backup_dir.mkdir(parents=True, exist_ok=True)
     items = []
@@ -90,23 +90,23 @@ def backup_create(request):
     # 权限检查
     if not (request.user.is_superuser or user_has_rbac_permission(request.user, Permissions.SYSTEM_BACKUP_CREATE)):
         return Response(api_error('无创建备份权限', code='forbidden'), status=403)
-    
+
     db_path = Path(settings.DATABASES['default']['NAME'])
     if not db_path.exists():
         return Response({'detail': '数据库文件不存在'}, status=400)
-    
+
     backup_dir = Path(settings.MEDIA_ROOT) / 'backups'
     backup_dir.mkdir(parents=True, exist_ok=True)
     ts = timezone.now().strftime('%Y%m%d_%H%M%S')
     target = backup_dir / f'backup_{ts}.sqlite3'
-    
+
     connections.close_all()
     shutil.copy2(db_path, target)
     log_event(
-        user=request.user, 
-        action='创建备份', 
-        level='INFO', 
-        detail=target.name, 
+        user=request.user,
+        action='创建备份',
+        level='INFO',
+        detail=target.name,
         ip=request.META.get('REMOTE_ADDR')
     )
     return Response({'detail': '备份创建成功', 'file': target.name})
@@ -119,11 +119,11 @@ def backup_clean(request):
     # 权限检查
     if not (request.user.is_superuser or user_has_rbac_permission(request.user, Permissions.SYSTEM_BACKUP_CREATE)):
         return Response(api_error('无管理备份权限', code='forbidden'), status=403)
-    
+
     keep = int(request.data.get('keep', 5))
     if keep < 1:
         keep = 1
-    
+
     backup_dir = Path(settings.MEDIA_ROOT) / 'backups'
     files = sorted(backup_dir.glob('backup_*.sqlite3'), key=lambda p: p.stat().st_mtime, reverse=True)
     removed = []
@@ -133,13 +133,13 @@ def backup_clean(request):
             removed.append(f.name)
         except Exception:
             pass
-    
+
     if removed:
         log_event(
-            user=request.user, 
-            action='清理备份', 
-            level='INFO', 
-            detail='删除: ' + ', '.join(removed), 
+            user=request.user,
+            action='清理备份',
+            level='INFO',
+            detail='删除: ' + ', '.join(removed),
             ip=request.META.get('REMOTE_ADDR')
         )
     return Response({'detail': '清理完成', 'removed': removed, 'kept': keep})
@@ -152,16 +152,16 @@ def backup_restore(request):
     # 权限检查
     if not (request.user.is_superuser or user_has_rbac_permission(request.user, Permissions.SYSTEM_BACKUP_RESTORE)):
         return Response(api_error('无恢复备份权限', code='forbidden'), status=403)
-    
+
     filename = request.data.get('filename')
     if not filename:
         return Response({'detail': '缺少 filename'}, status=400)
-    
+
     backup_dir = Path(settings.MEDIA_ROOT) / 'backups'
     target = (backup_dir / filename).resolve()
     if backup_dir not in target.parents or not target.exists() or not target.name.startswith('backup_'):
         return Response({'detail': '非法备份文件'}, status=400)
-    
+
     db_path = Path(settings.DATABASES['default']['NAME']).resolve()
     try:
         connections.close_all()
@@ -170,10 +170,10 @@ def backup_restore(request):
             shutil.copy2(db_path, auto_backup)
         shutil.copy2(target, db_path)
         log_event(
-            user=request.user, 
-            action='恢复备份', 
-            level='WARNING', 
-            detail=f'从 {target.name} 恢复', 
+            user=request.user,
+            action='恢复备份',
+            level='WARNING',
+            detail=f'从 {target.name} 恢复',
             ip=request.META.get('REMOTE_ADDR')
         )
         return Response({'detail': '恢复成功', 'from': target.name, 'auto_backup': auto_backup.name})
@@ -189,7 +189,7 @@ class CompanyDocumentListCreateAPIView(LoggingMixin, generics.ListCreateAPIView)
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     queryset = CompanyDocument.objects.select_related('uploaded_by').all().order_by('-created_at')
     log_model_name = '文档'
-    
+
     # RBAC 权限
     def get_rbac_permissions(self):
         if self.request.method == 'POST':
@@ -200,7 +200,7 @@ class CompanyDocumentListCreateAPIView(LoggingMixin, generics.ListCreateAPIView)
         if self.request.method == 'POST':
             return CompanyDocumentWriteSerializer
         return CompanyDocumentSerializer
-    
+
     def get_log_detail(self, obj):
         return obj.title
 
@@ -219,7 +219,7 @@ class CompanyDocumentDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyA
     serializer_class = CompanyDocumentSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '文档'
-    
+
     # RBAC 权限
     def get_rbac_permissions(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -232,7 +232,7 @@ class CompanyDocumentDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyA
         if self.request.method in ['PUT', 'PATCH']:
             return CompanyDocumentWriteSerializer
         return CompanyDocumentSerializer
-    
+
     def get_log_detail(self, obj):
         return f'{obj.title} v{obj.version}'
 
@@ -264,9 +264,9 @@ def health_check(request):
     - 返回基本健康状态
     """
     from ...monitoring import check_database_health
-    
+
     db_health = check_database_health()
-    
+
     if db_health['status'] == 'healthy':
         return Response({
             'status': 'ok',
@@ -291,9 +291,9 @@ def health_report(request):
     # 权限检查：仅管理员或有系统监控权限的用户
     if not (request.user.is_superuser or request.user.is_staff):
         return Response(api_error('无查看系统监控权限', code='forbidden'), status=403)
-    
+
     from ...monitoring import get_health_report
-    
+
     report = get_health_report()
     return Response(api_success(report))
 
@@ -305,10 +305,12 @@ def system_metrics(request):
     系统指标端点
     - 返回 CPU、内存、磁盘等指标
     """
-    if not (request.user.is_superuser or request.user.is_staff):
+    from ...permissions import user_has_rbac_permission
+    # 支持 superuser/staff 或 RBAC system.view 权限
+    if not (request.user.is_superuser or request.user.is_staff or user_has_rbac_permission(request.user, 'system.view')):
         return Response(api_error('无查看系统监控权限', code='forbidden'), status=403)
-    
+
     from ...monitoring import metrics
-    
+
     return Response(api_success(metrics.get_metrics()))
 

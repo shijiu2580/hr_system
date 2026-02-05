@@ -1,91 +1,81 @@
 <template>
-  <div class="page-wrapper">
-    <section class="hero-panel">
-      <div class="hero-info">
-        <div class="hero-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-            <line x1="1" y1="10" x2="23" y2="10"/>
-          </svg>
+  <div class="page-grid create-salary-page">
+    <div class="card">
+      <!-- 顶部标签栏 -->
+      <div class="tab-header">
+        <div class="tab-left">
+          <div class="tab-icon">
+            <img src="/icons/salaries.svg" alt="" />
+          </div>
+          <div class="tab-title">新建薪资记录</div>
         </div>
-        <div>
-          <h1>新建薪资记录</h1>
-          <p class="hero-text">支持手动添加或导入Excel批量创建</p>
+        <div class="header-actions">
+          <button class="btn-primary" @click="triggerFileInput" :disabled="loading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            导入Excel
+          </button>
+          <button class="btn-secondary" @click="goBack">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            返回列表
+          </button>
+          <button class="btn-add" @click="addEmptyRow" :disabled="loading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            添加一行
+          </button>
+          <button class="btn-template" @click="downloadTemplate" :disabled="loading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            下载模板
+          </button>
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".xlsx,.xls"
+            style="display:none"
+            @change="handleFileImport"
+          />
         </div>
       </div>
-      <div class="hero-actions">
-        <button class="btn-import" @click="triggerFileInput">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          导入Excel
-        </button>
-        <button class="btn-secondary" @click="goBack">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
-          返回列表
-        </button>
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".xlsx,.xls"
-          style="display:none"
-          @change="handleFileImport"
-        />
-      </div>
-    </section>
 
-    <!-- 右上角弹框提示 -->
-    <teleport to="body">
-      <transition name="toast">
-        <div v-if="message" class="toast" :class="`toast-${message.type}`">
-          <span>{{ message.text }}</span>
+      <!-- 右上角弹框提示 -->
+      <teleport to="body">
+        <transition name="toast">
+          <div v-if="message" class="toast" :class="`toast-${message.type}`">
+            <span>{{ message.text }}</span>
           <button @click="message = null" class="toast-close">×</button>
         </div>
       </transition>
     </teleport>
 
-    <section class="card">
-      <div v-if="loading" class="loading-dots-text">
-        <div class="dots">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-        </div>
-        <span>加载数据...</span>
-      </div>
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <span>加载数据...</span>
+    </div>
 
-      <div v-else>
-        <!-- 工具栏 -->
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <span class="record-count">共 <strong>{{ records.length }}</strong> 条记录</span>
-            <span v-if="records.length > 0" class="total-amount">
-              合计实发：<strong>{{ formatCurrency(totalNetSalary) }}</strong>
-            </span>
-          </div>
-          <div class="toolbar-right">
-            <button class="btn-add" @click="addEmptyRow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="16"/>
-                <line x1="8" y1="12" x2="16" y2="12"/>
-              </svg>
-              添加一行
-            </button>
-            <button class="btn-template" @click="downloadTemplate">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              下载模板
-            </button>
-          </div>
+    <div v-else>
+      <!-- 工具栏 -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <span class="record-count">共 <strong>{{ records.length }}</strong> 条记录</span>
+          <span v-if="records.length > 0" class="total-amount">
+            合计实发：<strong>{{ formatCurrency(totalNetSalary) }}</strong>
+          </span>
         </div>
+      </div>
 
         <!-- 表格式表单 -->
         <div class="table-container">
@@ -96,15 +86,13 @@
                 <th>员工姓名</th>
                 <th>薪资周期</th>
                 <th>基本工资</th>
-                <th>奖金</th>
-                <th>津贴</th>
                 <th class="col-net">实发工资</th>
                 <th class="col-action">操作</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="records.length === 0" class="empty-row">
-                <td colspan="8">
+                <td colspan="6">
                   <div class="empty-hint">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -141,27 +129,12 @@
                     <input type="number" min="0" step="0.01" v-model.number="row.basic_salary" class="form-control" placeholder="0.00" />
                   </div>
                 </td>
-                <td>
-                  <div class="money-input">
-                    <span class="money-prefix">¥</span>
-                    <input type="number" min="0" step="0.01" v-model.number="row.bonus" class="form-control" placeholder="0.00" />
-                  </div>
-                </td>
-                <td>
-                  <div class="money-input">
-                    <span class="money-prefix">¥</span>
-                    <input type="number" min="0" step="0.01" v-model.number="row.allowance" class="form-control" placeholder="0.00" />
-                  </div>
-                </td>
                 <td class="col-net">
                   <span class="net-value">{{ formatCurrency(computeRowNet(row)) }}</span>
                 </td>
                 <td class="col-action">
                   <button type="button" class="btn-delete" @click="removeRow(index)" title="删除此行">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
+                    <img src="/icons/delete.svg" alt="删除" />
                   </button>
                 </td>
               </tr>
@@ -170,7 +143,7 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn-primary" :disabled="saving || records.length === 0" @click="handleSubmitAll">
+          <button type="button" class="btn-primary" :disabled="saving || records.length === 0" @click="handleSubmitAll">
             <svg v-if="!saving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
               <polyline points="17 21 17 13 7 13 7 21"/>
@@ -179,13 +152,13 @@
             <span class="spinner-small" v-else></span>
             {{ saving ? '保存中...' : `保存全部 (${records.length} 条)` }}
           </button>
-          <button type="button" class="btn btn-danger" v-if="records.length > 0" @click="clearAll">
+          <button type="button" class="btn-danger" v-if="records.length > 0" @click="clearAll">
             清空全部
           </button>
-          <button type="button" class="btn btn-secondary" @click="goBack">取消</button>
+          <button type="button" class="btn-secondary" @click="goBack">取消</button>
         </div>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
@@ -245,12 +218,9 @@ function clearAll() {
   }
 }
 
-// 计算单行实发
+// 计算单行实发（只有基本工资）
 function computeRowNet(row) {
-  const base = Number(row.basic_salary) || 0
-  const bonus = Number(row.bonus) || 0
-  const allowance = Number(row.allowance) || 0
-  return base + bonus + allowance
+  return Number(row.basic_salary) || 0
 }
 
 // 计算总实发
@@ -409,14 +379,25 @@ async function handleSubmitAll() {
           basic_salary: row.basic_salary,
           bonus: row.bonus,
           allowance: row.allowance,
-          paid: true,
-          paid_at: paidAt
+          paid: false
         })
         successCount++
       } catch (e) {
         failCount++
         const emp = employees.value.find(emp => emp.id === row.employee_id)
-        errors.push(`${emp?.name || '未知'} ${row.year}年${row.month}月: ${e.response?.data?.detail || e.message}`)
+        // 提取错误信息：可能在 detail, month, non_field_errors 或直接在 data 中
+        const errData = e.response?.data
+        let errMsg = ''
+        if (errData) {
+          if (errData.detail) errMsg = errData.detail
+          else if (errData.month) errMsg = errData.month
+          else if (errData.non_field_errors) errMsg = errData.non_field_errors.join(', ')
+          else if (typeof errData === 'string') errMsg = errData
+          else errMsg = JSON.stringify(errData)
+        } else {
+          errMsg = e.message
+        }
+        errors.push(`${emp?.name || '未知'} ${row.year}年${row.month}月: ${errMsg}`)
       }
     }
 
@@ -438,108 +419,123 @@ async function handleSubmitAll() {
 </script>
 
 <style scoped>
-.page-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-  padding: 2.25rem;
-  min-height: 100vh;
-  box-sizing: border-box;
-  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 55%), #f5f7fb;
-}
-
-/* Hero Panel */
-.hero-panel {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  padding: 1.5rem 1.8rem;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.85), rgba(255, 255, 255, 0.95));
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-}
-
-.hero-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.hero-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+/* 页面布局 - 与员工列表等页面保持一致 */
+.page-grid {
   display: grid;
-  place-items: center;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
 }
 
-.hero-icon svg {
-  width: 22px;
-  height: 22px;
-  color: #fff;
+.create-salary-page {
+  padding: 1.2rem;
 }
 
-.hero-panel h1 {
-  margin: 0 0 0.25rem;
-  font-size: 22px;
-  color: #0f172a;
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  padding: 1rem 1.1rem;
 }
 
-.hero-text {
-  margin: 0;
-  font-size: 13px;
-  color: #64748b;
-}
-
-.hero-actions {
+/* 顶部标签栏 */
+.tab-header {
   display: flex;
-  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
 }
 
-.btn-import {
+.tab-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.tab-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-icon img {
+  width: 24px;
+  height: 24px;
+}
+
+.tab-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.header-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.header-actions button {
+  width: 100%;
+  justify-content: center;
+}
+
+/* 按钮样式 */
+.btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.55rem 1rem;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #10b981, #059669);
+  padding: 0.5rem 1rem;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
   color: #fff;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s;
 }
 
-.btn-import svg {
+.btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary svg {
   width: 16px;
   height: 16px;
-}
-
-.btn-import:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
 .btn-secondary {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.55rem 1rem;
-  border-radius: 10px;
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  background: rgba(99, 102, 241, 0.08);
-  color: #4338ca;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  color: #1e293b;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-secondary svg {
@@ -547,12 +543,25 @@ async function handleSubmitAll() {
   height: 16px;
 }
 
-.btn-secondary:hover {
-  background: rgba(99, 102, 241, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2);
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-/* Alert */
+.btn-danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
+
 /* Toast 右上角弹框 */
 .toast {
   position: fixed;
@@ -599,15 +608,7 @@ async function handleSubmitAll() {
   to { opacity: 0; }
 }
 
-/* Card */
-.card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
-  border-radius: 18px;
-  box-shadow: 0 22px 40px rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  padding: 1.5rem;
-}
-
+/* 加载状态 */
 .loading-state {
   display: flex;
   align-items: center;
@@ -621,8 +622,8 @@ async function handleSubmitAll() {
 .spinner {
   width: 22px;
   height: 22px;
-  border: 2.5px solid rgba(99, 102, 241, 0.2);
-  border-top-color: #6366f1;
+  border: 2.5px solid rgba(37, 99, 235, 0.2);
+  border-top-color: #2563eb;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -651,29 +652,37 @@ async function handleSubmitAll() {
 .toolbar-left {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .record-count {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
+  background: #f1f5f9;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
 }
 
 .record-count strong {
-  color: #6366f1;
-  font-size: 16px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .total-amount {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
-  padding-left: 1.5rem;
-  border-left: 1px solid rgba(148, 163, 184, 0.4);
+  padding-left: 0;
+  border-left: none;
+  background: #f0fdf4;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid #dcfce7;
 }
 
 .total-amount strong {
-  color: #059669;
-  font-size: 16px;
+  color: #15803d;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -686,7 +695,7 @@ async function handleSubmitAll() {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.45rem 0.85rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
@@ -696,23 +705,23 @@ async function handleSubmitAll() {
 }
 
 .btn-add {
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  background: rgba(99, 102, 241, 0.08);
-  color: #4f46e5;
+  border: 1px solid #e0e7ff;
+  background: #eef2ff;
+  color: var(--color-primary);
 }
 
 .btn-add:hover {
-  background: rgba(99, 102, 241, 0.12);
+  background: #e0e7ff;
 }
 
 .btn-template {
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  background: rgba(16, 185, 129, 0.08);
-  color: #059669;
+  border: 1px solid #d1fae5;
+  background: #ecfdf5;
+  color: var(--color-success);
 }
 
 .btn-template:hover {
-  background: rgba(16, 185, 129, 0.12);
+  background: #d1fae5;
 }
 
 .btn-add svg, .btn-template svg {
@@ -722,36 +731,37 @@ async function handleSubmitAll() {
 
 /* Table */
 .table-container {
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px; /* Slightly reducing border radius */
   overflow: visible;
-  background: rgba(255, 255, 255, 0.98);
+  background: #fff;
 }
 
 .salary-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+  border-collapse: separate; /* Changed to separate for border radius on rows if needed */
+  border-spacing: 0;
+  font-size: 13.5px; /* Slightly refined font size */
   overflow: visible;
 }
 
 .salary-table thead {
-  background: rgba(99, 102, 241, 0.08);
+  background: #f9fafb; /* Lighter gray */
 }
 
 .salary-table th {
-  padding: 0.85rem 0.75rem;
+  padding: 0.75rem 1rem; /* Adjusted padding */
   text-align: left;
-  font-weight: 600;
-  color: #334155;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  font-weight: 500; /* Less bold */
+  color: #64748b; /* Softer text color */
+  border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
 }
 
 .salary-table td {
-  padding: 0.6rem 0.5rem;
+  padding: 0.5rem 1rem;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  border-bottom: 1px solid #f1f5f9; /* Even lighter border */
 }
 
 .salary-table tr:last-child td {
@@ -797,11 +807,11 @@ async function handleSubmitAll() {
 }
 
 .input-row td {
-  background: rgba(248, 250, 252, 0.5);
+  background: transparent;
 }
 
 .input-row:hover td {
-  background: rgba(99, 102, 241, 0.04);
+  background: var(--color-surface-alt, #f0f2f5);
 }
 
 /* Empty State */
@@ -831,23 +841,26 @@ async function handleSubmitAll() {
 /* Form Controls */
 .form-control {
   width: 100%;
-  padding: 0.45rem 0.55rem;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid transparent; /* Hidden default border */
+  border-bottom: 1px solid #cbd5e1; /* Only bottom border visible initially */
+  border-radius: 4px; /* Smaller radius */
+  font-size: 13.5px;
   color: #1e293b;
-  background: #fff;
+  background: transparent;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
 .form-control:hover {
-  border-color: rgba(99, 102, 241, 0.4);
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #6366f1;
+  background: #fff;
+  border-color: var(--color-primary, #2563eb);
   box-shadow: none;
 }
 
@@ -856,7 +869,9 @@ async function handleSubmitAll() {
 }
 
 .form-control[type="number"] {
+  appearance: textfield;
   -moz-appearance: textfield;
+  -webkit-appearance: textfield;
 }
 
 .form-control[type="number"]::-webkit-outer-spin-button,
@@ -939,12 +954,11 @@ async function handleSubmitAll() {
   border-radius: 8px;
   border: none;
   background: rgba(239, 68, 68, 0.08);
-  color: #ef4444;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.btn-delete svg {
+.btn-delete img {
   width: 16px;
   height: 16px;
 }
@@ -961,64 +975,6 @@ async function handleSubmitAll() {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff;
-  border: none;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
-}
-
-.btn-primary:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.btn-danger:hover {
-  background: rgba(239, 68, 68, 0.15);
-}
-
-.form-actions .btn-secondary {
-  background: rgba(248, 250, 252, 0.9);
-  color: #475569;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-}
-
-.form-actions .btn-secondary:hover {
-  background: #fff;
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #1e293b;
 }
 
 /* Animation */
@@ -1038,8 +994,8 @@ async function handleSubmitAll() {
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .page-wrapper {
-    padding: 1.5rem;
+  .create-salary-page {
+    padding: 1rem;
   }
 
   .table-container {
@@ -1052,22 +1008,22 @@ async function handleSubmitAll() {
 }
 
 @media (max-width: 640px) {
-  .page-wrapper {
-    padding: 1rem;
+  .create-salary-page {
+    padding: 0.75rem;
   }
 
-  .hero-panel {
+  .tab-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
-  .hero-actions {
+  .header-actions {
     width: 100%;
     flex-wrap: wrap;
   }
 
-  .hero-actions button {
+  .header-actions button {
     flex: 1;
     justify-content: center;
   }
@@ -1092,7 +1048,7 @@ async function handleSubmitAll() {
     flex-direction: column;
   }
 
-  .btn {
+  .form-actions button {
     width: 100%;
     justify-content: center;
   }

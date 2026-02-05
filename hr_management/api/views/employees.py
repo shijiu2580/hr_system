@@ -27,7 +27,17 @@ class EmployeeListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     def get_queryset(self):
         qs = Employee.objects.select_related('department', 'position', 'user').all()
         user = self.request.user
-        if not user.is_staff:
+
+        # 检查是否有全量访问权限（管理员/人事经理等）
+        from ...permissions import user_has_rbac_permission
+        has_full_access = (
+            user.is_staff or
+            user.is_superuser or
+            user_has_rbac_permission(user, 'employee.view_all') or
+            user_has_rbac_permission(user, 'employee.manage')
+        )
+
+        if not has_full_access:
             # 部门经理可看本部门所有员工，普通员工只能看自己
             managed_dept_ids = get_managed_department_ids(user)
             if managed_dept_ids:
