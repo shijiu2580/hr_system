@@ -37,5 +37,5 @@ RUN python manage.py collectstatic --no-input || true
 EXPOSE 8000
 
 # 启动命令（只执行 migrate，不自动 loaddata 避免覆盖数据）
-CMD ["sh", "-c", "python manage.py migrate && gunicorn hr_system.wsgi:application --bind 0.0.0.0:8000 --workers 1 --threads 2 --timeout 120 --max-requests 500 --max-requests-jitter 50"]
+CMD ["sh", "-c", "python manage.py migrate && gunicorn hr_system.wsgi:application --bind 0.0.0.0:8000 --workers 1 --threads 2 --timeout 120 --max-requests 300 --max-requests-jitter 30 --worker-class sync --preload"]
 
