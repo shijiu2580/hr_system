@@ -516,11 +516,10 @@ async function loadList() {
   try {
     // 加载全部数据，前端筛选
     const res = await api.get('/onboarding/pending/', { params: { status: 'all' } })
-    console.log('API response:', res.data)
-    if (res.data.success) {
-      list.value = res.data.data
+    if (res.success) {
+      list.value = res.data || []
     } else {
-      list.value = res.data.data || res.data || []
+      showToast(res.error?.message || '加载失败', 'error')
     }
   } catch (e) {
     console.error('Load error:', e)
@@ -533,14 +532,14 @@ async function loadList() {
 async function loadDepartments() {
   try {
     const res = await api.get('/departments/')
-    departments.value = res.data.results || res.data
+    departments.value = res.data?.results || res.data || []
   } catch (e) {}
 }
 
 async function loadPositions() {
   try {
     const res = await api.get('/positions/')
-    positions.value = res.data.results || res.data
+    positions.value = res.data?.results || res.data || []
   } catch (e) {}
 }
 
@@ -596,16 +595,16 @@ async function confirmApprove() {
       salary: approveForm.value.salary,
     })
     // 检查成功：success字段为true 或者 返回了employee_id
-    if (res.data.success || res.data.employee_id) {
+    if (res.success) {
       showToast('审核通过')
       approveVisible.value = false
       loadList()
     } else {
-      showToast(res.data.error?.message || res.data.message || '操作失败', 'error')
+      showToast(res.error?.message || '操作失败', 'error')
     }
   } catch (e) {
-    console.error('Approve error:', e.response?.data || e)
-    showToast(e.response?.data?.error?.message || e.response?.data?.message || '操作失败', 'error')
+    console.error('Approve error:', e)
+    showToast('操作失败', 'error')
   }
 }
 
@@ -627,15 +626,15 @@ async function confirmReject() {
       action: 'reject',
       reason: rejectReason.value,
     })
-    if (res.data.success) {
+    if (res.success) {
       showToast('已拒绝')
       rejectVisible.value = false
       loadList()
     } else {
-      showToast(res.data.error?.message || '操作失败', 'error')
+      showToast(res.error?.message || '操作失败', 'error')
     }
   } catch (e) {
-    showToast(e.response?.data?.error?.message || '操作失败', 'error')
+    showToast('操作失败', 'error')
   }
 }
 
@@ -648,15 +647,15 @@ function deleteEmployee(row) {
 async function confirmDelete() {
   try {
     const res = await api.delete(`/employees/${deleteTarget.value.id}/`)
-    if (res.data.success) {
+    if (res.success) {
       showToast('已删除')
       deleteVisible.value = false
       loadList()
     } else {
-      showToast(res.data.error?.message || '删除失败', 'error')
+      showToast(res.error?.message || '删除失败', 'error')
     }
   } catch (e) {
-    showToast(e.response?.data?.error?.message || '删除失败', 'error')
+    showToast('删除失败', 'error')
   }
 }
 </script>

@@ -67,7 +67,9 @@ class SalaryListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
 
 class SalaryDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIView):
     """薪资详情、更新、删除"""
-    queryset = SalaryRecord.objects.select_related('employee').all()
+    queryset = SalaryRecord.objects.select_related(
+        'employee', 'employee__department', 'employee__position', 'employee__user'
+    ).all()
     serializer_class = SalaryRecordSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '薪资记录'

@@ -53,7 +53,7 @@ def get_client_ip(request) -> str:
 
 def send_verification_email(email: str, code: str, code_type: str = 'reset_password') -> bool:
     """发送邮箱验证码
-    
+
     参数:
         email: 邮箱地址
         code: 验证码
@@ -63,16 +63,17 @@ def send_verification_email(email: str, code: str, code_type: str = 'reset_passw
     """
     from django.conf import settings
     from django.core.mail import EmailMessage
-    
-    # 打印到控制台（方便调试，避免中文emoji编码问题）
-    print(f"\n{'='*50}")
-    print(f"[Email] Verification Code")
-    print(f"{'='*50}")
-    print(f"To: {email}")
-    print(f"Code: {code}")
-    print(f"Type: {code_type}")
-    print(f"{'='*50}\n")
-    
+
+    # 仅在调试模式下打印验证码，避免生产环境泄露
+    if settings.DEBUG:
+        print(f"\n{'='*50}")
+        print(f"[Email] Verification Code")
+        print(f"{'='*50}")
+        print(f"To: {email}")
+        print(f"Code: {code}")
+        print(f"Type: {code_type}")
+        print(f"{'='*50}\n")
+
     # 发送邮件
     try:
         subject = '【HR管理系统】验证码'
@@ -89,7 +90,7 @@ def send_verification_email(email: str, code: str, code_type: str = 'reset_passw
 HR管理系统
 '''
         from_email = settings.DEFAULT_FROM_EMAIL
-        
+
         email_msg = EmailMessage(
             subject=subject,
             body=message,
@@ -100,23 +101,17 @@ HR管理系统
         email_msg.send(fail_silently=False)
         print(f"[Email] Sent successfully to: {email}")
         return True
-        
+
     except Exception as e:
         print(f"[Email] Failed to send to: {email}, error: {str(e)}")
         return False
 
 
-# 保留原函数名兼容性
-def send_sms(phone: str, code: str, code_type: str = 'reset_password') -> bool:
-    """发送短信验证码（已废弃，改用邮箱）"""
-    print(f"警告：短信功能已改为邮箱验证，请使用 send_verification_email")
-    return False
-
 
 def generate_verification_code() -> str:
-    """生成6位数字验证码"""
-    import random
-    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    """生成6位数字验证码（使用密码学安全的随机数）"""
+    import secrets
+    return ''.join([str(secrets.randbelow(10)) for _ in range(6)])
 
 
 # ============ 节假日API工具 ============
@@ -124,13 +119,13 @@ def generate_verification_code() -> str:
 def is_workday(date) -> bool:
     """
     判断指定日期是否为工作日（需要签到）
-    
+
     使用 timor.tech 节假日API，支持：
     - 国家法定节假日（不需签到）
     - 调休补班日（需要签到）
     - 普通周末（不需签到）
     - 普通工作日（需要签到）
-    
+
     参数:
         date: datetime.date 对象
     返回:
@@ -140,46 +135,46 @@ def is_workday(date) -> bool:
     import logging
     from django.core.cache import cache
     from django.conf import settings
-    
+
     logger = logging.getLogger('hr_management.utils')
-    
+
     # 检查是否启用节假日API
     if not getattr(settings, 'HOLIDAY_API_ENABLED', True):
         # 未启用API，回退到简单周末判断
         return date.weekday() < 5
-    
+
     # 缓存key，避免重复调用API
     cache_key = f'holiday_type_{date.isoformat()}'
     cached_result = cache.get(cache_key)
     if cached_result is not None:
         return cached_result
-    
+
     try:
         url = f'http://timor.tech/api/holiday/info/{date.isoformat()}'
         headers = {'User-Agent': 'Mozilla/5.0 HR-System/1.0'}
         resp = requests.get(url, timeout=5, headers=headers)
         resp.raise_for_status()
         data = resp.json()
-        
+
         if data.get('code') == 0:
             holiday_type = data.get('type', {}).get('type', 0)
             # type: 0=工作日, 1=周末, 2=节假日, 3=调休补班
             is_work = holiday_type in (0, 3)  # 工作日或调休补班需要签到
-            
+
             # 缓存结果24小时
             cache.set(cache_key, is_work, 86400)
-            
+
             type_names = {0: '工作日', 1: '周末', 2: '节假日', 3: '调休补班'}
             logger.info(f"Holiday API: {date} -> {type_names.get(holiday_type, '未知')} (is_workday={is_work})")
             return is_work
         else:
             logger.warning(f"Holiday API returned error: {data}")
-            
+
     except requests.RequestException as e:
         logger.warning(f"Holiday API request failed: {e}")
     except Exception as e:
         logger.error(f"Holiday API unexpected error: {e}")
-    
+
     # API失败时回退到周末判断
     fallback = date.weekday() < 5
     cache.set(cache_key, fallback, 3600)  # 失败时缓存1小时后重试
@@ -189,7 +184,7 @@ def is_workday(date) -> bool:
 def get_holiday_info(date) -> Dict[str, Any]:
     """
     获取指定日期的节假日详细信息
-    
+
     返回:
         {
             'is_workday': bool,      # 是否工作日
@@ -203,9 +198,9 @@ def get_holiday_info(date) -> Dict[str, Any]:
     import logging
     from django.core.cache import cache
     from django.conf import settings
-    
+
     logger = logging.getLogger('hr_management.utils')
-    
+
     result = {
         'is_workday': date.weekday() < 5,
         'type': 0 if date.weekday() < 5 else 1,
@@ -213,26 +208,26 @@ def get_holiday_info(date) -> Dict[str, Any]:
         'holiday_name': None,
         'from_api': False
     }
-    
+
     if not getattr(settings, 'HOLIDAY_API_ENABLED', True):
         return result
-    
+
     cache_key = f'holiday_info_{date.isoformat()}'
     cached = cache.get(cache_key)
     if cached:
         return cached
-    
+
     try:
         url = f'http://timor.tech/api/holiday/info/{date.isoformat()}'
         headers = {'User-Agent': 'Mozilla/5.0 HR-System/1.0'}
         resp = requests.get(url, timeout=5, headers=headers)
         resp.raise_for_status()
         data = resp.json()
-        
+
         if data.get('code') == 0:
             type_data = data.get('type', {})
             holiday_type = type_data.get('type', 0)
-            
+
             type_names = {0: '工作日', 1: '周末', 2: '节假日', 3: '调休补班'}
             result = {
                 'is_workday': holiday_type in (0, 3),
@@ -242,9 +237,9 @@ def get_holiday_info(date) -> Dict[str, Any]:
                 'from_api': True
             }
             cache.set(cache_key, result, 86400)
-            
+
     except Exception as e:
         logger.warning(f"get_holiday_info failed: {e}")
-    
+
     return result
 

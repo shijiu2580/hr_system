@@ -71,7 +71,10 @@
           <div v-for="group in groupedAlerts" :key="group.key" class="accordion-item">
             <div class="accordion-header" @click="toggleGroup(group.key)">
               <div class="header-left">
-                <div class="avatar" :style="{ background: getAvatarColor(group.employee?.id || 0) }">
+                <div v-if="group.employee?.avatar" class="avatar avatar-img">
+                  <img :src="group.employee.avatar" :alt="group.employee.name" />
+                </div>
+                <div v-else class="avatar" :style="{ background: getAvatarColor(group.employee?.id || 0) }">
                   {{ group.employee?.name?.charAt(0) || '?' }}
                 </div>
                 <div class="emp-meta">
@@ -640,6 +643,13 @@ async function loadData() {
   font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .name-text {

@@ -620,6 +620,11 @@ class SimpleScheduler:
 
     def _run_loop(self):
         """调度循环"""
+        # 首次启动延迟 60 秒，避免应用启动时立即执行所有任务
+        start_time = time.time()
+        for task in self._tasks.values():
+            task['last_run'] = start_time
+
         while self._running:
             current_time = time.time()
 
@@ -632,7 +637,7 @@ class SimpleScheduler:
                     except Exception as e:
                         logger.error(f"Scheduled task {name} failed: {e}")
 
-            time.sleep(1)  # 每秒检查一次
+            time.sleep(60)  # 每 60 秒检查一次，任务间隔最小为 1 小时，无需更频繁
 
 
 # 全局调度器实例

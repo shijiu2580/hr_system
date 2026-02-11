@@ -70,7 +70,7 @@
     <!-- 快捷入口 -->
     <div class="section-title">快捷服务</div>
     <van-cell-group inset>
-      <van-cell title="补签申请" is-link to="/attendance">
+      <van-cell title="补签申请" is-link to="/supplement">
         <template #icon>
           <svg-icon name="leaves" size="16" style="margin-right: 4px; vertical-align: middle" />
         </template>

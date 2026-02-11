@@ -76,15 +76,15 @@ def invalidate_role_cache(sender, instance, **kwargs):
 @receiver(m2m_changed, sender=Role.users.through)
 def role_users_changed(sender, instance, action, pk_set, **kwargs):
     """角色-用户关系变更时清除权限缓存"""
-    if action in ('post_add', 'post_remove', 'post_clear'):
-        # instance 是 Role
+    if action in ('post_add', 'post_remove'):
+        # 添加/移除操作，直接通过 pk_set 清除
         if pk_set:
             for user_id in pk_set:
                 cache.delete(CacheKeys.USER_PERMISSIONS.format(user_id=user_id))
-        else:
-            # clear 操作，清除所有该角色用户的缓存
-            for user in instance.users.all():
-                cache.delete(CacheKeys.USER_PERMISSIONS.format(user_id=user.id))
+    elif action == 'pre_clear':
+        # clear 操作前提前获取用户列表（post_clear 时关系已清空，查不到）
+        for user in instance.users.all():
+            cache.delete(CacheKeys.USER_PERMISSIONS.format(user_id=user.id))
 
 
 @receiver(m2m_changed, sender=Role.permissions.through)

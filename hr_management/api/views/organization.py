@@ -15,11 +15,13 @@ from ..serializers import (
 
 class DepartmentListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     """部门列表与创建"""
-    queryset = Department.objects.all().order_by('name')
+    queryset = Department.objects.select_related('manager', 'parent').prefetch_related(
+        'supervisors', 'children'
+    ).all().order_by('name')
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '部门'
-    
+
     # RBAC 权限
     def get_rbac_permissions(self):
         if self.request.method == 'POST':
@@ -30,7 +32,7 @@ class DepartmentListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return DepartmentWriteSerializer
         return DepartmentSerializer
-    
+
     def get_log_detail(self, obj):
         return obj.name
 
@@ -49,7 +51,7 @@ class DepartmentDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIVie
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '部门'
-    
+
     # RBAC 权限
     def get_rbac_permissions(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -62,7 +64,7 @@ class DepartmentDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIVie
         if self.request.method in ['PUT', 'PATCH']:
             return DepartmentWriteSerializer
         return DepartmentSerializer
-    
+
     def get_log_detail(self, obj):
         return obj.name
 
@@ -90,7 +92,7 @@ class PositionListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     serializer_class = PositionSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '职位'
-    
+
     # RBAC 权限
     def get_rbac_permissions(self):
         if self.request.method == 'POST':
@@ -101,7 +103,7 @@ class PositionListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return PositionWriteSerializer
         return PositionSerializer
-    
+
     def get_log_detail(self, obj):
         return f'{obj.department.name}-{obj.name}'
 
@@ -120,7 +122,7 @@ class PositionDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIView)
     serializer_class = PositionSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     log_model_name = '职位'
-    
+
     # RBAC 权限
     def get_rbac_permissions(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -133,7 +135,7 @@ class PositionDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIView)
         if self.request.method in ['PUT', 'PATCH']:
             return PositionWriteSerializer
         return PositionSerializer
-    
+
     def get_log_detail(self, obj):
         return f'{obj.department.name}-{obj.name}'
 

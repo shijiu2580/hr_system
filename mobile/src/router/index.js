@@ -55,6 +55,12 @@ const routes = [
     meta: { title: '考勤记录', requiresAuth: true, requiresOnboarded: true }
   },
   {
+    path: '/supplement',
+    name: 'Supplement',
+    component: () => import('../views/Supplement.vue'),
+    meta: { title: '补签申请', requiresAuth: true, requiresOnboarded: true }
+  },
+  {
     path: '/leave',
     name: 'Leave',
     component: () => import('../views/Leave.vue'),
@@ -80,33 +86,33 @@ let isInitialized = false
 router.beforeEach(async (to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title || 'HR员工自助'
-  
+
   const userStore = useUserStore()
-  
+
   // 首次加载时，先恢复用户状态
   if (!isInitialized && userStore.token) {
     isInitialized = true
     await userStore.checkAuth()
   }
-  
+
   // 需要登录的页面
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
     return
   }
-  
+
   // 需要已入职状态的页面
   if (to.meta.requiresOnboarded && userStore.onboardStatus !== 'onboarded') {
     next({ name: 'Status' })
     return
   }
-  
+
   // 已入职员工访问入职进度页时，直接跳转首页
   if (to.name === 'Status' && userStore.onboardStatus === 'onboarded') {
     next({ name: 'Home' })
     return
   }
-  
+
   next()
 })
 
