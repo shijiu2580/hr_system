@@ -115,6 +115,26 @@
         </div>
       </div>
 
+      <!-- 拒绝原因弹窗 -->
+      <div v-if="showRejectModal" class="modal-overlay" @click.self="cancelReject">
+        <div class="modal-content" style="max-width: 420px;">
+          <div class="modal-header">
+            <h3>拒绝补签申请</h3>
+            <button class="modal-close" @click="cancelReject">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-row">
+              <label class="form-label">拒绝原因</label>
+              <textarea v-model="rejectComments" class="form-textarea" placeholder="请输入拒绝原因（选填）" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="cancelReject">取消</button>
+            <button class="btn-submit" style="background:#ee0a24;" @click="confirmReject">确认拒绝</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 消息提示 -->
       <transition name="fade">
         <div v-if="message" class="message-toast" :class="message.type">
@@ -135,6 +155,9 @@ const auth = useAuthStore();
 
 const loading = ref(false);
 const items = ref([]);
+const showRejectModal = ref(false);
+const rejectComments = ref('');
+const rejectTargetId = ref(null);
 const dateFrom = ref('');
 const dateTo = ref('');
 const statusFilter = ref('');
@@ -247,7 +270,8 @@ async function load() {
     // 获取所有补签申请（管理员接口）
     const resp = await api.get('/attendance/supplement/pending/?status=all');
     if (resp.success) {
-      items.value = Array.isArray(resp.data) ? resp.data : [];
+      const d = resp.data;
+      items.value = Array.isArray(d) ? d : (d?.results || []);
     } else {
       console.error('加载补签申请失败:', resp.error?.message);
     }
@@ -294,13 +318,30 @@ async function handleBatchApprove() {
 }
 
 async function handleApprove(id, action) {
-  const actionText = action === 'approve' ? '通过' : '拒绝';
-  let comments = '';
   if (action === 'reject') {
-    comments = window.prompt('请输入拒绝原因：', '');
-    if (comments === null) return;
+    rejectTargetId.value = id;
+    rejectComments.value = '';
+    showRejectModal.value = true;
+    return;
   }
+  await doApprove(id, 'approve', '');
+}
 
+function cancelReject() {
+  showRejectModal.value = false;
+  rejectTargetId.value = null;
+  rejectComments.value = '';
+}
+
+async function confirmReject() {
+  showRejectModal.value = false;
+  await doApprove(rejectTargetId.value, 'reject', rejectComments.value);
+  rejectTargetId.value = null;
+  rejectComments.value = '';
+}
+
+async function doApprove(id, action, comments) {
+  const actionText = action === 'approve' ? '通过' : '拒绝';
   approvingId.value = id;
   try {
     const resp = await api.post(`/attendance/supplement/${id}/approve/`, { action, comments });
@@ -1025,5 +1066,108 @@ async function handleApprove(id, action) {
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
   transform: translate(-50%, -10px);
+}
+
+/* 拒绝原因弹窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0 4px;
+}
+
+.modal-body {
+  padding: 1.25rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.form-row {
+  margin-bottom: 1rem;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+.btn-cancel {
+  padding: 8px 20px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-submit {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
 }
 </style>

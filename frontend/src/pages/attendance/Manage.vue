@@ -347,6 +347,26 @@
         </div>
       </div>
 
+      <!-- 拒绝原因弹窗 -->
+      <div v-if="showRejectModal" class="modal-overlay" @click.self="cancelReject">
+        <div class="modal-content" style="max-width: 420px;">
+          <div class="modal-header">
+            <h3>拒绝补签申请</h3>
+            <button class="modal-close" @click="cancelReject">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-row">
+              <label class="form-label">拒绝原因</label>
+              <textarea v-model="rejectComments" class="form-textarea" placeholder="请输入拒绝原因（选填）" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="cancelReject">取消</button>
+            <button class="btn-submit" style="background:#ee0a24;" @click="confirmReject">确认拒绝</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 消息提示 -->
       <transition name="fade">
         <div v-if="message" class="message-toast" :class="message.type">
@@ -377,6 +397,9 @@ const approvalFilter = ref('');
 const selected = ref([]);
 const selectAll = ref(false);
 const showSupplementModal = ref(false);
+const showRejectModal = ref(false);
+const rejectComments = ref('');
+const rejectTargetId = ref(null);
 const submitting = ref(false);
 const exporting = ref(false);
 const message = ref(null);
@@ -892,7 +915,8 @@ async function loadPendingSupplements() {
   try {
     const resp = await api.get('/attendance/supplement/pending/');
     if (resp.success) {
-      pendingSupplements.value = Array.isArray(resp.data) ? resp.data : [];
+      const d = resp.data;
+      pendingSupplements.value = Array.isArray(d) ? d : (d?.results || []);
     }
   } catch (e) {
     console.error('加载待审批补签失败:', e);
@@ -900,20 +924,37 @@ async function loadPendingSupplements() {
 }
 
 async function handleApprove(id, action) {
-  const actionText = action === 'approve' ? '通过' : '拒绝';
-  let comments = '';
   if (action === 'reject') {
-    comments = window.prompt('请输入拒绝原因：', '');
-    if (comments === null) return;
+    rejectTargetId.value = id;
+    rejectComments.value = '';
+    showRejectModal.value = true;
+    return;
   }
+  await doApprove(id, 'approve', '');
+}
 
+function cancelReject() {
+  showRejectModal.value = false;
+  rejectTargetId.value = null;
+  rejectComments.value = '';
+}
+
+async function confirmReject() {
+  showRejectModal.value = false;
+  await doApprove(rejectTargetId.value, 'reject', rejectComments.value);
+  rejectTargetId.value = null;
+  rejectComments.value = '';
+}
+
+async function doApprove(id, action, comments) {
+  const actionText = action === 'approve' ? '通过' : '拒绝';
   approvingId.value = id;
   try {
     const resp = await api.post(`/attendance/supplement/${id}/approve/`, { action, comments });
     if (resp.success) {
       showMessage('success', `已${actionText}补签申请`);
       await loadPendingSupplements();
-      await load(); // 刷新考勤列表
+      await load();
     } else {
       showMessage('error', resp.error?.message || `${actionText}失败`);
     }

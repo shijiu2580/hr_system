@@ -33,7 +33,7 @@ class SystemLogListAPIView(generics.ListAPIView):
         level = self.request.query_params.get('level')
         if level:
             qs = qs.filter(level=level)
-        return qs[:500]
+        return qs
 
 
 @api_view(['POST'])

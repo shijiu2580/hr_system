@@ -38,9 +38,10 @@ class Department(models.Model):
     def get_all_children(self):
         """获取所有子部门（递归）"""
         children = list(self.children.all())
-        for child in self.children.all():
-            children.extend(child.get_all_children())
-        return children
+        result = list(children)  # 复用已加载的列表，避免重复查询
+        for child in children:
+            result.extend(child.get_all_children())
+        return result
 
 
 class Position(models.Model):
@@ -197,10 +198,9 @@ class Employee(models.Model):
     def generate_employee_id(cls):
         """生成随机4位数员工编号"""
         import random
-        existing_ids = set(cls.objects.values_list('employee_id', flat=True))
-        for _ in range(1000):  # 最多尝试1000次
+        for _ in range(1000):  # 最多尝试 1000 次
             new_id = str(random.randint(1000, 9999))
-            if new_id not in existing_ids:
+            if not cls.objects.filter(employee_id=new_id).exists():
                 return new_id
         # 如果4位数用完了，使用5位数
         return str(random.randint(10000, 99999))
@@ -487,30 +487,10 @@ class Role(models.Model):
 def user_has_rbac_permission(user: User, key: str) -> bool:
     """检查用户是否具备某个自定义 RBAC 权限。
 
-    权限来源（混合模式）：
-    1. 超级管理员(superuser)直接放行
-    2. 用户直接关联的角色
-    3. 用户员工档案对应职位的默认角色
+    已迁移至 permissions.py 统一实现（带缓存），此处保留兼容接口。
     """
-    if not user.is_authenticated:
-        return False
-    if user.is_superuser:
-        return True
-
-    # 检查用户直接关联的角色
-    if Role.objects.filter(users=user, permissions__key=key).exists():
-        return True
-
-    # 检查职位默认角色
-    try:
-        employee = user.employee
-        if employee and employee.position:
-            if Role.objects.filter(positions=employee.position, permissions__key=key).exists():
-                return True
-    except Exception:
-        pass
-
-    return False
+    from .permissions import user_has_rbac_permission as _check
+    return _check(user, key)
 
 
 def get_user_all_roles(user: User):

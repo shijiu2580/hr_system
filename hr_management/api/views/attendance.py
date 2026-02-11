@@ -518,9 +518,9 @@ def attendance_supplement_pending(request):
     else:
         qs = AttendanceSupplement.objects.filter(status=status_filter).select_related('employee').order_by('-created_at')
 
-    data = []
+    results = []
     for item in qs:
-        data.append({
+        results.append({
             'id': item.id,
             'employee_id': item.employee.employee_id,
             'employee_name': item.employee.name,
@@ -531,7 +531,7 @@ def attendance_supplement_pending(request):
             'status': item.status,
             'created_at': item.created_at.strftime('%Y-%m-%d %H:%M:%S') if item.created_at else '',
         })
-    return Response(api_success(data))
+    return Response(api_success({'count': len(results), 'results': results}))
 
 
 @api_view(['POST'])
@@ -776,6 +776,7 @@ def attendance_alerts(request):
                 'id': att.employee.id,
                 'name': att.employee.name,
                 'employee_id': att.employee.employee_id,
+                'avatar': att.employee.avatar.url if att.employee.avatar else None,
                 'department': {
                     'id': dept.id,
                     'name': dept.name,

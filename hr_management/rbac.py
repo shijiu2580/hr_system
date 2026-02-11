@@ -308,7 +308,7 @@ DEFAULT_ROLES = {
 
 
 def user_has_permission(user, permission_key):
-    """检查用户是否拥有指定权限
+    """检查用户是否拥有指定权限（委托给统一的缓存版本）
 
     Args:
         user: Django User 对象
@@ -317,24 +317,8 @@ def user_has_permission(user, permission_key):
     Returns:
         bool: 是否拥有权限
     """
-    if not user or not user.is_authenticated:
-        return False
-
-    # 超级管理员拥有所有权限
-    if user.is_superuser:
-        return True
-
-    # 管理员角色拥有所有权限
-    if hasattr(user, 'roles'):
-        if user.roles.filter(code='admin').exists():
-            return True
-
-    # 检查用户角色中是否包含该权限
-    from .models import Role
-    return Role.objects.filter(
-        users=user,
-        permissions__key=permission_key
-    ).exists()
+    from .permissions import user_has_rbac_permission
+    return user_has_rbac_permission(user, permission_key)
 
 
 def require_permission(*permission_keys, any_of=False):

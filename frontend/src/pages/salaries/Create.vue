@@ -195,9 +195,7 @@ function createEmptyRow() {
     employee_id: '',
     year: now.getFullYear(),
     month: now.getMonth() + 1,
-    basic_salary: 0,
-    bonus: 0,
-    allowance: 0
+    basic_salary: 0
   }
 }
 
@@ -295,9 +293,7 @@ async function handleFileImport(event) {
         employee_name_hint: empNameOrId, // 用于提示未匹配的员工
         year: parseInt(row[1]) || now.getFullYear(),
         month: parseInt(row[2]) || now.getMonth() + 1,
-        basic_salary: parseFloat(row[3]) || 0,
-        bonus: parseFloat(row[4]) || 0,
-        allowance: parseFloat(row[5]) || 0
+        basic_salary: parseFloat(row[3]) || 0
       })
     }
 
@@ -343,13 +339,6 @@ function goBack() {
   router.push('/salaries')
 }
 
-// 获取本月发薪日期（每月5日）
-function getPayDate() {
-  const now = new Date()
-  const payDay = 5
-  return new Date(now.getFullYear(), now.getMonth(), payDay, 10, 0, 0).toISOString()
-}
-
 // 批量提交
 async function handleSubmitAll() {
   // 验证
@@ -361,8 +350,6 @@ async function handleSubmitAll() {
 
   saving.value = true
   message.value = null
-
-  const paidAt = getPayDate()
 
   try {
     // 逐条提交（也可以改成批量接口）
@@ -377,8 +364,6 @@ async function handleSubmitAll() {
           year: row.year,
           month: row.month,
           basic_salary: row.basic_salary,
-          bonus: row.bonus,
-          allowance: row.allowance,
           paid: false
         })
         successCount++

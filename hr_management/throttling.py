@@ -10,7 +10,7 @@ class BurstRateThrottle(UserRateThrottle):
     适用于防止短时间内大量请求
     """
     scope = 'burst'
-    
+
 
 class SustainedRateThrottle(UserRateThrottle):
     """
@@ -25,7 +25,7 @@ class LoginRateThrottle(AnonRateThrottle):
     登录接口限流 - 防止暴力破解
     """
     scope = 'login'
-    
+
     def get_cache_key(self, request, view):
         # 基于 IP 地址限流
         ident = self.get_ident(request)
@@ -66,25 +66,34 @@ class ReportThrottle(UserRateThrottle):
 class ScopedRateThrottleMixin:
     """
     基于权限范围的限流 Mixin
-    高级用户可以有更高的限流配额
+    管理员用户可以有更高的限流配额
     """
-    
-    def get_rate(self):
-        # 检查用户是否是管理员
-        if hasattr(self, 'request') and self.request.user.is_authenticated:
-            if self.request.user.is_superuser or self.request.user.is_staff:
-                # 管理员使用更宽松的限制
-                return self.get_admin_rate()
-        return super().get_rate()
-    
-    def get_admin_rate(self):
-        """管理员的限流速率，子类可以覆盖"""
-        # 默认是普通用户的 3 倍
-        rate = super().get_rate()
-        if rate:
-            num_requests, duration = self.parse_rate(rate)
-            return f'{num_requests * 3}/{duration}'
-        return rate
+
+    def allow_request(self, request, view):
+        """管理员用户提升限流配额为 3 倍"""
+        # 先解析基础速率
+        if self.rate is None:
+            return True
+        self.num_requests, self.duration = self.parse_rate(self.rate)
+
+        # 管理员提升 3 倍配额
+        if request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff):
+            self.num_requests *= 3
+
+        self.key = self.get_cache_key(request, view)
+        if self.key is None:
+            return True
+
+        self.history = self.cache.get(self.key, [])
+        self.now = self.timer()
+
+        # 清理过期记录
+        while self.history and self.history[-1] <= self.now - self.duration:
+            self.history.pop()
+
+        if len(self.history) >= self.num_requests:
+            return self.throttle_failure()
+        return self.throttle_success()
 
 
 class AdminBurstThrottle(ScopedRateThrottleMixin, BurstRateThrottle):
@@ -102,7 +111,7 @@ DEFAULT_THROTTLE_RATES = {
     # 基础限流
     'anon': '30/min',           # 匿名用户：每分钟 30 次
     'user': '120/min',          # 登录用户：每分钟 120 次
-    
+
     # 自定义限流
     'burst': '60/min',          # 突发限流：每分钟 60 次
     'sustained': '10000/day',   # 持续限流：每天 10000 次
@@ -117,7 +126,7 @@ DEFAULT_THROTTLE_RATES = {
 def get_throttle_classes_for_view(view_type='default'):
     """
     根据视图类型获取合适的限流类
-    
+
     Args:
         view_type: 视图类型，可选值：
             - 'default': 默认限流
@@ -126,7 +135,7 @@ def get_throttle_classes_for_view(view_type='default'):
             - 'upload': 上传接口
             - 'report': 报表接口
             - 'sensitive': 敏感操作
-    
+
     Returns:
         限流类列表
     """

@@ -1,20 +1,24 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from .models import Employee, Department
+from .permission_cache import (
+    cached_user_permissions,
+    cached_managed_departments,
+    has_permission_cached,
+)
 
 
 def get_managed_department_ids(user):
-    """获取用户作为部门经理管理的部门ID列表"""
+    """获取用户作为部门经理管理的部门ID列表（带缓存）"""
     if not user or not user.is_authenticated:
         return []
-    try:
-        emp = Employee.objects.get(user=user)
-        return list(Department.objects.filter(manager=emp).values_list('id', flat=True))
-    except Employee.DoesNotExist:
-        return []
+    return cached_managed_departments(user)
 
 
 def user_has_rbac_permission(user, permission_key):
-    """检查用户是否拥有指定的RBAC权限
+    """检查用户是否拥有指定的RBAC权限（带缓存）
+
+    使用 permission_cache 模块的缓存机制，避免每次请求查询数据库。
+    缓存会在角色/权限变更时自动失效。
 
     Args:
         user: Django User 对象
@@ -26,40 +30,11 @@ def user_has_rbac_permission(user, permission_key):
     if not user or not user.is_authenticated:
         return False
 
-    # 超级管理员拥有所有权限
-    if user.is_superuser:
+    # 超级管理员和系统管理员拥有所有权限
+    if user.is_superuser or user.is_staff:
         return True
 
-    # 系统管理员(is_staff)拥有所有权限
-    if user.is_staff:
-        return True
-
-    # admin角色拥有所有权限
-    if hasattr(user, 'roles'):
-        if user.roles.filter(code='admin').exists():
-            return True
-
-    # 检查用户直接关联的角色中是否包含该权限
-    from .models import Role, Employee
-    if Role.objects.filter(
-        users=user,
-        permissions__key=permission_key
-    ).exists():
-        return True
-
-    # 检查用户通过职位继承的角色中是否包含该权限
-    try:
-        employee = Employee.objects.select_related('position').get(user=user)
-        if employee.position:
-            if Role.objects.filter(
-                positions=employee.position,
-                permissions__key=permission_key
-            ).exists():
-                return True
-    except Employee.DoesNotExist:
-        pass
-
-    return False
+    return has_permission_cached(user, permission_key)
 
 
 class HasRBACPermission(BasePermission):
