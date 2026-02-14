@@ -1065,16 +1065,19 @@ function resetFilters() {
 }
 
 .header-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--color-primary);
+  border-radius: 8px;
 }
 
 .header-icon img {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
 }
 
 .header-title {
@@ -1094,7 +1097,7 @@ function resetFilters() {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #2563eb;
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -1104,7 +1107,7 @@ function resetFilters() {
 }
 
 .btn-export:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .btn-export:disabled {
@@ -1184,19 +1187,20 @@ function resetFilters() {
 }
 
 .reset-filter-btn {
-  padding: 6px 12px;
-  font-size: 13px;
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
   color: #6b7280;
-  background: #f3f4f6;
+  background: white;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .reset-filter-btn:hover {
   color: #374151;
-  background: #e5e7eb;
+  background: #f3f4f6;
   border-color: #9ca3af;
 }
 
@@ -1232,17 +1236,7 @@ function resetFilters() {
   text-decoration: underline;
 }
 
-/* 表格 */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.data-table th {
-  /* 使用全局样式 */
-}
-
+/* .data-table definition removed to use global style */
 .data-table th.sortable {
   cursor: pointer;
 }
@@ -1280,16 +1274,9 @@ function resetFilters() {
   gap: 0.25rem;
 }
 
-.data-table td {
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  color: #374151;
-  vertical-align: middle;
-}
+/* data-table td removed to use global style */
 
-.data-row:hover {
-  background: #fafafa;
-}
+/* data-row:hover removed to use global style */
 
 .data-row.row-selected {
   background: #eff6ff;
@@ -1357,8 +1344,8 @@ function resetFilters() {
 }
 
 .checkbox:checked {
-  background: #9ca3af !important;
-  border-color: #9ca3af !important;
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
 }
 
 .checkbox:checked::after {
@@ -1374,8 +1361,8 @@ function resetFilters() {
 }
 
 .checkbox:indeterminate {
-  background: #9ca3af !important;
-  border-color: #9ca3af !important;
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
 }
 
 .checkbox:indeterminate::after {
@@ -1400,7 +1387,7 @@ function resetFilters() {
 .col-actions { width: 80px; }
 
 .type-link {
-  color: #2563eb;
+  color: var(--color-primary);
   text-decoration: none;
 }
 
@@ -1432,7 +1419,7 @@ function resetFilters() {
 }
 
 .action-link {
-  color: #2563eb;
+  color: var(--color-primary);
   text-decoration: none;
   font-size: 14px;
   margin-right: 16px;
@@ -1462,7 +1449,7 @@ function resetFilters() {
 
 .progress-fill {
   height: 100%;
-  background: #2563eb;
+  background: var(--color-primary);
   animation: progress 1.5s ease-in-out infinite;
 }
 
@@ -1534,7 +1521,7 @@ function resetFilters() {
 }
 
 .page-size-custom-select :deep(.select-option.selected) {
-  background: #2563eb;
+  background: var(--color-primary);
   color: #fff;
 }
 
@@ -1799,7 +1786,7 @@ function resetFilters() {
 }
 
 .employee-option.active {
-  background: #2563eb;
+  background: var(--color-primary);
   color: #fff;
 }
 
@@ -1840,7 +1827,7 @@ function resetFilters() {
 }
 
 .employee-link {
-  color: #2563eb;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
 }
@@ -1916,7 +1903,7 @@ function resetFilters() {
 
 .edit-input:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--color-primary);
   box-shadow: none;
 }
 
@@ -1932,7 +1919,7 @@ function resetFilters() {
 
 .edit-textarea:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--color-primary);
   box-shadow: none;
 }
 
@@ -1942,7 +1929,7 @@ function resetFilters() {
 
 .btn-primary {
   padding: 0.5rem 1rem;
-  background: #2563eb;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 4px;
@@ -1952,7 +1939,7 @@ function resetFilters() {
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .btn-primary:disabled {
