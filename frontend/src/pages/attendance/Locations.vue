@@ -468,9 +468,7 @@ h2 {
 }
 
 .data-table th {
-  background: #fafafa;
-  color: #475569;
-  font-weight: 600;
+  /* 使用全局样式 */
 }
 
 .muted {

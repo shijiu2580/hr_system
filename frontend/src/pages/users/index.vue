@@ -641,13 +641,7 @@ onMounted(async () => {
 }
 
 .user-table thead th {
-  text-align: left;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.6rem 0.75rem;
-  color: #94a3b8;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+  /* 使用全局样式 */
 }
 
 .user-table tbody td {

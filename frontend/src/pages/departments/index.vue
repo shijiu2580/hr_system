@@ -1012,18 +1012,11 @@ onMounted(loadData)
 }
 
 .data-table thead {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  /* 使用全局样式 */
 }
 
 .data-table th {
-  text-align: left;
-  padding: 0.75rem 1rem;
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  /* 使用全局样式 */
 }
 
 .data-table td {

@@ -360,16 +360,11 @@ function handleRemove(p) {
 }
 
 .perm-table thead {
-  background: #f9fafb;
+  /* 使用全局样式 */
 }
 
 .perm-table th {
-  padding: 0.625rem 1rem;
-  text-align: left;
-  color: #6b7280;
-  font-weight: 600;
-  font-size: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  /* 使用全局样式 */
 }
 
 .perm-table td {

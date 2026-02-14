@@ -866,17 +866,11 @@ async function confirmDelete() {
 }
 
 .data-table thead {
-  background: #f8fafc;
+  /* 使用全局样式 */
 }
 
 .data-table th {
-  padding: 0.85rem 1rem;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
+  /* 使用全局样式 */
 }
 
 .data-table td {

@@ -83,7 +83,15 @@ a:hover { color: var(--color-primary-hover); }
 
 /* 表格与表单基础 */
 table { width:100%; border-collapse: collapse; font-size:14px; }
-table thead th { text-align:left; background: var(--color-surface-alt); padding:.55rem .6rem; border-bottom:1px solid var(--color-border); font-weight:600; }
+table thead th { 
+  text-align: left; 
+  background: var(--color-surface); 
+  padding: 0.875rem 1rem; 
+  border-bottom: 2px solid var(--color-primary); 
+  font-weight: 500; 
+  color: var(--color-primary);
+  white-space: nowrap;
+}
 table tbody td { padding:.5rem .6rem; border-bottom:1px solid var(--color-border); }
 table tbody tr:hover { background: var(--color-surface-alt); }
 
