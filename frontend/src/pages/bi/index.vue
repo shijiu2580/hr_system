@@ -14,27 +14,15 @@
         <div class="filters">
           <div class="filter-group">
             <label>考勤周期</label>
-            <select v-model="daysRange">
-              <option :value="30">近 30 天</option>
-              <option :value="60">近 60 天</option>
-              <option :value="90">近 90 天</option>
-            </select>
+            <CustomSelect v-model="daysRange" :options="daysRangeOptions" />
           </div>
           <div class="filter-group">
             <label>请假周期</label>
-            <select v-model="leaveDaysRange">
-              <option :value="90">近 3 个月</option>
-              <option :value="180">近 6 个月</option>
-              <option :value="365">近 1 年</option>
-            </select>
+            <CustomSelect v-model="leaveDaysRange" :options="leaveDaysRangeOptions" />
           </div>
           <div class="filter-group">
             <label>流动趋势</label>
-            <select v-model="turnoverMonths">
-              <option :value="6">近 6 个月</option>
-              <option :value="12">近 1 年</option>
-              <option :value="24">近 2 年</option>
-            </select>
+            <CustomSelect v-model="turnoverMonths" :options="turnoverMonthsOptions" />
           </div>
         </div>
         <button class="btn outline icon-btn" @click="reloadAll" :disabled="loadingAll">
@@ -155,6 +143,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import api from '../../utils/api';
 import Chart from 'chart.js/auto';
+import CustomSelect from '../../components/CustomSelect.vue';
 
 const loadingAll = ref(false);
 const error = ref('');
@@ -164,6 +153,24 @@ const lastUpdated = ref('');
 const daysRange = ref(30);
 const leaveDaysRange = ref(90);
 const turnoverMonths = ref(12);
+
+const daysRangeOptions = [
+  { value: 30, label: '近 30 天' },
+  { value: 60, label: '近 60 天' },
+  { value: 90, label: '近 90 天' }
+];
+
+const leaveDaysRangeOptions = [
+  { value: 90, label: '近 3 个月' },
+  { value: 180, label: '近 6 个月' },
+  { value: 365, label: '近 1 年' }
+];
+
+const turnoverMonthsOptions = [
+  { value: 6, label: '近 6 个月' },
+  { value: 12, label: '近 1 年' },
+  { value: 24, label: '近 2 年' }
+];
 
 const deptCostChartRef = ref(null);
 const salaryRangeChartRef = ref(null);
@@ -458,19 +465,83 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
-.filter-group select {
+.filter-group .custom-select {
   width: 130px;
-  background-color: #fff;
+}
+
+.filter-group :deep(.select-trigger) {
+  padding: 0.45rem 0.75rem;
+  padding-right: 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  min-height: auto;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.filter-group :deep(.select-trigger:hover) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.filter-group :deep(.select-trigger:focus),
+.filter-group :deep(.custom-select.open .select-trigger) {
+  border-color: #cbd5e1;
+  box-shadow: none;
+}
+
+.filter-group :deep(.select-value) {
+  font-size: 13px;
+}
+
+.filter-group :deep(.select-dropdown) {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 4px;
+}
+
+.filter-group :deep(.select-option) {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #334151;
+}
+
+.filter-group :deep(.select-option:hover),
+.filter-group :deep(.select-option.highlighted) {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.filter-group :deep(.select-option.selected) {
+  background: #2563eb;
+  color: #fff;
 }
 
 [data-theme="dark"] .filter-group label {
   color: #94a3b8;
 }
 
-[data-theme="dark"] .filter-group select {
+[data-theme="dark"] .filter-group :deep(.select-trigger) {
   background-color: #1e293b;
   border-color: #334155;
   color: #e2e8f0;
+}
+
+[data-theme="dark"] .filter-group :deep(.select-dropdown) {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .filter-group :deep(.select-option) {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .filter-group :deep(.select-option:hover),
+[data-theme="dark"] .filter-group :deep(.select-option.highlighted) {
+  background: #334155;
 }
 
 .update-hint {
