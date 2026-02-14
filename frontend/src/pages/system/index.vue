@@ -343,6 +343,74 @@
         <span class="log-count">共 {{ filteredLogs.length }} 条日志</span>
       </div>
     </section>
+
+    <!-- 清理备份确认弹窗 -->
+    <div v-if="showCleanBackupModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>确认清理旧备份</h3>
+          <button class="modal-close" @click="showCleanBackupModal = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-message">
+            <p>确定要清理旧的备份文件吗？</p>
+          </div>
+          <p class="confirm-hint">
+            系统将保留最近的 <strong>5</strong> 个备份文件，其余旧文件将被永久删除以释放空间。
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showCleanBackupModal = false">取消</button>
+          <button class="btn-danger" @click="confirmCleanBackups">确认清理</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 清空日志确认弹窗 -->
+    <div v-if="showClearLogModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>确认清空日志</h3>
+          <button class="modal-close" @click="showClearLogModal = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-message">
+            <p>确定要清空符合当前筛选条件的日志吗？</p>
+          </div>
+          <p class="confirm-hint" v-if="levelFilter || userFilter || logKeyword">
+            当前筛选：
+            <span v-if="levelFilter">级别:{{ levelFilter }} </span>
+            <span v-if="userFilter">用户:{{ userFilter }} </span>
+            <span v-if="logKeyword">关键词:{{ logKeyword }}</span>
+          </p>
+          <p class="confirm-hint" v-else>
+            这将清空 <strong>所有</strong> 系统日志，此操作不可恢复！
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="showClearLogModal = false">取消</button>
+          <button class="btn-danger" @click="confirmClearLogs">确认清空</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 无备份提示弹窗 -->
+    <div v-if="showNoBackupsModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>提示</h3>
+          <button class="modal-close" @click="showNoBackupsModal = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-message">
+            <p>暂时没有旧备份文件需要清理。</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" @click="showNoBackupsModal = false">知道了</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script setup>
@@ -402,9 +470,20 @@ async function createBackup() {
   }
 }
 
-async function cleanBackups() {
-  if (!confirm('确认清理旧备份，保留最近 5 个？')) return
+const showCleanBackupModal = ref(false)
+const showNoBackupsModal = ref(false)
 
+async function cleanBackups() {
+  if (backups.value.length === 0) {
+    showNoBackupsModal.value = true
+    return
+  }
+  // Open the confirmation modal instead of using confirm()
+  showCleanBackupModal.value = true
+}
+
+async function confirmCleanBackups() {
+  showCleanBackupModal.value = false
   cleaning.value = true
   errorBackup.value = ''
   successBackup.value = ''
@@ -498,9 +577,15 @@ async function reloadLogs() {
   }
 }
 
-async function clearLogs() {
-  if (!confirm('确认清空当前筛选范围日志？')) return
+const showClearLogModal = ref(false)
 
+function openClearLogModal() {
+  if (filteredLogs.value.length === 0) return
+  showClearLogModal.value = true
+}
+
+async function confirmClearLogs() {
+  showClearLogModal.value = false
   clearingLogs.value = true
   errorLogs.value = ''
   successLogs.value = ''
@@ -515,6 +600,11 @@ async function clearLogs() {
   } finally {
     clearingLogs.value = false
   }
+}
+
+async function clearLogs() {
+  // Deprecated direct call, use openClearLogModal instead
+  openClearLogModal()
 }
 
 const filteredLogs = computed(() => {
@@ -662,6 +752,33 @@ onMounted(() => {
 }
 
 /* ==================== 按钮样式 ==================== */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #2563eb;
+  color: #fff;
+  border: 1px solid #2563eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary:not(:disabled):hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -672,40 +789,32 @@ onMounted(() => {
   letter-spacing: 0.01em;
 }
 
-.btn-primary {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  font-weight: 500;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary:not(:disabled):hover {
-  background: #1d4ed8;
-}
-
 .btn-secondary {
-  border: 1px solid #d1d5db;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
   background: #fff;
-  color: #374151;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  color: #334155;
+  font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.5;
 }
 
 .btn-secondary:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
+  background-color: #f1f5f9;
 }
 
 .btn-secondary:not(:disabled):hover {
-  background: #f3f4f6;
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 
 .btn-sm {
@@ -738,20 +847,30 @@ onMounted(() => {
 }
 
 .btn-danger {
-  background: #dc2626;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
   color: #fff;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  line-height: 1.5;
 }
 
 .btn-danger:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .btn-danger:not(:disabled):hover {
-  background: #b91c1c;
+  background: #dc2626;
+  border-color: #dc2626;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.15);
 }
 
 .btn-icon {
@@ -1498,5 +1617,104 @@ onMounted(() => {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001; /* Increased z-index to be on top of other content */
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px; /* More standard border radius */
+  width: 90%;
+  max-width: 440px; /* Slightly wider */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideUp 0.2s ease;
+  overflow: hidden; /* Ensure content doesn't spill out */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem; /* Increased horizontal padding */
+  border-bottom: 1px solid #e2e8f0; /* Lighter border */
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b; /* Slightly darker text */
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  color: #334155;
+}
+
+.confirm-message {
+  display: block;
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+/* warning-icon definition removed */
+
+.confirm-message p {
+  font-size: 14px;
+  color: #334155;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.confirm-hint {
+  background: #fff1f2; /* Light red background for warning context */
+  border: 1px solid #fecdd3;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #9f1239;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.confirm-hint strong {
+  color: #be123c;
+  font-weight: 600;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem; /* Match header padding */
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0; /* Remove bottom radius as it's handled by overflow hidden on content */
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
