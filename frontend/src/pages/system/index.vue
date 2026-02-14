@@ -924,15 +924,8 @@ onMounted(() => {
 }
 
 .data-table thead th {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #2563eb;
-  font-weight: 500;
-  text-align: left;
-  padding: 0.75rem 1rem;
-  border-bottom: 2px solid #2563eb;
-  background: #f8fafc;
+  /* 使用全局样式 */
+}
 }
 
 .data-table tbody td {

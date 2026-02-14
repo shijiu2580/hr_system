@@ -731,16 +731,11 @@ async function handleSubmitAll() {
 }
 
 .salary-table thead {
-  background: #f9fafb; /* Lighter gray */
+  /* 使用全局样式 */
 }
 
 .salary-table th {
-  padding: 0.75rem 1rem; /* Adjusted padding */
-  text-align: left;
-  font-weight: 500; /* Less bold */
-  color: #64748b; /* Softer text color */
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
+  /* 使用全局样式 */
 }
 
 .salary-table td {

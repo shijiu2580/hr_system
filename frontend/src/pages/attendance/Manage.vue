@@ -1259,13 +1259,7 @@ async function doApprove(id, action, comments) {
 }
 
 .data-table th {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-weight: 500;
-  color: #2563eb;
-  border-bottom: 2px solid #2563eb;
-  background: #f8fafc;
-  white-space: nowrap;
+  /* 使用全局样式 */
 }
 
 .data-table td {

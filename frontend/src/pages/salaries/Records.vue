@@ -1240,13 +1240,7 @@ function resetFilters() {
 }
 
 .data-table th {
-  padding: 0.875rem 1rem;
-  text-align: left;
-  font-weight: 500;
-  color: #2563eb;
-  border-bottom: 2px solid #2563eb;
-  background: #fff;
-  white-space: nowrap;
+  /* 使用全局样式 */
 }
 
 .data-table th.sortable {
