@@ -28,6 +28,7 @@ const TravelExpense = () => import('../pages/salaries/TravelExpense.vue');
 const ExpenseApproval = () => import('../pages/salaries/ExpenseApproval.vue');
 const System = () => import('../pages/system/index.vue');
 const Reports = () => import('../pages/reports/index.vue');
+const BIReports = () => import('../pages/bi/index.vue');
 const Documents = () => import('../pages/documents/index.vue');
 const DocumentForm = () => import('../pages/documents/Form.vue');
 const Departments = () => import('../pages/departments/index.vue');
@@ -52,6 +53,7 @@ const SUBMENU_PRELOADERS = {
   attendance: [AttendanceRecords, AttendanceManage, AttendanceApproval, AttendanceLocations, AttendanceAlerts, AttendanceForm],
   leaves: [LeaveApply, LeaveApproval, LeaveCreate, BusinessTrip, BusinessTripCreate],
   salaries: [Salaries, SalaryCreate, SalaryRecords, TravelExpense, ExpenseApproval],
+  reports: [Reports, BIReports],
   resignation: [ResignationProgress, ResignationApply, ResignationApproval],
 };
 
@@ -121,6 +123,7 @@ const router = createRouter({
     // 系统管理（管理员）
     { path: '/system', component: System, meta: { requiresAuth: true, permissions: [Permissions.SYSTEM_VIEW] } },
     { path: '/reports', component: Reports, meta: { requiresAuth: true, permissions: [Permissions.REPORT_VIEW] } },
+    { path: '/bi', component: BIReports, meta: { requiresAuth: true, permissions: [Permissions.REPORT_VIEW] } },
     { path: '/documents', component: Documents, meta: { requiresAuth: true } },
     { path: '/documents/upload', component: DocumentForm, meta: { requiresAuth: true, permissions: [Permissions.DOCUMENT_UPLOAD] } },
     { path: '/documents/:id/edit', component: DocumentForm, meta: { requiresAuth: true, permissions: [Permissions.DOCUMENT_MANAGE] } },

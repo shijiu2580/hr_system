@@ -78,7 +78,7 @@
                 <td class="col-check"><input type="checkbox" class="checkbox" v-model="selected" :value="item.id" /></td>
                 <td class="col-date">
                   <a href="javascript:;" class="date-link">{{ formatDateWithWeek(item.date) }}</a>
-                  <img v-if="isWeekend(item.date)" src="/icons/Rest.svg" alt="休息日" class="weekend-icon" />
+                  <img v-if="isRestDay(item)" src="/icons/Rest.svg" alt="休息日" class="weekend-icon" />
                 </td>
                 <td class="col-time">{{ item.check_in_time ? formatDateTime(item.date, item.check_in_time) : '--' }}</td>
                 <td class="col-time">{{ item.check_out_time ? formatDateTime(item.date, item.check_out_time) : '--' }}</td>
@@ -155,7 +155,7 @@
               <tr v-for="item in paginatedOvertimeRecords" :key="item.id" class="data-row">
                 <td class="col-date">
                   {{ formatDateWithWeek(item.date) }}
-                  <img src="/icons/Rest.svg" alt="休息日" class="weekend-icon" />
+                  <img v-if="isRestDay(item)" src="/icons/Rest.svg" alt="休息日" class="weekend-icon" />
                 </td>
                 <td class="col-time">{{ item.check_in_time ? formatTime(item.check_in_time) : '--' }}</td>
                 <td class="col-time">{{ item.check_out_time ? formatTime(item.check_out_time) : '--' }}</td>
@@ -498,7 +498,7 @@ watch([dateFrom, dateTo], () => {
 
 const filtered = computed(() => {
   // 排除休息日（加班打卡），只显示工作日的考勤
-  let result = items.value.filter(i => !isWeekend(i.date));
+  let result = items.value.filter(i => !isRestDay(i));
 
   if (dateFrom.value) {
     result = result.filter(i => i.date >= dateFrom.value);
@@ -556,7 +556,7 @@ function abnormalGoToPage(page) {
 // 加班打卡记录（休息日的打卡）
 const overtimeRecords = computed(() => {
   return items.value.filter(item => {
-    return isWeekend(item.date) && (item.check_in_time || item.check_out_time);
+    return isRestDay(item) && (item.check_in_time || item.check_out_time);
   }).sort((a, b) => b.date.localeCompare(a.date));
 });
 
@@ -677,6 +677,13 @@ function isWeekend(dateStr) {
   return d.getDay() === 0 || d.getDay() === 6;
 }
 
+function isRestDay(item) {
+  if (item && typeof item.is_workday === 'boolean') {
+    return !item.is_workday;
+  }
+  return isWeekend(item?.date);
+}
+
 function formatDateTime(dateStr, timeStr) {
   if (!timeStr) return '--';
   // 如果timeStr已经包含日期，则解析完整时间
@@ -711,7 +718,7 @@ function getAbsentDuration(item) {
 
 function getStatus(item) {
   if (!item.check_in_time && !item.check_out_time) {
-    return isWeekend(item.date) ? 'normal' : 'absent';
+    return isRestDay(item) ? 'normal' : 'absent';
   }
 
   // 解析签到签退时间

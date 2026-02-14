@@ -226,9 +226,18 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 class AttendanceSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer(read_only=True)
+    is_workday = serializers.SerializerMethodField()
+
     class Meta:
         model = Attendance
-        fields = ['id','employee','date','check_in_time','check_out_time','attendance_type','notes']
+        fields = ['id','employee','date','check_in_time','check_out_time','attendance_type','notes','is_workday']
+
+    def get_is_workday(self, obj):
+        from .utils import is_workday
+        try:
+            return is_workday(obj.date)
+        except Exception:
+            return obj.date.weekday() < 5 if obj and obj.date else True
 
 class LeaveRequestSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer(read_only=True)

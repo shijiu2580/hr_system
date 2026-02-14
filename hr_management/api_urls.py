@@ -19,6 +19,9 @@ from .api.views import (
     DepartmentDistributionAPIView, MonthlySalaryAPIView, AttendanceRateAPIView,
     LeaveAnalysisAPIView, EmployeeGrowthAPIView, PositionDistributionAPIView,
     ReportOverviewAPIView,
+    # BI
+    BIDepartmentCostAPIView, BIAttendanceHeatmapAPIView, BITurnoverAPIView,
+    BISalaryRangeAPIView, BILeaveBalanceAPIView, BIDailyAttendanceAPIView,
     # Employees
     EmployeeListCreateAPIView, EmployeeDetailAPIView, CurrentEmployeeAPIView,
     # Attendance
@@ -89,6 +92,14 @@ urlpatterns = [
     path('reports/leave_analysis/', LeaveAnalysisAPIView.as_view(), name='api_leave_analysis'),
     path('reports/employee_growth/', EmployeeGrowthAPIView.as_view(), name='api_employee_growth'),
     path('reports/position_distribution/', PositionDistributionAPIView.as_view(), name='api_position_distribution'),
+
+    # BI 报表
+    path('bi/department-cost/', BIDepartmentCostAPIView.as_view(), name='api_bi_dept_cost'),
+    path('bi/attendance-heatmap/', BIAttendanceHeatmapAPIView.as_view(), name='api_bi_attendance_heatmap'),
+    path('bi/turnover/', BITurnoverAPIView.as_view(), name='api_bi_turnover'),
+    path('bi/salary-range/', BISalaryRangeAPIView.as_view(), name='api_bi_salary_range'),
+    path('bi/leave-balance/', BILeaveBalanceAPIView.as_view(), name='api_bi_leave_balance'),
+    path('bi/daily-attendance/', BIDailyAttendanceAPIView.as_view(), name='api_bi_daily_attendance'),
 
     path('employees/', EmployeeListCreateAPIView.as_view(), name='api_employees'),
     path('employees/me/', CurrentEmployeeAPIView.as_view(), name='api_employee_me'),

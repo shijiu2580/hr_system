@@ -208,12 +208,41 @@
           <span class="text-box">文档中心</span>
         </RouterLink>
 
-        <RouterLink to="/reports" class="nav-item" v-if="canViewReports">
-          <span class="icon-box">
-            <img class="icon" src="/icons/reports.svg" alt="" />
-          </span>
-          <span class="text-box">大数据报表</span>
-        </RouterLink>
+        <!-- 报表（带子菜单） -->
+        <div class="nav-item-group" v-if="canViewReports">
+          <div
+            class="nav-item nav-item-parent"
+            :class="{ 'has-active': isReportsActive }"
+            @mouseenter="preloadSubmenu('reports')"
+            @click="toggleSubmenu('reports')"
+          >
+            <span class="icon-box">
+              <img class="icon" src="/icons/reports.svg" alt="" />
+            </span>
+            <span class="text-box">报表</span>
+            <span class="arrow-box" v-show="!collapsed">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                :class="{ rotated: submenuOpen.reports }"
+              >
+                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </span>
+          </div>
+          <transition name="submenu">
+            <div class="submenu" v-show="submenuOpen.reports && !collapsed">
+              <RouterLink to="/reports" class="submenu-item">
+                <span>大数据报表</span>
+              </RouterLink>
+              <RouterLink to="/bi" class="submenu-item">
+                <span>BI 报表</span>
+              </RouterLink>
+            </div>
+          </transition>
+        </div>
 
 
         <!-- 离职申请（带子菜单） -->
@@ -592,6 +621,7 @@ const submenuOpen = ref({
   attendance: false,
   leaves: false,
   salaries: false,
+  reports: false,
   resignation: false
 });
 
@@ -624,6 +654,7 @@ const isAttendanceActive = computed(() => route.path.startsWith('/attendance'));
 const isLeavesActive = computed(() => route.path.startsWith('/leaves'));
 const isSalariesActive = computed(() => route.path.startsWith('/salaries'));
 const isResignationActive = computed(() => route.path.startsWith('/resignation'));
+const isReportsActive = computed(() => route.path.startsWith('/reports') || route.path.startsWith('/bi'));
 
 let pendingInterval = null;
 
@@ -941,6 +972,9 @@ function updateIsMobile() {
   padding: 0 1rem;
   background: #fff;
   border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
 .top-left {
