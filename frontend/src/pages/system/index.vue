@@ -926,7 +926,6 @@ onMounted(() => {
 .data-table thead th {
   /* 使用全局样式 */
 }
-}
 
 .data-table tbody td {
   padding: 0.75rem 1rem;

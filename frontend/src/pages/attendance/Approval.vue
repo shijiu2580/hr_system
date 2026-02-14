@@ -665,11 +665,7 @@ async function doApprove(id, action, comments) {
 }
 
 .data-table th {
-  background: #f8fafc;
-  font-weight: 600;
-  color: #475569;
-  font-size: 12px;
-  white-space: nowrap;
+  /* 使用全局样式 */
 }
 
 .data-row:hover {
