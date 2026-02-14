@@ -972,9 +972,16 @@ function updateIsMobile() {
   padding: 0 1rem;
   background: #fff;
   border-bottom: 1px solid #e2e8f0;
-  position: sticky;
+  position: fixed;
   top: 0;
+  right: 0;
+  left: 64px;
   z-index: 30;
+  transition: left 0.35s cubic-bezier(.4, 0, .2, 1);
+}
+
+.layout-sidebar:not(.collapsed) ~ .layout-main .top-bar {
+  left: 160px;
 }
 
 .top-left {
@@ -1265,6 +1272,7 @@ function updateIsMobile() {
   padding: 1rem 1.5rem;
   overflow: auto;
   flex: 1;
+  margin-top: 52px;
 }
 
 .sidebar-backdrop {
@@ -1302,6 +1310,7 @@ function updateIsMobile() {
 
   .top-bar {
     justify-content: space-between;
+    left: 0;
   }
 
   .menu-toggle {

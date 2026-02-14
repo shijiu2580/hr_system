@@ -440,16 +440,19 @@ async function handleSubmitAll() {
 }
 
 .tab-icon {
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--color-primary);
+  border-radius: 8px;
 }
 
 .tab-icon img {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
 }
 
 .tab-title {
@@ -475,8 +478,8 @@ async function handleSubmitAll() {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: #2563eb;
-  border: 1px solid #2563eb;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
   border-radius: 8px;
   color: #fff;
   font-size: 13px;
@@ -486,7 +489,7 @@ async function handleSubmitAll() {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .btn-primary:disabled {
@@ -607,8 +610,8 @@ async function handleSubmitAll() {
 .spinner {
   width: 22px;
   height: 22px;
-  border: 2.5px solid rgba(37, 99, 235, 0.2);
-  border-top-color: #2563eb;
+  border: 2.5px solid rgba(147, 197, 253, 0.4);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -724,24 +727,19 @@ async function handleSubmitAll() {
 
 .salary-table {
   width: 100%;
-  border-collapse: separate; /* Changed to separate for border radius on rows if needed */
+  border-collapse: collapse;
   border-spacing: 0;
   font-size: 13.5px; /* Slightly refined font size */
   overflow: visible;
 }
 
-.salary-table thead {
-  /* 使用全局样式 */
-}
-
-.salary-table th {
-  /* 使用全局样式 */
-}
+/* .salary-table thead and .salary-table th removed to use global style */
 
 .salary-table td {
-  padding: 0.5rem 1rem;
+  padding: 0.875rem 1rem;
   vertical-align: middle;
-  border-bottom: 1px solid #f1f5f9; /* Even lighter border */
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
 }
 
 .salary-table tr:last-child td {
@@ -840,7 +838,7 @@ async function handleSubmitAll() {
 .form-control:focus {
   outline: none;
   background: #fff;
-  border-color: var(--color-primary, #2563eb);
+  border-color: var(--color-primary);
   box-shadow: none;
 }
 
