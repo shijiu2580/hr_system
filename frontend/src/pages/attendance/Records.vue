@@ -219,15 +219,25 @@ async function checkWorkday() {
 }
 
 function getStatus(item) {
-  if (!item) return isWorkday.value ? 'not_checked_in' : 'normal';
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const dateStr = item?.date || todayStr;
+
+  if (!item) {
+    if (isWorkday.value && dateStr === todayStr) {
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      return currentMinutes > 9 * 60 ? 'late' : 'not_checked_in';
+    }
+    return isWorkday.value ? 'not_checked_in' : 'normal';
+  }
   if (item.attendance_type === 'absent') return 'absent';
 
   // 检查是否迟到（9:00后签到）
   const checkIn = parseTime(item.check_in_time);
 
-  // 工作日：没签到且当前时间超过9点，视为迟到
-  if (isWorkday.value && !checkIn) {
-    const now = new Date();
+  // 工作日：仅当天没签到且当前时间超过9点，视为迟到
+  if (isWorkday.value && dateStr === todayStr && !checkIn) {
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     if (currentMinutes > 9 * 60) {
       return 'late';

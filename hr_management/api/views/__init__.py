@@ -58,6 +58,10 @@ from .reports import (
     LeaveAnalysisAPIView, EmployeeGrowthAPIView, PositionDistributionAPIView,
     ReportOverviewAPIView
 )
+from .bi import (
+    BIDepartmentCostAPIView, BIAttendanceHeatmapAPIView, BITurnoverAPIView,
+    BISalaryRangeAPIView, BILeaveBalanceAPIView, BIDailyAttendanceAPIView
+)
 from .notifications import (
     notification_list, notification_unread_count,
     notification_mark_read, notification_mark_all_read, notification_clear
