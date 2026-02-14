@@ -384,7 +384,7 @@ async function loadData() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ef4444;
+  background: var(--color-primary);
   border-radius: 8px;
 }
 
@@ -411,7 +411,7 @@ async function loadData() {
 }
 
 .tab-btn.active {
-  color: #ef4444;
+  color: var(--color-primary);
 }
 
 .tab-btn.active::after {
@@ -421,7 +421,7 @@ async function loadData() {
   left: 0;
   right: 0;
   height: 2px;
-  background: #ef4444;
+  background: var(--color-primary);
 }
 
 .stat-badges {
@@ -485,63 +485,7 @@ async function loadData() {
   min-width: 110px;
 }
 
-.filter-custom-select :deep(.select-trigger) {
-  padding: 0.45rem 0.75rem;
-  padding-right: 2rem;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 6px;
-  background: #fff;
-  min-height: auto;
-}
-
-.filter-custom-select :deep(.select-trigger:hover) {
-  border-color: rgba(148, 163, 184, 0.6);
-  background: #f8fafc;
-}
-
-.filter-custom-select :deep(.select-trigger:focus),
-.filter-custom-select :deep(.custom-select.open .select-trigger) {
-  border-color: rgba(148, 163, 184, 0.6);
-  box-shadow: none;
-}
-
-.filter-custom-select :deep(.select-value) {
-  font-size: 14px;
-  color: #1e293b;
-}
-
-.filter-custom-select :deep(.select-arrow) {
-  color: #1e293b;
-}
-
-.filter-custom-select :deep(.select-dropdown) {
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  padding: 4px;
-}
-
-.filter-custom-select :deep(.select-option) {
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #374151;
-}
-
-.filter-custom-select :deep(.select-option:hover),
-.filter-custom-select :deep(.select-option.highlighted) {
-  background: #f1f5f9;
-  color: #1e293b;
-}
-
-.filter-custom-select :deep(.select-option.selected) {
-  background: #ef4444;
-  color: #fff;
-}
-
-.filter-custom-select :deep(.select-option.selected::before) {
-  display: none;
-}
+/* CustomSelect overrides removed to use global style */
 
 .refresh-btn {
   margin-left: auto;
@@ -570,32 +514,11 @@ async function loadData() {
   min-height: 300px;
 }
 
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
+/* .data-table definition removed */
 
-.data-table th {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-weight: 500;
-  color: #ef4444;
-  border-bottom: 2px solid #ef4444;
-  background: #f8fafc;
-  white-space: nowrap;
-}
+/* .data-table th removed to use global style */
 
-.data-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  color: #374151;
-  vertical-align: middle;
-}
-
-.data-row:hover {
-  background: #fafafa;
-}
+/* .data-table td and .data-row:hover removed to use global style */
 
 .col-name {
   min-width: 140px;

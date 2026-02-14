@@ -3,7 +3,7 @@
     <div class="page-hero">
       <div class="hero-info">
         <div class="hero-icon">
-          <img src="/icons/bi.svg" alt="" style="width:100%;height:100%;" />
+          <img src="/icons/reports.svg" alt="" style="width:100%;height:100%;" />
         </div>
         <div>
           <h2>BI 报表</h2>
