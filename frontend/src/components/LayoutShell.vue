@@ -317,7 +317,7 @@
 
     <div class="sidebar-backdrop" v-if="isMobile && sidebarOpen" @click="closeSidebar"></div>
 
-    <div class="layout-main">
+    <div class="layout-main" @click="collapseIfOpen">
       <div class="top-bar">
         <div class="top-left">
           <button v-if="isMobile" class="menu-toggle" @click="toggleSidebar" aria-label="切换菜单">
@@ -602,8 +602,20 @@ function hoverIn() {
 
 function hoverOut() {
   if (isMobile.value) return;
+  // 子菜单展开时不折叠，等用户点击子菜单项导航后再收起
+  const hasOpenSubmenu = Object.values(submenuOpen.value).some(v => v);
+  if (hasOpenSubmenu) return;
   collapsed.value = true;
-  closeAllSubmenus();
+}
+
+// 点击内容区时收起侧边栏和子菜单
+function collapseIfOpen() {
+  if (isMobile.value) return;
+  const hasOpenSubmenu = Object.values(submenuOpen.value).some(v => v);
+  if (hasOpenSubmenu || !collapsed.value) {
+    closeAllSubmenus();
+    collapsed.value = true;
+  }
 }
 
 function toggleSidebar() {
@@ -689,6 +701,10 @@ onUnmounted(() => {
 watch(() => route.fullPath, () => {
   if (isMobile.value) {
     closeSidebar();
+  } else {
+    // 桌面端导航后收起侧边栏和子菜单
+    closeAllSubmenus();
+    collapsed.value = true;
   }
 });
 
