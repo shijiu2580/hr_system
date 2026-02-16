@@ -139,6 +139,14 @@
 
       <!-- 加班打卡 -->
       <div v-if="activeTab === 'overtime'" class="tab-content">
+        <div class="filters-bar">
+          <div class="filter-item filter-date-group">
+            <span class="filter-label">日期范围：</span>
+            <input type="date" v-model="dateFrom" class="filter-date" />
+            <span class="filter-sep">~</span>
+            <input type="date" v-model="dateTo" class="filter-date" />
+          </div>
+        </div>
         <div class="section-title">加班打卡记录（休息日）</div>
         <div class="table-wrapper">
           <table class="data-table">
