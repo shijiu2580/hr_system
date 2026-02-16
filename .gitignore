@@ -53,3 +53,4 @@ Thumbs.db
 backup_*.sqlite3
 *.bak
 *.tmp
+db.sqlite3
