@@ -488,19 +488,24 @@ function resetSupplementForm() {
 resetSupplementForm();
 
 // 初始化日期范围为本月
-onMounted(() => {
+onMounted(async () => {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
   dateFrom.value = `${year}-${String(month).padStart(2, '0')}-01`;
   const lastDay = new Date(year, month, 0).getDate();
   dateTo.value = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
-  load();
+  await load();
   loadPendingSupplements(); // 加载待审批补签
 });
 
-// 监听日期变化自动刷新
+// 监听日期变化自动刷新（跳过首次赋值）
+let mounted = false;
 watch([dateFrom, dateTo], () => {
+  if (!mounted) {
+    mounted = true;
+    return;
+  }
   load();
 });
 

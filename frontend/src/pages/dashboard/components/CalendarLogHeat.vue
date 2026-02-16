@@ -1,6 +1,6 @@
 ﻿<template>
   <div class="log-calendar" v-if="days && days.length">
-    <div class="calendar-grid" :style="gridStyle">
+    <div class="calendar-grid">
   <div v-for="cell in calendarCells" :key="cell.date" class="day-cell" :class="{ today: cell.isToday, empty: !cell.hasData }" :style="cellStyle(cell)" @mouseenter="showTip(cell, $event)" @mouseleave="hideTip">
   <span class="day-num">{{ cell.day }}</span>
   <span v-if="cell.lunar && props.showLunar" class="lunar">{{ cell.lunar }}</span>
