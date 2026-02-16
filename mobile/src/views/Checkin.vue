@@ -225,8 +225,8 @@ const showNotesInput = computed(() => {
     return isWorkday.value && isLateTime
   }
   if (!hasCheckedOut.value) {
-    // 18点前签退需要填写早退原因；18点后不需要
-    return hours < 18
+    // 工作日18点前签退需要填写早退原因；休息日/节假日不判断早退
+    return isWorkday.value && hours < 18
   }
   return false
 })
