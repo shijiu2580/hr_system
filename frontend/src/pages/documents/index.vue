@@ -343,8 +343,14 @@ function downloadDoc(doc) {
 		showToast('该文档附件不存在或已被删除', 'error')
 		return
 	}
-	// 使用 fetch + blob 下载，正确处理 404 等错误
-	fetch(doc.file_url)
+	// 提取 /media/... 相对路径，避免跨域或内部地址问题
+	let url = doc.file_url
+	try {
+		const u = new URL(url, window.location.origin)
+		url = u.pathname
+	} catch { /* 已是相对路径则直接使用 */ }
+
+	fetch(url)
 		.then(resp => {
 			if (!resp.ok) {
 				throw new Error(`HTTP ${resp.status}`)
@@ -352,16 +358,15 @@ function downloadDoc(doc) {
 			return resp.blob()
 		})
 		.then(blob => {
-			const url = URL.createObjectURL(blob)
+			const blobUrl = URL.createObjectURL(blob)
 			const a = document.createElement('a')
-			a.href = url
-			// 从 file_url 中提取文件名
-			const fileName = decodeURIComponent(doc.file_url.split('/').pop()) || doc.title
+			a.href = blobUrl
+			const fileName = decodeURIComponent(url.split('/').pop()) || doc.title
 			a.download = fileName
 			document.body.appendChild(a)
 			a.click()
 			document.body.removeChild(a)
-			URL.revokeObjectURL(url)
+			URL.revokeObjectURL(blobUrl)
 		})
 		.catch(() => {
 			showToast('文件下载失败，文件可能已被删除', 'error')
