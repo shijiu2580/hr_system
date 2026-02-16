@@ -1283,6 +1283,16 @@ function updateIsMobile() {
   z-index: 40;
 }
 
+/* ==================== 自适应断点 ==================== */
+
+/* 中等屏幕：缩小内边距 */
+@media (max-width: 1200px) {
+  .page-wrapper {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* 平板/小屏：侧边栏抽屉模式 */
 @media (max-width: 960px) {
   .layout-shell {
     flex-direction: column;
@@ -1311,6 +1321,11 @@ function updateIsMobile() {
   .top-bar {
     justify-content: space-between;
     left: 0;
+    padding: 0 0.75rem;
+  }
+
+  .page-wrapper {
+    padding: 0.75rem;
   }
 
   .menu-toggle {
@@ -1319,6 +1334,100 @@ function updateIsMobile() {
 
   .sidebar-backdrop {
     display: block;
+  }
+
+  .user-name {
+    max-width: 80px;
+  }
+}
+
+/* 小屏手机：进一步紧凑 */
+@media (max-width: 768px) {
+  .top-bar {
+    height: 48px;
+    padding: 0 0.5rem;
+  }
+
+  .page-wrapper {
+    padding: 0.5rem;
+    margin-top: 48px;
+  }
+
+  .layout-sidebar {
+    width: 220px;
+  }
+
+  .layout-sidebar.collapsed {
+    width: 220px;
+  }
+
+  .user-box {
+    gap: 0.4rem;
+    font-size: 13px;
+  }
+
+  .user-name {
+    max-width: 60px;
+    font-size: 12px;
+  }
+
+  .theme-toggle,
+  .user-box button {
+    padding: 0.35rem 0.55rem;
+    font-size: 12px;
+  }
+
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .notification-dropdown {
+    width: 260px;
+    right: 4px;
+  }
+}
+
+/* 超小屏：极致紧凑 */
+@media (max-width: 480px) {
+  .top-bar {
+    height: 44px;
+    padding: 0 0.35rem;
+  }
+
+  .page-wrapper {
+    padding: 0.35rem;
+    margin-top: 44px;
+  }
+
+  .layout-sidebar {
+    width: 200px;
+  }
+
+  .layout-sidebar.collapsed {
+    width: 200px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .user-box {
+    gap: 0.3rem;
+  }
+
+  .theme-toggle,
+  .user-box button {
+    padding: 0.3rem 0.45rem;
+    font-size: 11px;
+  }
+
+  .notification-dropdown {
+    width: calc(100vw - 1rem);
+    right: 0.5rem;
+    left: 0.5rem;
   }
 }
 
