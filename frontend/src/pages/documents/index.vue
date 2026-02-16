@@ -317,10 +317,32 @@ async function deleteDoc(doc) {
 
 function downloadDoc(doc) {
 	if (!doc.file_url) {
-		showToast('暂无可下载的附件', 'error')
+		showToast('该文档附件不存在或已被删除', 'error')
 		return
 	}
-	window.open(doc.file_url, '_blank')
+	// 使用 fetch + blob 下载，正确处理 404 等错误
+	fetch(doc.file_url)
+		.then(resp => {
+			if (!resp.ok) {
+				throw new Error(`HTTP ${resp.status}`)
+			}
+			return resp.blob()
+		})
+		.then(blob => {
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement('a')
+			a.href = url
+			// 从 file_url 中提取文件名
+			const fileName = decodeURIComponent(doc.file_url.split('/').pop()) || doc.title
+			a.download = fileName
+			document.body.appendChild(a)
+			a.click()
+			document.body.removeChild(a)
+			URL.revokeObjectURL(url)
+		})
+		.catch(() => {
+			showToast('文件下载失败，文件可能已被删除', 'error')
+		})
 }
 
 onMounted(() => loadDocuments())

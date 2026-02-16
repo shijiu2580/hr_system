@@ -675,6 +675,9 @@ class CompanyDocumentSerializer(serializers.ModelSerializer):
         if not obj.file:
             return None
         try:
+            # 检查文件是否真实存在于磁盘
+            if not obj.file.storage.exists(obj.file.name):
+                return None
             url = obj.file.url
             if request:
                 return request.build_absolute_uri(url)
