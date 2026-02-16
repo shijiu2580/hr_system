@@ -233,11 +233,14 @@ function getStatus(item) {
   }
   if (item.attendance_type === 'absent') return 'absent';
 
+  // 非工作日（节假日/周末）签到统一视为加班
+  if (!isWorkday.value) return 'overtime';
+
   // 检查是否迟到（9:00后签到）
   const checkIn = parseTime(item.check_in_time);
 
   // 工作日：仅当天没签到且当前时间超过9点，视为迟到
-  if (isWorkday.value && dateStr === todayStr && !checkIn) {
+  if (dateStr === todayStr && !checkIn) {
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     if (currentMinutes > 9 * 60) {
       return 'late';
@@ -251,7 +254,7 @@ function getStatus(item) {
   const checkOut = parseTime(item.check_out_time);
   // 工作日：有签到但没签退，且当前时间超过18点，视为早退
   let isEarlyLeave = false;
-  if (isWorkday.value && checkIn && !checkOut) {
+  if (checkIn && !checkOut) {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     // 超过18点还没签退，判定为早退
@@ -274,6 +277,7 @@ function getStatusLabel(item) {
   const status = getStatus(item);
   const map = {
     normal: '正常',
+    overtime: '加班',
     late: '迟到',
     early_leave: '早退',
     late_and_early: '迟到/早退',
@@ -691,6 +695,7 @@ onUnmounted(() => {
 }
 
 .status-text.status-normal { color: #059669; }
+.status-text.status-overtime { color: #2563eb; }
 .status-text.status-late { color: #d97706; }
 .status-text.status-early_leave { color: #d97706; }
 .status-text.status-late_and_early { color: #dc2626; }
