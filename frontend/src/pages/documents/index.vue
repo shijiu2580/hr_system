@@ -189,6 +189,20 @@
 			</div>
 		</section>
 
+		<!-- 删除确认弹框 -->
+		<transition name="modal">
+			<div v-if="confirmModal.show" class="modal-overlay" @click.self="confirmModal.show = false">
+				<div class="modal-box">
+					<h3 class="modal-title">确认删除</h3>
+					<p class="modal-text">{{ confirmModal.message }}</p>
+					<div class="modal-actions">
+						<button class="modal-btn cancel" @click="confirmModal.show = false">取消</button>
+						<button class="modal-btn confirm" @click="confirmDelete">删除</button>
+					</div>
+				</div>
+			</div>
+		</transition>
+
 		<!-- Toast 提示 -->
 		<transition name="toast">
 			<div v-if="toast" class="toast-message" :class="toast.type">
@@ -217,6 +231,7 @@ const auth = useAuthStore()
 const loading = ref(true)
 const documents = ref([])
 const toast = ref(null)
+const confirmModal = reactive({ show: false, message: '', doc: null })
 const filters = reactive({ search: '', type: 'all', onlyActive: true })
 
 const typeOptions = [
@@ -304,8 +319,16 @@ async function toggleActive(doc) {
 	}
 }
 
-async function deleteDoc(doc) {
-	if (!confirm(`确定删除「${doc.title}」吗？`)) return
+function deleteDoc(doc) {
+	confirmModal.message = `确定删除「${doc.title}」吗？删除后无法恢复。`
+	confirmModal.doc = doc
+	confirmModal.show = true
+}
+
+async function confirmDelete() {
+	const doc = confirmModal.doc
+	confirmModal.show = false
+	if (!doc) return
 	const resp = await api.delete(`/documents/${doc.id}/`)
 	if (resp.success) {
 		showToast('文档已删除', 'success')
@@ -913,7 +936,7 @@ onMounted(() => loadDocuments())
 /* Toast 消息 */
 .toast-message {
 	position: fixed;
-	bottom: 2rem;
+	top: 5rem;
 	right: 2rem;
 	display: flex;
 	align-items: center;
@@ -963,7 +986,104 @@ onMounted(() => loadDocuments())
 .toast-enter-from,
 .toast-leave-to {
 	opacity: 0;
-	transform: translateY(10px);
+	transform: translateY(-10px);
+}
+
+/* 删除确认弹框 */
+.modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.45);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2000;
+}
+
+.modal-box {
+	background: #fff;
+	border-radius: 14px;
+	padding: 2rem 2rem 1.5rem;
+	max-width: 380px;
+	width: 90%;
+	text-align: center;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-icon svg {
+	width: 48px;
+	height: 48px;
+}
+
+.modal-title {
+	margin: 0.75rem 0 0.5rem;
+	font-size: 18px;
+	font-weight: 600;
+	color: #0f172a;
+}
+
+.modal-text {
+	margin: 0 0 1.5rem;
+	font-size: 14px;
+	color: #64748b;
+	line-height: 1.5;
+}
+
+.modal-actions {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+}
+
+.modal-btn {
+	padding: 0.55rem 1.5rem;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s;
+	border: none;
+}
+
+.modal-btn.cancel {
+	background: #f1f5f9;
+	color: #475569;
+}
+
+.modal-btn.cancel:hover {
+	background: #e2e8f0;
+}
+
+.modal-btn.confirm {
+	background: #dc2626;
+	color: #fff;
+}
+
+.modal-btn.confirm:hover {
+	background: #b91c1c;
+}
+
+.modal-enter-active,
+.modal-leave-active {
+	transition: opacity 0.25s ease;
+}
+
+.modal-enter-active .modal-box,
+.modal-leave-active .modal-box {
+	transition: transform 0.25s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+	opacity: 0;
+}
+
+.modal-enter-from .modal-box {
+	transform: scale(0.9);
+}
+
+.modal-leave-to .modal-box {
+	transform: scale(0.95);
 }
 
 /* 响应式 */
