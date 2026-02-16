@@ -300,7 +300,7 @@ async function handleSubmit() {
   background: var(--color-bg-primary, #fff);
   border-radius: 12px;
   border: 1px solid rgba(148, 163, 184, 0.4);
-  padding: 28px 60px 28px 32px;
+  padding: 28px 32px;
   box-sizing: border-box;
   width: 100%;
 }
