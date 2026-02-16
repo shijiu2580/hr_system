@@ -1266,10 +1266,6 @@ async function doApprove(id, action, comments) {
   font-size: 14px;
 }
 
-.data-table th {
-  /* 使用全局样式 */
-}
-
 .data-table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #f3f4f6;
