@@ -375,8 +375,8 @@ function updateClock() {
 async function handleCheckIn() {
   const now = new Date();
   const hours = now.getHours();
-  // 9:00-18:00之间签到算迟到，需要填原因；18:00后是加班签到，不需要原因
-  const isLate = hours >= 9 && hours < 18;
+  // 工作日9:00-18:00之间签到算迟到，需要填原因；休息日/节假日不判断迟到（算加班签到）
+  const isLate = isWorkday.value && hours >= 9 && hours < 18;
 
   if (isLate) {
     // 迟到需要填写原因
@@ -394,8 +394,8 @@ async function handleCheckIn() {
 async function handleCheckOut() {
   const now = new Date();
   const hours = now.getHours();
-  // 18:00前签退算早退，需要填原因；18:00后是正常/加班签退，不需要原因
-  const isEarlyLeave = hours < 18;
+  // 工作日18:00前签退算早退，需要填原因；休息日/节假日不判断早退（算加班签退）
+  const isEarlyLeave = isWorkday.value && hours < 18;
   const isUpdate = todayRecord.value && todayRecord.value.check_out_time;
 
   if (isEarlyLeave && !isUpdate) {
