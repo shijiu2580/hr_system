@@ -31,7 +31,7 @@
               <img class="icon" src="/icons/employees.svg" alt="" />
             </span>
             <span class="text-box">员工</span>
-            <span class="arrow-box" v-show="!collapsed">
+            <span class="arrow-box" v-show="!sidebarCollapsed">
               <svg
                 width="12"
                 height="12"
@@ -44,7 +44,7 @@
             </span>
           </div>
               <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.employees && !collapsed">
+            <div class="submenu" v-show="submenuOpen.employees && !sidebarCollapsed">
               <RouterLink to="/employees/manage" class="submenu-item" v-if="canManageEmployees">
                 <span>员工管理</span>
               </RouterLink>
@@ -71,7 +71,7 @@
               <img class="icon" src="/icons/attendance.svg" alt="" />
             </span>
             <span class="text-box">考勤</span>
-            <span class="arrow-box" v-show="!collapsed">
+            <span class="arrow-box" v-show="!sidebarCollapsed">
               <svg
                 width="12"
                 height="12"
@@ -84,7 +84,7 @@
             </span>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.attendance && !collapsed">
+            <div class="submenu" v-show="submenuOpen.attendance && !sidebarCollapsed">
               <RouterLink to="/attendance/records" class="submenu-item">
                 <span>考勤记录</span>
               </RouterLink>
@@ -117,7 +117,7 @@
               <img class="icon" src="/icons/leaves.svg" alt="" />
             </span>
             <span class="text-box">请假</span>
-            <span class="arrow-box" v-show="!collapsed">
+            <span class="arrow-box" v-show="!sidebarCollapsed">
               <svg
                 width="12"
                 height="12"
@@ -130,7 +130,7 @@
             </span>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.leaves && !collapsed">
+            <div class="submenu" v-show="submenuOpen.leaves && !sidebarCollapsed">
               <RouterLink to="/leaves/apply" class="submenu-item">
                 <span>请假申请</span>
               </RouterLink>
@@ -157,7 +157,7 @@
               <img class="icon" src="/icons/salaries.svg" alt="" />
             </span>
             <span class="text-box">薪资</span>
-            <span class="arrow-box" v-show="!collapsed">
+            <span class="arrow-box" v-show="!sidebarCollapsed">
               <svg
                 width="12"
                 height="12"
@@ -170,7 +170,7 @@
             </span>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.salaries && !collapsed">
+            <div class="submenu" v-show="submenuOpen.salaries && !sidebarCollapsed">
               <RouterLink to="/salaries" class="submenu-item" v-if="canViewAllSalary">
                 <span>薪资管理</span>
               </RouterLink>
@@ -220,7 +220,7 @@
               <img class="icon" src="/icons/reports.svg" alt="" />
             </span>
             <span class="text-box">报表</span>
-            <span class="arrow-box" v-show="!collapsed">
+            <span class="arrow-box" v-show="!sidebarCollapsed">
               <svg
                 width="12"
                 height="12"
@@ -233,7 +233,7 @@
             </span>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.reports && !collapsed">
+            <div class="submenu" v-show="submenuOpen.reports && !sidebarCollapsed">
               <RouterLink to="/reports" class="submenu-item">
                 <span>大数据报表</span>
               </RouterLink>
@@ -257,7 +257,7 @@
               <img class="icon" src="/icons/resignation.svg" alt="" />
             </span>
             <span class="text-box">离职申请</span>
-            <span class="arrow-box" v-show="!collapsed">
+            <span class="arrow-box" v-show="!sidebarCollapsed">
               <svg
                 width="12"
                 height="12"
@@ -270,7 +270,7 @@
             </span>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.resignation && !collapsed">
+            <div class="submenu" v-show="submenuOpen.resignation && !sidebarCollapsed">
               <RouterLink to="/resignation/progress" class="submenu-item">
                 <span>离职进度</span>
               </RouterLink>
