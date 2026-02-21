@@ -100,21 +100,9 @@ function toggleGroup(name) {
 // 按导航栏页面结构分组
 const PAGE_GROUP_CONFIG = [
   {
-    name: '首页',
-    icon: '/icons/dashboard.svg',
-    prefixes: ['dashboard.'],
-    keys: []
-  },
-  {
     name: '员工管理',
     icon: '/icons/employees.svg',
-    prefixes: ['employee.'],
-    keys: []
-  },
-  {
-    name: '入职管理',
-    icon: '/icons/employees.svg',
-    prefixes: ['onboarding.'],
+    prefixes: ['employee.', 'onboarding.'],
     keys: []
   },
   {
@@ -154,15 +142,9 @@ const PAGE_GROUP_CONFIG = [
     keys: []
   },
   {
-    name: '大数据报表',
+    name: '报表',
     icon: '/icons/reports.svg',
-    prefixes: ['report.'],
-    keys: []
-  },
-  {
-    name: 'BI 报表',
-    icon: '/icons/stats.svg',
-    prefixes: ['bi.'],
+    prefixes: ['report.', 'bi.'],
     keys: []
   },
   {
