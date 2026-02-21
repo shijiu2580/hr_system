@@ -87,7 +87,7 @@
                   <span class="status-text" :class="'status-' + getStatus(item)">{{ getStatusLabel(item) }}</span>
                 </td>
                 <td class="col-reason">
-                  <template v-if="item.notes && formatReasonLines(item.notes).length">
+                  <template v-if="!isRestDay(item) && item.notes && formatReasonLines(item.notes).length">
                     <div v-for="(line, idx) in formatReasonLines(item.notes)" :key="idx" class="reason-line">{{ line }}</div>
                   </template>
                   <template v-else>--</template>
@@ -221,7 +221,7 @@
                   <span class="status-text" :class="'status-' + getStatus(item)">{{ getStatusLabel(item) }}</span>
                 </td>
                 <td class="col-reason">
-                  <template v-if="item.notes && formatReasonLines(item.notes).length">
+                  <template v-if="!isRestDay(item) && item.notes && formatReasonLines(item.notes).length">
                     <div v-for="(line, idx) in formatReasonLines(item.notes)" :key="idx" class="reason-line">{{ line }}</div>
                   </template>
                   <template v-else>--</template>
@@ -725,37 +725,100 @@ function formatCreatedAt(dateTimeStr) {
 }
 
 function getAbsentDuration(item) {
-  // 简化处理，假设正常情况返回0
-  return '0 分钟';
+  // 休息日/节假日：加班，缺勤为0
+  if (isRestDay(item)) return '0 分钟';
+
+  // 没有签到和签退，缺勤一整天
+  if (!item.check_in_time && !item.check_out_time) {
+    return '8 小时';
+  }
+
+  const WORK_START = 9 * 60;     // 上班 9:00
+  const LUNCH_START = 12 * 60;   // 午休开始 12:00
+  const LUNCH_END = 13 * 60;     // 午休结束 13:00
+  const WORK_END = 18 * 60;      // 下班 18:00
+  const TOTAL_WORK = 8 * 60;     // 总工作时长 480分钟（不含午休）
+
+  const parseMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    if (timeStr.includes('T') || timeStr.includes(' ')) {
+      const d = new Date(timeStr);
+      return d.getHours() * 60 + d.getMinutes();
+    }
+    const parts = timeStr.split(':');
+    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  };
+
+  // 计算某个时间段内的有效工作分钟数（排除午休 12:00-13:00）
+  const calcWorkMinutes = (from, to) => {
+    if (from >= to) return 0;
+    let minutes = to - from;
+    // 减去午休重叠部分
+    const overlapStart = Math.max(from, LUNCH_START);
+    const overlapEnd = Math.min(to, LUNCH_END);
+    if (overlapStart < overlapEnd) {
+      minutes -= (overlapEnd - overlapStart);
+    }
+    return Math.max(0, minutes);
+  };
+
+  const checkIn = parseMinutes(item.check_in_time);
+  const checkOut = parseMinutes(item.check_out_time);
+
+  // 实际签到时间（不早于上班时间）
+  const effectiveIn = checkIn !== null ? Math.max(checkIn, WORK_START) : WORK_START;
+  // 实际签退时间（不晚于下班时间）；没签退则视为只工作到签到时刻（缺勤下午）
+  let effectiveOut;
+  if (checkOut !== null) {
+    effectiveOut = Math.min(checkOut, WORK_END);
+  } else {
+    // 有签到没签退：视为只签了到，下午全部缺勤
+    // 按签到时间到午休开始或签到时间本身计算已工作时长
+    effectiveOut = effectiveIn;
+  }
+
+  const workedMinutes = calcWorkMinutes(effectiveIn, effectiveOut);
+  const absentMinutes = Math.max(0, TOTAL_WORK - workedMinutes);
+
+  if (absentMinutes <= 0) return '0 分钟';
+  if (absentMinutes >= 60) {
+    const hours = Math.floor(absentMinutes / 60);
+    const mins = absentMinutes % 60;
+    return mins > 0 ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
+  }
+  return `${absentMinutes} 分钟`;
 }
 
 function getStatus(item) {
+  // 休息日/节假日：有打卡算加班，没打卡算正常休息
+  if (isRestDay(item)) {
+    return (item.check_in_time || item.check_out_time) ? 'overtime' : 'normal';
+  }
+
   if (!item.check_in_time && !item.check_out_time) {
-    return isRestDay(item) ? 'normal' : 'absent';
+    return 'absent';
   }
 
-  // 解析签到签退时间
-  const checkInTime = item.check_in_time;
-  const checkOutTime = item.check_out_time;
+  // 工作日才判断迟到/早退
+  const parseMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    if (timeStr.includes('T') || timeStr.includes(' ')) {
+      const d = new Date(timeStr);
+      return d.getHours() * 60 + d.getMinutes();
+    }
+    const parts = timeStr.split(':');
+    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  };
 
-  let isLate = false;
+  const checkIn = parseMinutes(item.check_in_time);
+  const checkOut = parseMinutes(item.check_out_time);
+
+  const isLate = checkIn !== null && checkIn > 9 * 60;
   let isEarlyLeave = false;
-
-  // 判断迟到（9:00后签到）
-  if (checkInTime) {
-    const parts = checkInTime.split(':');
-    const checkInMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    isLate = checkInMinutes > 9 * 60;
-  }
-
-  // 判断早退（没签退 或 18:00前签退）
-  if (!checkOutTime && checkInTime) {
-    // 有签到但没签退，视为早退
+  if (!item.check_out_time && item.check_in_time) {
     isEarlyLeave = true;
-  } else if (checkOutTime) {
-    const parts = checkOutTime.split(':');
-    const checkOutMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    isEarlyLeave = checkOutMinutes < 18 * 60;
+  } else if (checkOut !== null) {
+    isEarlyLeave = checkOut < 18 * 60;
   }
 
   if (isLate && isEarlyLeave) return 'late_and_early';
@@ -769,6 +832,7 @@ function getStatusLabel(item) {
   const status = getStatus(item);
   const map = {
     normal: '正常',
+    overtime: '加班',
     late: '迟到',
     early_leave: '早退',
     late_and_early: '迟到/早退',
@@ -1431,6 +1495,10 @@ async function doApprove(id, action, comments) {
 
 .status-text.status-normal {
   color: #059669;
+}
+
+.status-text.status-overtime {
+  color: #2563eb;
 }
 
 .status-text.status-late {
