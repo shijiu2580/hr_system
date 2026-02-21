@@ -665,24 +665,6 @@ onMounted(loadData)
   padding: 2rem;
 }
 
-.progress-bar {
-  height: 4px;
-  background: #e2e8f0;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  width: 30%;
-  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-  animation: loading 1s ease-in-out infinite;
-}
-
-@keyframes loading {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
-}
 
 /* 空状态 */
 .empty-state {

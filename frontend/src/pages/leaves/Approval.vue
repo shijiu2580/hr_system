@@ -134,10 +134,6 @@
           暂无数据
         </div>
 
-        <!-- 进度条（装饰） -->
-        <div class="progress-bar" v-if="loading">
-          <div class="progress-fill"></div>
-        </div>
       </div>
 
       <!-- 底部 -->
@@ -795,28 +791,6 @@ onMounted(() => {
   font-size: 14px;
 }
 
-/* 进度条 */
-.progress-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: #e5e7eb;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #fbbf24, #84cc16);
-  animation: progress 1.5s ease-in-out infinite;
-}
-
-@keyframes progress {
-  0% { width: 0; margin-left: 0; }
-  50% { width: 60%; margin-left: 20%; }
-  100% { width: 0; margin-left: 100%; }
-}
 
 /* 底部 */
 .table-footer {

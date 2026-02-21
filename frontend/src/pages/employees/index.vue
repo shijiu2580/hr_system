@@ -179,10 +179,6 @@
           <!-- 空状态 -->
           <div v-if="!loading && !employees.length" class="empty-state">暂无员工数据</div>
 
-          <!-- 进度条 -->
-          <div class="progress-bar" v-if="loading">
-            <div class="progress-fill"></div>
-          </div>
         </div>
 
         <!-- 底部统计和分页 -->
@@ -1050,30 +1046,6 @@ onMounted(async () => {
   color: #9ca3af;
 }
 
-.progress-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: #e5e7eb;
-}
-
-.progress-fill {
-  height: 100%;
-  width: 30%;
-  background: #2563eb;
-  animation: loading 1s ease-in-out infinite;
-}
-
-@keyframes loading {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(400%);
-  }
-}
 
 /* 底部统计和分页 */
 .table-footer {
