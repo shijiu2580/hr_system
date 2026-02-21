@@ -5,62 +5,72 @@
       <span class="dot"></span>
       <span class="dot"></span>
     </div>
-    <div v-else-if="pageGroups.length" class="page-groups-container">
-      <!-- 按页面分组展示 -->
-      <div v-for="group in pageGroups" :key="group.name" class="page-group">
-        <div class="page-group-header" @click="toggleGroup(group.name)">
+    <div v-else-if="navGroups.length" class="page-groups-container">
+      <!-- 一级：侧边栏父导航 -->
+      <div v-for="nav in navGroups" :key="nav.name" class="page-group">
+        <div class="page-group-header" @click="toggleNav(nav.name)">
           <div class="page-group-icon">
-            <img :src="group.icon" alt="" v-if="group.icon" />
-            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
+            <img :src="nav.icon" alt="" />
           </div>
-          <span class="page-group-title">{{ group.name }}</span>
-          <span class="page-group-count">{{ group.permissions.length }} 个权限</span>
-          <svg :class="{ rotated: expandedGroups[group.name] }" class="expand-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <span class="page-group-title">{{ nav.name }}</span>
+          <span class="page-group-count">{{ nav.totalCount }} 个权限</span>
+          <svg :class="{ rotated: expandedNavs[nav.name] }" class="expand-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </div>
         <transition name="slide">
-          <div v-show="expandedGroups[group.name]" class="page-group-content">
-            <table class="perm-table">
-              <thead>
-                <tr>
-                  <th style="width:180px;">权限键</th>
-                  <th style="width:150px;">权限名称</th>
-                  <th>描述</th>
-                  <th style="width:80px;">关联角色</th>
-                  <th style="width:140px;">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="p in group.permissions" :key="p.id">
-                  <td><code class="key-code">{{ p.key }}</code></td>
-                  <td class="name-cell">{{ p.name }}</td>
-                  <td class="desc-cell">{{ p.description || '-' }}</td>
-                  <td class="count-cell">
-                    <span class="badge-count">{{ getPermRoleCount(p) }}</span>
-                  </td>
-                  <td class="actions-cell">
-                    <button class="btn outline small icon-btn" @click="handleEdit(p)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                      编辑
-                    </button>
-                    <button class="btn danger small icon-btn" @click="handleRemove(p)" :disabled="deletingPermId===p.id">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                      </svg>
-                      {{ deletingPermId === p.id ? '删除中...' : '删除' }}
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-show="expandedNavs[nav.name]" class="page-group-content">
+            <!-- 二级：子菜单分组 -->
+            <div v-for="sub in nav.children" :key="sub.name" class="sub-group">
+              <div class="sub-group-header" @click.stop="toggleSub(nav.name + '/' + sub.name)">
+                <svg :class="{ rotated: expandedSubs[nav.name + '/' + sub.name] }" class="sub-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+                <span class="sub-group-title">{{ sub.name }}</span>
+                <span class="sub-group-count">{{ sub.permissions.length }}</span>
+              </div>
+              <transition name="slide">
+                <div v-show="expandedSubs[nav.name + '/' + sub.name]" class="sub-group-content">
+                  <table class="perm-table">
+                    <thead>
+                      <tr>
+                        <th style="width:180px;">权限键</th>
+                        <th style="width:150px;">权限名称</th>
+                        <th>描述</th>
+                        <th style="width:80px;">关联角色</th>
+                        <th style="width:140px;">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="p in sub.permissions" :key="p.id">
+                        <td><code class="key-code">{{ p.key }}</code></td>
+                        <td class="name-cell">{{ p.name }}</td>
+                        <td class="desc-cell">{{ p.description || '-' }}</td>
+                        <td class="count-cell">
+                          <span class="badge-count">{{ getPermRoleCount(p) }}</span>
+                        </td>
+                        <td class="actions-cell">
+                          <button class="btn outline small icon-btn" @click="handleEdit(p)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            编辑
+                          </button>
+                          <button class="btn danger small icon-btn" @click="handleRemove(p)" :disabled="deletingPermId===p.id">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            {{ deletingPermId === p.id ? '删除中...' : '删除' }}
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </transition>
+            </div>
           </div>
         </transition>
       </div>
@@ -78,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { reactive, computed } from 'vue';
 import { useRbac } from '../composables/useRbac';
 
 const {
@@ -90,138 +100,171 @@ const {
   getPermRoleCount
 } = useRbac();
 
-// 展开状态
-const expandedGroups = reactive({});
+// ========== 展开状态 ==========
+const expandedNavs = reactive({});   // 一级父导航
+const expandedSubs = reactive({});   // 二级子菜单
 
-function toggleGroup(name) {
-  expandedGroups[name] = !expandedGroups[name];
+function toggleNav(name) {
+  expandedNavs[name] = !expandedNavs[name];
+}
+function toggleSub(key) {
+  expandedSubs[key] = !expandedSubs[key];
 }
 
-// 按导航栏页面结构分组
-const PAGE_GROUP_CONFIG = [
+// ========== 侧边栏导航结构配置 ==========
+// 每个父导航 → 子菜单 → 各子菜单对应的权限 key
+const NAV_CONFIG = [
   {
-    name: '员工管理',
+    name: '员工',
     icon: '/icons/employees.svg',
-    prefixes: ['employee.', 'onboarding.'],
-    keys: []
+    children: [
+      { name: '员工管理', keys: ['employee.create', 'employee.edit', 'employee.delete', 'employee.import', 'employee.export'] },
+      { name: '员工列表', keys: ['employee.view'] },
+      { name: '入职审核', keys: ['onboarding.view', 'onboarding.view_all', 'onboarding.approve', 'onboarding.reject'] },
+    ]
   },
   {
-    name: '考勤管理',
+    name: '考勤',
     icon: '/icons/attendance.svg',
-    prefixes: ['attendance.'],
-    keys: []
+    children: [
+      { name: '考勤记录', keys: ['attendance.view'] },
+      { name: '考勤管理', keys: ['attendance.view_all', 'attendance.create', 'attendance.edit'] },
+      { name: '考勤地点', keys: ['attendance.location'] },
+      { name: '补签审批', keys: ['attendance.approve'] },
+    ]
   },
   {
-    name: '请假管理',
+    name: '请假',
     icon: '/icons/leaves.svg',
-    prefixes: ['leave.', 'trip.'],
-    keys: []
+    children: [
+      { name: '请假申请', keys: ['leave.view', 'leave.create'] },
+      { name: '出差申请', keys: ['trip.view', 'trip.create'] },
+      { name: '审批流程', keys: ['leave.view_all', 'leave.approve', 'trip.view_all', 'trip.approve'] },
+    ]
   },
   {
-    name: '薪资管理',
+    name: '薪资',
     icon: '/icons/salaries.svg',
-    prefixes: ['salary.', 'expense.'],
-    keys: []
+    children: [
+      { name: '薪资管理', keys: ['salary.view_all', 'salary.create', 'salary.edit', 'salary.delete', 'salary.disburse'] },
+      { name: '薪资记录', keys: ['salary.view'] },
+      { name: '差旅报销', keys: ['expense.view', 'expense.create'] },
+      { name: '报销审批', keys: ['expense.view_all', 'expense.approve'] },
+    ]
   },
   {
-    name: '职位管理',
+    name: '职位',
     icon: '/icons/positions.svg',
-    prefixes: ['position.'],
-    keys: []
+    children: [
+      { name: '职位管理', keys: ['position.view', 'position.create', 'position.edit', 'position.delete'] },
+    ]
   },
   {
-    name: '部门管理',
+    name: '部门',
     icon: '/icons/departments.svg',
-    prefixes: ['department.'],
-    keys: []
+    children: [
+      { name: '部门管理', keys: ['department.view', 'department.create', 'department.edit', 'department.delete'] },
+    ]
   },
   {
     name: '文档中心',
     icon: '/icons/documents.svg',
-    prefixes: ['document.'],
-    keys: []
+    children: [
+      { name: '文档管理', keys: ['document.view', 'document.create', 'document.edit', 'document.upload', 'document.delete', 'document.manage'] },
+    ]
   },
   {
     name: '报表',
     icon: '/icons/reports.svg',
-    prefixes: ['report.', 'bi.'],
-    keys: []
+    children: [
+      { name: '大数据报表', keys: ['report.view', 'report.export', 'report.employee', 'report.attendance', 'report.salary', 'report.leave'] },
+      { name: 'BI 报表', keys: ['bi.view', 'bi.department_cost', 'bi.attendance_heat', 'bi.turnover', 'bi.salary_range', 'bi.leave_balance', 'bi.daily_attendance'] },
+    ]
   },
   {
-    name: '离职管理',
+    name: '离职申请',
     icon: '/icons/resignation.svg',
-    prefixes: ['resignation.'],
-    keys: []
+    children: [
+      { name: '离职进度', keys: ['resignation.view'] },
+      { name: '发起申请', keys: ['resignation.create'] },
+      { name: '离职审批', keys: ['resignation.view_all', 'resignation.approve'] },
+    ]
   },
   {
-    name: '系统管理',
+    name: '系统',
     icon: '/icons/system.svg',
-    prefixes: ['system.'],
-    keys: []
+    children: [
+      { name: '系统管理', keys: ['system.view', 'system.log', 'system.log_view', 'system.log_clear', 'system.backup', 'system.backup_view', 'system.backup_create', 'system.backup_restore', 'system.restore'] },
+    ]
   },
   {
     name: '权限管理',
     icon: '/icons/rbac.svg',
-    prefixes: ['rbac.'],
-    keys: []
+    children: [
+      { name: '角色与权限', keys: ['rbac.view', 'rbac.manage', 'rbac.role_manage', 'rbac.permission_manage'] },
+    ]
   },
   {
     name: '用户管理',
     icon: '/icons/users.svg',
-    prefixes: ['user.'],
-    keys: []
-  }
+    children: [
+      { name: '用户管理', keys: ['user.view', 'user.create', 'user.edit', 'user.delete', 'user.reset_password'] },
+    ]
+  },
 ];
 
-// 根据权限key匹配分组
-function matchGroup(perm) {
-  const key = perm.key;
-  for (const group of PAGE_GROUP_CONFIG) {
-    // 优先精确匹配
-    if (group.keys.includes(key)) return group.name;
-    // 前缀匹配
-    for (const prefix of group.prefixes) {
-      if (key.startsWith(prefix)) return group.name;
-    }
-  }
-  return '其他';
-}
-
-// 计算分组后的权限
-const pageGroups = computed(() => {
-  const groupMap = {};
-
-  // 初始化已配置的分组
-  for (const config of PAGE_GROUP_CONFIG) {
-    groupMap[config.name] = {
-      name: config.name,
-      icon: config.icon,
-      permissions: []
-    };
-  }
-  groupMap['其他'] = { name: '其他', icon: null, permissions: [] };
-
-  // 分配权限到各分组
-  for (const perm of permissions.value) {
-    const groupName = matchGroup(perm);
-    if (groupMap[groupName]) {
-      groupMap[groupName].permissions.push(perm);
-    }
+// ========== 计算二级分组结构 ==========
+const navGroups = computed(() => {
+  // 建立 key → perm 映射
+  const permMap = {};
+  for (const p of permissions.value) {
+    permMap[p.key] = p;
   }
 
-  // 返回有权限的分组（按配置顺序）
   const result = [];
-  for (const config of PAGE_GROUP_CONFIG) {
-    if (groupMap[config.name].permissions.length > 0) {
-      result.push(groupMap[config.name]);
-      // 默认展开第一个
-      if (result.length === 1 && expandedGroups[config.name] === undefined) {
-        expandedGroups[config.name] = true;
+  let firstNav = true;
+
+  for (const nav of NAV_CONFIG) {
+    const children = [];
+    let totalCount = 0;
+
+    for (const sub of nav.children) {
+      const matched = sub.keys.map(k => permMap[k]).filter(Boolean);
+      if (matched.length > 0) {
+        children.push({ name: sub.name, permissions: matched });
+        totalCount += matched.length;
+      }
+    }
+
+    if (children.length > 0) {
+      result.push({ name: nav.name, icon: nav.icon, children, totalCount });
+      // 默认展开第一个父导航及其所有子分组
+      if (firstNav) {
+        if (expandedNavs[nav.name] === undefined) expandedNavs[nav.name] = true;
+        for (const sub of children) {
+          const subKey = nav.name + '/' + sub.name;
+          if (expandedSubs[subKey] === undefined) expandedSubs[subKey] = true;
+        }
+        firstNav = false;
       }
     }
   }
-  if (groupMap['其他'].permissions.length > 0) {
-    result.push(groupMap['其他']);
+
+  // 检查是否有未分配的权限
+  const allConfigKeys = new Set();
+  for (const nav of NAV_CONFIG) {
+    for (const sub of nav.children) {
+      for (const k of sub.keys) allConfigKeys.add(k);
+    }
+  }
+  const orphans = permissions.value.filter(p => !allConfigKeys.has(p.key));
+  if (orphans.length > 0) {
+    result.push({
+      name: '其他',
+      icon: null,
+      children: [{ name: '未分类权限', permissions: orphans }],
+      totalCount: orphans.length
+    });
   }
 
   return result;
@@ -241,7 +284,7 @@ function handleRemove(p) {
   padding: 1.5rem;
 }
 
-/* 页面分组容器 */
+/* ===== 一级：父导航分组 ===== */
 .page-groups-container {
   display: flex;
   flex-direction: column;
@@ -268,7 +311,6 @@ function handleRemove(p) {
   background: linear-gradient(to right, #f9fafb, #fff);
   cursor: pointer;
   user-select: none;
-  border-bottom: 1px solid transparent;
   transition: all 0.2s;
 }
 
@@ -321,7 +363,62 @@ function handleRemove(p) {
   border-top: 1px solid #e5e7eb;
 }
 
-/* 折叠动画 */
+/* ===== 二级：子菜单分组 ===== */
+.sub-group {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.sub-group:last-child {
+  border-bottom: none;
+}
+
+.sub-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem 0.625rem 1.5rem;
+  background: #fafbfc;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.sub-group-header:hover {
+  background: #f3f4f6;
+}
+
+.sub-arrow {
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sub-arrow.rotated {
+  transform: rotate(90deg);
+}
+
+.sub-group-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.sub-group-count {
+  font-size: 11px;
+  color: #9ca3af;
+  background: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sub-group-content {
+  background: #fff;
+}
+
+/* ===== 折叠动画 ===== */
 .slide-enter-active,
 .slide-leave-active {
   transition: all 0.25s ease;
@@ -337,26 +434,30 @@ function handleRemove(p) {
 .slide-enter-to,
 .slide-leave-from {
   opacity: 1;
-  max-height: 1000px;
+  max-height: 2000px;
 }
 
-/* 表格样式 */
+/* ===== 表格样式 ===== */
 .perm-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
 
-.perm-table thead {
-  /* 使用全局样式 */
-}
-
 .perm-table th {
-  /* 使用全局样式 */
+  padding: 0.5rem 1rem 0.5rem 1.5rem;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #fafbfc;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .perm-table td {
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 1rem 0.625rem 1.5rem;
   text-align: left;
   border-bottom: 1px solid #f3f4f6;
 }
@@ -415,6 +516,7 @@ function handleRemove(p) {
   gap: 0.5rem;
 }
 
+/* ===== 按钮 ===== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -462,7 +564,7 @@ function handleRemove(p) {
   cursor: not-allowed;
 }
 
-/* 空状态和加载状态 */
+/* ===== 空状态和加载状态 ===== */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -487,27 +589,27 @@ function handleRemove(p) {
   font-size: 13px;
 }
 
-.loading-state {
+.loading-dots {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
   padding: 2rem;
-  color: #6b7280;
 }
 
-.loading-spinner {
-  width: 20px;
-  height: 20px;
+.dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: 2px solid #e5e7eb;
-  border-top-color: #2563eb;
-  animation: spin 1s linear infinite;
+  background: #2563eb;
+  animation: bounce 1.4s infinite ease-in-out both;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.dot:nth-child(1) { animation-delay: -0.32s; }
+.dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
 }
 </style>
