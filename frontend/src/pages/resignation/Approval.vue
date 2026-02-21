@@ -230,15 +230,19 @@ async function handleApprove(item, action) {
 
   item._processing = true;
   try {
-    await api.post(`/leaves/${item.id}/approve/`, {
+    const resp = await api.post(`/leaves/${item.id}/approve/`, {
       action,
       stage,
       comments: item._comment || ''
     });
-    await fetchData();
+    if (resp.success) {
+      await fetchData();
+    } else {
+      alert(resp.error?.message || '操作失败，请稍后重试');
+    }
   } catch (e) {
     console.error(e);
-    alert(e.response?.data?.message || '操作失败，请稍后重试');
+    alert('操作失败，请稍后重试');
   } finally {
     item._processing = false;
   }

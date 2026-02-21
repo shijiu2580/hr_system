@@ -524,9 +524,9 @@ async function fetchPendingApprovals() {
       // 6. 入职审批
       api.get('/onboarding/pending/')
         .then(res => {
-          // 后端返回 { success, data: [...], count } 格式
+          // api.js 解包后 res.data 可能是数组或 {count, results}
           const d = res.data;
-          pendingItems.value.onboarding = d?.count ?? (Array.isArray(d?.data) ? d.data.length : 0);
+          pendingItems.value.onboarding = Array.isArray(d) ? d.length : (d?.count ?? 0);
         })
         .catch(() => { pendingItems.value.onboarding = 0; })
     ];

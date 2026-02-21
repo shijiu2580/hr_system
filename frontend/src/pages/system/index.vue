@@ -445,10 +445,14 @@ async function loadBackups() {
   errorBackup.value = ''
 
   try {
-    const { data } = await api.get('/backups/')
-    backups.value = data.backups || []
+    const resp = await api.get('/backups/')
+    if (resp.success) {
+      backups.value = resp.data?.backups || []
+    } else {
+      errorBackup.value = resp.error?.message || '加载备份失败'
+    }
   } catch (e) {
-    errorBackup.value = e.response?.data?.detail || '加载备份失败'
+    errorBackup.value = '加载备份失败'
   } finally {
     loadingBackups.value = false
   }
@@ -460,11 +464,15 @@ async function createBackup() {
   successBackup.value = ''
 
   try {
-    const { data } = await api.post('/backups/create/')
-    successBackup.value = data.detail || '创建成功'
-    await loadBackups()
+    const resp = await api.post('/backups/create/')
+    if (resp.success) {
+      successBackup.value = resp.data?.detail || '创建成功'
+      await loadBackups()
+    } else {
+      errorBackup.value = resp.error?.message || '创建失败'
+    }
   } catch (e) {
-    errorBackup.value = e.response?.data?.detail || '创建失败'
+    errorBackup.value = '创建失败'
   } finally {
     creating.value = false
   }
@@ -489,11 +497,15 @@ async function confirmCleanBackups() {
   successBackup.value = ''
 
   try {
-    const { data } = await api.post('/backups/clean/', { keep: 5 })
-    successBackup.value = data.detail || '清理完成'
-    await loadBackups()
+    const resp = await api.post('/backups/clean/', { keep: 5 })
+    if (resp.success) {
+      successBackup.value = resp.data?.detail || '清理完成'
+      await loadBackups()
+    } else {
+      errorBackup.value = resp.error?.message || '清理失败'
+    }
   } catch (e) {
-    errorBackup.value = e.response?.data?.detail || '清理失败'
+    errorBackup.value = '清理失败'
   } finally {
     cleaning.value = false
   }
@@ -507,10 +519,14 @@ async function restore(b) {
   successBackup.value = ''
 
   try {
-    const { data } = await api.post('/backups/restore/', { filename: b.name })
-    successBackup.value = data.detail || '恢复成功'
+    const resp = await api.post('/backups/restore/', { filename: b.name })
+    if (resp.success) {
+      successBackup.value = resp.data?.detail || '恢复成功'
+    } else {
+      errorBackup.value = resp.error?.message || '恢复失败'
+    }
   } catch (e) {
-    errorBackup.value = e.response?.data?.detail || '恢复失败'
+    errorBackup.value = '恢复失败'
   } finally {
     restoringName.value = null
   }
@@ -568,10 +584,14 @@ async function reloadLogs() {
 
   try {
     const params = levelFilter.value ? { level: levelFilter.value } : {}
-    const { data } = await api.get('/logs/', { params })
-    logs.value = data.results || data || []
+    const resp = await api.get('/logs/', { params })
+    if (resp.success) {
+      logs.value = resp.data?.results || resp.data || []
+    } else {
+      errorLogs.value = resp.error?.message || '加载日志失败'
+    }
   } catch (e) {
-    errorLogs.value = e.response?.data?.detail || '加载日志失败'
+    errorLogs.value = '加载日志失败'
   } finally {
     loadingLogs.value = false
   }
@@ -592,11 +612,15 @@ async function confirmClearLogs() {
 
   try {
     const payload = levelFilter.value ? { level: levelFilter.value } : {}
-    const { data } = await api.post('/logs/clear/', payload)
-    successLogs.value = data.detail || '已清空'
-    await reloadLogs()
+    const resp = await api.post('/logs/clear/', payload)
+    if (resp.success) {
+      successLogs.value = resp.data?.detail || '已清空'
+      await reloadLogs()
+    } else {
+      errorLogs.value = resp.error?.message || '清空失败'
+    }
   } catch (e) {
-    errorLogs.value = e.response?.data?.detail || '清空失败'
+    errorLogs.value = '清空失败'
   } finally {
     clearingLogs.value = false
   }
@@ -678,8 +702,12 @@ async function loadHealth() {
   loadingHealth.value = true
 
   try {
-    const { data } = await api.get('/health/')
-    healthData.value = data
+    const resp = await api.get('/health/')
+    if (resp.success) {
+      healthData.value = resp.data
+    } else {
+      healthData.value = { status: 'error', db: false }
+    }
   } catch (e) {
     healthData.value = { status: 'error', db: false }
   } finally {

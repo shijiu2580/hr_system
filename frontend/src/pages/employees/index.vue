@@ -338,7 +338,7 @@ watch(employees, () => {
 })
 
 async function loadMeta() {
-  const [d, p] = await Promise.all([api.get('/departments/'), api.get('/positions/')])
+  const [d, p] = await Promise.all([api.get('/departments/', { params: { page_size: 9999 } }), api.get('/positions/', { params: { page_size: 9999 } })])
   if (d.success) departments.value = d.data?.results || d.data || []
   if (p.success) positions.value = p.data?.results || p.data || []
 }

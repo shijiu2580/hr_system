@@ -61,10 +61,10 @@ const error = ref('')
 onMounted(async () => {
   try {
     const [usersRes, deptsRes, posRes, locRes] = await Promise.all([
-      api.get('/users/manage/'),
-      api.get('/departments/'),
-      api.get('/positions/'),
-      api.get('/checkin-locations/')
+      api.get('/users/manage/', { params: { page_size: 9999 } }),
+      api.get('/departments/', { params: { page_size: 9999 } }),
+      api.get('/positions/', { params: { page_size: 9999 } }),
+      api.get('/checkin-locations/', { params: { page_size: 9999 } })
     ])
     users.value = usersRes.data.results || usersRes.data || []
     departments.value = deptsRes.data.results || deptsRes.data || []

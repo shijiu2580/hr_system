@@ -119,8 +119,8 @@ onMounted(async () => {
   try {
     // 并行加载部门和角色列表
     const [deptRes, roleRes] = await Promise.all([
-      api.get('/departments/'),
-      api.get('/rbac/roles/')
+      api.get('/departments/', { params: { page_size: 9999 } }),
+      api.get('/rbac/roles/', { params: { page_size: 9999 } })
     ])
     departments.value = deptRes.data.results || deptRes.data || []
     roles.value = roleRes.data.results || roleRes.data || []

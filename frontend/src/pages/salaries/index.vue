@@ -202,11 +202,11 @@ function formatCurrency(value) {
 async function loadStats() {
   try {
     // 薪资记录数量
-    const salaryRes = await api.get('/salaries/')
+    const salaryRes = await api.get('/salaries/', { params: { page_size: 9999 } })
     if (salaryRes.success) {
       const data = salaryRes.data
       const records = data.results || data.data || data || []
-      stats.salaryCount = records.length
+      stats.salaryCount = data.count ?? records.length
       
       // 本月薪资统计
       const now = new Date()
@@ -220,11 +220,11 @@ async function loadStats() {
     }
 
     // 差旅报销数量
-    const expenseRes = await api.get('/travel-expenses/')
+    const expenseRes = await api.get('/travel-expenses/', { params: { page_size: 9999 } })
     if (expenseRes.success) {
       const data = expenseRes.data
       const records = data.results || data.data || data || []
-      stats.expenseCount = records.length
+      stats.expenseCount = data.count ?? records.length
       stats.pendingExpense = records.filter(r => r.status === 'pending').length
       
       // 本月已批准报销统计

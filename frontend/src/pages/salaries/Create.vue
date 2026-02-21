@@ -326,7 +326,7 @@ async function handleFileImport(event) {
 
 onMounted(async () => {
   try {
-    const res = await api.get('/employees/')
+    const res = await api.get('/employees/', { params: { page_size: 9999 } })
     employees.value = res.data.results || res.data || []
   } catch (e) {
     message.value = { type: 'error', text: '加载员工列表失败：' + (e.response?.data?.detail || e.message) }

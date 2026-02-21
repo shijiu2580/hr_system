@@ -442,7 +442,7 @@ async function submitCancel() {
 
 async function load() {
   loading.value = true
-  const resp = await api.get('/business-trips/')
+  const resp = await api.get('/business-trips/', { params: { page_size: 9999 } })
   if (resp.success) {
     const d = resp.data
     if (Array.isArray(d)) {
