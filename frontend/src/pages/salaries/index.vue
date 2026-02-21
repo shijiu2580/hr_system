@@ -207,7 +207,7 @@ async function loadStats() {
       const data = salaryRes.data
       const records = data.results || data.data || data || []
       stats.salaryCount = data.count ?? records.length
-      
+
       // 本月薪资统计
       const now = new Date()
       const currentYear = now.getFullYear()
@@ -226,7 +226,7 @@ async function loadStats() {
       const records = data.results || data.data || data || []
       stats.expenseCount = data.count ?? records.length
       stats.pendingExpense = records.filter(r => r.status === 'pending').length
-      
+
       // 本月已批准报销统计
       const now = new Date()
       const currentYear = now.getFullYear()

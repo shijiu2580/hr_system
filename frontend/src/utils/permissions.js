@@ -76,6 +76,15 @@ export const Permissions = {
   REPORT_SALARY: 'report.salary',
   REPORT_LEAVE: 'report.leave',
 
+  // -------- BI 报表 --------
+  BI_VIEW: 'bi.view',
+  BI_DEPARTMENT_COST: 'bi.department_cost',
+  BI_ATTENDANCE_HEAT: 'bi.attendance_heat',
+  BI_TURNOVER: 'bi.turnover',
+  BI_SALARY_RANGE: 'bi.salary_range',
+  BI_LEAVE_BALANCE: 'bi.leave_balance',
+  BI_DAILY_ATTENDANCE: 'bi.daily_attendance',
+
   // -------- 系统管理 --------
   SYSTEM_VIEW: 'system.view',
   SYSTEM_LOG: 'system.log',
@@ -215,6 +224,7 @@ export const routePermissions = {
 
   // 报表
   '/reports': [Permissions.REPORT_VIEW],
+  '/bi': [Permissions.BI_VIEW],
 };
 
 /**
