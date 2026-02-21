@@ -142,6 +142,10 @@ PERMISSION_GROUPS = {
         (Permissions.EMPLOYEE_DELETE, '删除员工', '删除员工档案'),
         (Permissions.EMPLOYEE_IMPORT, '导入员工', '批量导入员工数据'),
         (Permissions.EMPLOYEE_EXPORT, '导出员工', '导出员工数据'),
+        (Permissions.ONBOARDING_VIEW, '查看入职申请', '查看入职申请详情'),
+        (Permissions.ONBOARDING_VIEW_ALL, '查看所有入职', '查看所有待入职员工'),
+        (Permissions.ONBOARDING_APPROVE, '审批入职', '审批通过入职申请'),
+        (Permissions.ONBOARDING_REJECT, '拒绝入职', '拒绝入职申请'),
     ],
     '部门管理': [
         (Permissions.DEPARTMENT_VIEW, '查看部门', '查看部门信息'),
@@ -168,8 +172,6 @@ PERMISSION_GROUPS = {
         (Permissions.LEAVE_VIEW_ALL, '查看所有请假', '查看所有员工的请假记录'),
         (Permissions.LEAVE_CREATE, '创建请假', '发起请假申请'),
         (Permissions.LEAVE_APPROVE, '审批请假', '审批员工请假申请'),
-    ],
-    '出差管理': [
         (Permissions.TRIP_VIEW, '查看出差', '查看自己的出差记录'),
         (Permissions.TRIP_VIEW_ALL, '查看所有出差', '查看所有员工的出差记录'),
         (Permissions.TRIP_CREATE, '创建出差', '发起出差申请'),
@@ -182,8 +184,6 @@ PERMISSION_GROUPS = {
         (Permissions.SALARY_EDIT, '编辑薪资', '编辑薪资记录'),
         (Permissions.SALARY_DELETE, '删除薪资', '删除薪资记录'),
         (Permissions.SALARY_DISBURSE, '发放薪资', '批量发放薪资'),
-    ],
-    '报销管理': [
         (Permissions.EXPENSE_VIEW, '查看报销', '查看自己的报销记录'),
         (Permissions.EXPENSE_VIEW_ALL, '查看所有报销', '查看所有员工的报销记录'),
         (Permissions.EXPENSE_CREATE, '创建报销', '发起报销申请'),
@@ -197,15 +197,13 @@ PERMISSION_GROUPS = {
         (Permissions.DOCUMENT_DELETE, '删除文档', '删除文档'),
         (Permissions.DOCUMENT_MANAGE, '管理公司文档', '管理公司公开文档'),
     ],
-    '报表统计': [
+    '报表': [
         (Permissions.REPORT_VIEW, '查看报表', '查看统计报表'),
         (Permissions.REPORT_EXPORT, '导出报表', '导出统计报表'),
         (Permissions.REPORT_EMPLOYEE, '员工报表', '查看员工统计报表'),
         (Permissions.REPORT_ATTENDANCE, '考勤报表', '查看考勤统计报表'),
         (Permissions.REPORT_SALARY, '薪资报表', '查看薪资统计报表'),
         (Permissions.REPORT_LEAVE, '请假报表', '查看请假统计报表'),
-    ],
-    'BI 报表': [
         (Permissions.BI_VIEW, '查看BI报表', '访问BI报表页面'),
         (Permissions.BI_DEPARTMENT_COST, '部门成本分析', '查看部门人力成本分析'),
         (Permissions.BI_ATTENDANCE_HEAT, '考勤热力图', '查看考勤热力图分析'),
@@ -238,12 +236,7 @@ PERMISSION_GROUPS = {
         (Permissions.RBAC_ROLE_MANAGE, '管理角色', '创建、编辑、删除角色'),
         (Permissions.RBAC_PERMISSION_MANAGE, '管理权限', '创建、编辑、删除权限'),
     ],
-    '入职管理': [
-        (Permissions.ONBOARDING_VIEW, '查看入职申请', '查看入职申请详情'),
-        (Permissions.ONBOARDING_VIEW_ALL, '查看所有入职', '查看所有待入职员工'),
-        (Permissions.ONBOARDING_APPROVE, '审批入职', '审批通过入职申请'),
-        (Permissions.ONBOARDING_REJECT, '拒绝入职', '拒绝入职申请'),
-    ],
+
     '离职管理': [
         (Permissions.RESIGNATION_VIEW, '查看离职', '查看自己的离职申请'),
         (Permissions.RESIGNATION_VIEW_ALL, '查看所有离职', '查看所有员工的离职申请'),
