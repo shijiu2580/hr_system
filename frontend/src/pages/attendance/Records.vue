@@ -59,7 +59,7 @@
                 <span class="status-text" :class="'status-' + getStatus(todayRecord)">{{ getStatusLabel(todayRecord) }}</span>
               </td>
               <td class="col-reason">
-                <template v-if="todayRecord.notes && formatReasonLines(todayRecord.notes).length">
+                <template v-if="isWorkday && todayRecord.notes && formatReasonLines(todayRecord.notes).length">
                   <div v-for="(line, idx) in formatReasonLines(todayRecord.notes)" :key="idx" class="reason-line">{{ line }}</div>
                 </template>
                 <template v-else>--</template>
@@ -292,60 +292,48 @@ function getStatusLabel(item) {
 
 // 计算缺勤时长（午休12:00-13:00不计算）
 function calcAbsentTime(item) {
+  // 休息日/节假日：加班，缺勤为0
+  if (!isWorkday.value) return '0 分钟';
   if (!item || !item.check_out_time) return '--';
 
-  // 解析签退时间
-  let checkOutTime = item.check_out_time;
-  let checkOutHours, checkOutMinutes;
+  const WORK_START = 9 * 60;     // 上班 9:00
+  const LUNCH_START = 12 * 60;   // 午休开始 12:00
+  const LUNCH_END = 13 * 60;     // 午休结束 13:00
+  const WORK_END = 18 * 60;      // 下班 18:00
+  const TOTAL_WORK = 8 * 60;     // 总工作时长 480分钟（不含午休）
 
-  if (checkOutTime.includes('T') || checkOutTime.includes(' ')) {
-    const d = new Date(checkOutTime);
-    checkOutHours = d.getHours();
-    checkOutMinutes = d.getMinutes();
-  } else {
-    const parts = checkOutTime.split(':');
-    checkOutHours = parseInt(parts[0]);
-    checkOutMinutes = parseInt(parts[1]);
-  }
+  const parseMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    if (timeStr.includes('T') || timeStr.includes(' ')) {
+      const d = new Date(timeStr);
+      return d.getHours() * 60 + d.getMinutes();
+    }
+    const parts = timeStr.split(':');
+    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  };
 
-  const WORK_START = 9; // 上班时间 9:00
-  const LUNCH_START = 12; // 午休开始 12:00
-  const LUNCH_END = 13; // 午休结束 13:00
-  const WORK_END = 18; // 下班时间 18:00
-  const TOTAL_WORK_HOURS = 8; // 总工作时长 8小时（不含午休）
+  // 计算某个时间段内的有效工作分钟数（排除午休 12:00-13:00）
+  const calcWorkMinutes = (from, to) => {
+    if (from >= to) return 0;
+    let minutes = to - from;
+    const overlapStart = Math.max(from, LUNCH_START);
+    const overlapEnd = Math.min(to, LUNCH_END);
+    if (overlapStart < overlapEnd) {
+      minutes -= (overlapEnd - overlapStart);
+    }
+    return Math.max(0, minutes);
+  };
 
-  const checkOutTotalMinutes = checkOutHours * 60 + checkOutMinutes;
-  const workStartMinutes = WORK_START * 60; // 9:00 = 540
-  const lunchStartMinutes = LUNCH_START * 60; // 12:00 = 720
-  const lunchEndMinutes = LUNCH_END * 60; // 13:00 = 780
-  const workEndMinutes = WORK_END * 60; // 18:00 = 1080
-  const totalWorkMinutes = TOTAL_WORK_HOURS * 60; // 480分钟
+  const checkIn = parseMinutes(item.check_in_time);
+  const checkOut = parseMinutes(item.check_out_time);
 
-  // 如果签退时间在9:00之前，缺勤8小时
-  if (checkOutTotalMinutes <= workStartMinutes) {
-    return `${TOTAL_WORK_HOURS} 小时`;
-  }
+  // 实际签到时间（不早于上班时间）
+  const effectiveIn = checkIn !== null ? Math.max(checkIn, WORK_START) : WORK_START;
+  // 实际签退时间（不晚于下班时间）
+  const effectiveOut = Math.min(checkOut, WORK_END);
 
-  // 如果签退时间在18:00之后，不缺勤
-  if (checkOutTotalMinutes >= workEndMinutes) {
-    return '0 分钟';
-  }
-
-  // 计算实际工作时长
-  let workedMinutes = 0;
-
-  if (checkOutTotalMinutes <= lunchStartMinutes) {
-    // 签退在12:00之前：工作时长 = 签退时间 - 9:00
-    workedMinutes = checkOutTotalMinutes - workStartMinutes;
-  } else if (checkOutTotalMinutes <= lunchEndMinutes) {
-    // 签退在12:00-13:00之间：工作时长 = 3小时（上午满勤）
-    workedMinutes = lunchStartMinutes - workStartMinutes; // 180分钟
-  } else {
-    // 签退在13:00之后：工作时长 = 3小时 + (签退时间 - 13:00)
-    workedMinutes = (lunchStartMinutes - workStartMinutes) + (checkOutTotalMinutes - lunchEndMinutes);
-  }
-
-  const absentMinutes = totalWorkMinutes - workedMinutes;
+  const workedMinutes = calcWorkMinutes(effectiveIn, effectiveOut);
+  const absentMinutes = Math.max(0, TOTAL_WORK - workedMinutes);
 
   if (absentMinutes <= 0) {
     return '0 分钟';
