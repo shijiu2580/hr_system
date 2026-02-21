@@ -113,7 +113,7 @@ const PAGE_GROUP_CONFIG = [
   },
   {
     name: '入职管理',
-    icon: '/icons/onboarding.svg',
+    icon: '/icons/employees.svg',
     prefixes: ['onboarding.'],
     keys: []
   },
@@ -157,6 +157,12 @@ const PAGE_GROUP_CONFIG = [
     name: '大数据报表',
     icon: '/icons/reports.svg',
     prefixes: ['report.'],
+    keys: []
+  },
+  {
+    name: 'BI 报表',
+    icon: '/icons/stats.svg',
+    prefixes: ['bi.'],
     keys: []
   },
   {
