@@ -373,7 +373,7 @@ class OnboardPendingListAPIView(views.APIView):
                 'position': emp.position.name if emp.position else None,
             })
 
-        return Response(api_success(data))
+        return Response(api_success(data, count=len(data)))
 
 
 class OnboardApproveAPIView(views.APIView):

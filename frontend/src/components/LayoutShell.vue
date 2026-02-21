@@ -522,8 +522,12 @@ async function fetchPendingApprovals() {
         .catch(() => { pendingItems.value.expense = 0; }),
 
       // 6. 入职审批
-      api.get('/onboarding/pending/', { params: { page_size: 1 } })
-        .then(res => { pendingItems.value.onboarding = res.data?.count || 0; })
+      api.get('/onboarding/pending/')
+        .then(res => {
+          // 后端返回 { success, data: [...], count } 格式
+          const d = res.data;
+          pendingItems.value.onboarding = d?.count ?? (Array.isArray(d?.data) ? d.data.length : 0);
+        })
         .catch(() => { pendingItems.value.onboarding = 0; })
     ];
 
@@ -682,7 +686,7 @@ onMounted(() => {
   window.addEventListener('error', handleGlobalError);
 
   // 获取待审批数量（如果有审批权限）
-  if (auth.user && (canApproveAttendance.value || canApproveLeave.value || canApproveExpense.value)) {
+  if (auth.user && (canApproveAttendance.value || canApproveLeave.value || canApproveExpense.value || canManageEmployees.value)) {
     fetchPendingApprovals();
     // 每5分钟刷新一次
     pendingInterval = setInterval(fetchPendingApprovals, 5 * 60 * 1000);
