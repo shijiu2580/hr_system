@@ -768,25 +768,6 @@ onMounted(() => load())
   padding: 2rem;
 }
 
-.progress-bar {
-  height: 4px;
-  background: #e5e7eb;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  width: 60%;
-  background: linear-gradient(90deg, #fbbf24 0%, #22c55e 100%);
-  animation: progress 1.5s ease-in-out infinite;
-}
-
-@keyframes progress {
-  0% { width: 0%; }
-  50% { width: 80%; }
-  100% { width: 100%; }
-}
 
 /* 空状态 */
 .empty-state {

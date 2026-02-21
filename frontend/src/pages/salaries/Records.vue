@@ -1438,26 +1438,6 @@ function resetFilters() {
   padding: 3rem;
 }
 
-.progress-bar {
-  height: 3px;
-  background: #e5e7eb;
-  border-radius: 2px;
-  overflow: hidden;
-  width: 200px;
-  margin: 0 auto;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--color-primary);
-  animation: progress 1.5s ease-in-out infinite;
-}
-
-@keyframes progress {
-  0% { width: 0; margin-left: 0; }
-  50% { width: 60%; margin-left: 20%; }
-  100% { width: 0; margin-left: 100%; }
-}
 
 /* 空状态 */
 .empty-state {

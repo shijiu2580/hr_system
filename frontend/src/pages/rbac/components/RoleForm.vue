@@ -30,29 +30,29 @@
               <div class="form-grid">
                 <div class="form-group">
                   <label>角色名称 <span class="required">*</span></label>
-                  <input 
-                    v-model.trim="roleForm.name" 
-                    required 
-                    :disabled="editingRole?.is_system" 
-                    placeholder="例如：人事经理" 
+                  <input
+                    v-model.trim="roleForm.name"
+                    required
+                    :disabled="editingRole?.is_system"
+                    placeholder="例如：人事经理"
                   />
                 </div>
                 <div class="form-group">
                   <label>角色代码 <span class="required">*</span></label>
-                  <input 
-                    v-model.trim="roleForm.code" 
-                    required 
-                    :disabled="editingRole?.is_system || !!editingRole" 
-                    placeholder="例如：hr_manager" 
+                  <input
+                    v-model.trim="roleForm.code"
+                    required
+                    :disabled="editingRole?.is_system || !!editingRole"
+                    placeholder="例如：hr_manager"
                   />
                 </div>
               </div>
               <div class="form-group">
                 <label>角色描述</label>
-                <textarea 
-                  v-model.trim="roleForm.description" 
-                  rows="2" 
-                  placeholder="可选，描述此角色的职责" 
+                <textarea
+                  v-model.trim="roleForm.description"
+                  rows="2"
+                  placeholder="可选，描述此角色的职责"
                   :disabled="editingRole?.is_system"
                 ></textarea>
               </div>
@@ -81,17 +81,17 @@
                     </button>
                   </div>
                   <div v-show="expandedGroups[group.name]" class="perm-group-body">
-                    <label 
-                      v-for="p in group.permissions" 
-                      :key="p.id" 
+                    <label
+                      v-for="p in group.permissions"
+                      :key="p.id"
                       class="perm-item"
                       :class="{ checked: roleForm.permission_ids.includes(p.id), disabled: editingRole?.is_system }"
                     >
-                      <input 
-                        type="checkbox" 
-                        :value="p.id" 
-                        v-model="roleForm.permission_ids" 
-                        :disabled="editingRole?.is_system" 
+                      <input
+                        type="checkbox"
+                        :value="p.id"
+                        v-model="roleForm.permission_ids"
+                        :disabled="editingRole?.is_system"
                       />
                       <div class="perm-info">
                         <span class="perm-name">{{ p.name }}</span>
@@ -117,16 +117,16 @@
                 <!-- 如果没有员工数据，显示平铺的用户列表 -->
                 <template v-if="employees.length === 0 && users.length > 0">
                   <div class="user-flat-list">
-                    <label 
-                      v-for="u in users" 
-                      :key="u.id" 
+                    <label
+                      v-for="u in users"
+                      :key="u.id"
                       class="user-item"
                       :class="{ checked: roleForm.user_ids.includes(u.id) }"
                     >
-                      <input 
-                        type="checkbox" 
-                        :value="u.id" 
-                        v-model="roleForm.user_ids" 
+                      <input
+                        type="checkbox"
+                        :value="u.id"
+                        v-model="roleForm.user_ids"
                       />
                       <div class="user-avatar">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -165,17 +165,17 @@
                         </button>
                       </div>
                       <div v-show="expandedPositions[dept.id + '-' + position.id]" class="user-position-body">
-                        <label 
-                          v-for="emp in getPositionEmployees(dept.id, position.id)" 
-                          :key="emp.user?.id || emp.id" 
+                        <label
+                          v-for="emp in getPositionEmployees(dept.id, position.id)"
+                          :key="emp.user?.id || emp.id"
                           class="user-item"
                           :class="{ checked: emp.user && roleForm.user_ids.includes(emp.user.id), disabled: !emp.user }"
                         >
-                          <input 
-                            type="checkbox" 
-                            :value="emp.user?.id" 
-                            v-model="roleForm.user_ids" 
-                            :disabled="!emp.user" 
+                          <input
+                            type="checkbox"
+                            :value="emp.user?.id"
+                            v-model="roleForm.user_ids"
+                            :disabled="!emp.user"
                           />
                           <div class="user-avatar" :class="{ 'has-avatar': emp.avatar }">
                             <img v-if="emp.avatar" :src="emp.avatar" :alt="emp.name" />
@@ -201,17 +201,17 @@
                         <span class="user-position-count">{{ getNoPositionSelectedCount(dept.id) }}/{{ getDeptEmployeesNoPosition(dept.id).length }}</span>
                       </div>
                       <div v-show="expandedPositions[dept.id + '-0']" class="user-position-body">
-                        <label 
-                          v-for="emp in getDeptEmployeesNoPosition(dept.id)" 
-                          :key="emp.user?.id || emp.id" 
+                        <label
+                          v-for="emp in getDeptEmployeesNoPosition(dept.id)"
+                          :key="emp.user?.id || emp.id"
                           class="user-item"
                           :class="{ checked: emp.user && roleForm.user_ids.includes(emp.user.id), disabled: !emp.user }"
                         >
-                          <input 
-                            type="checkbox" 
-                            :value="emp.user?.id" 
-                            v-model="roleForm.user_ids" 
-                            :disabled="!emp.user" 
+                          <input
+                            type="checkbox"
+                            :value="emp.user?.id"
+                            v-model="roleForm.user_ids"
+                            :disabled="!emp.user"
                           />
                           <div class="user-avatar">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -239,16 +239,16 @@
                   </div>
                   <div v-show="expandedDepts[0]" class="user-dept-body">
                     <div class="user-position-body" style="padding-left: 0;">
-                      <label 
-                        v-for="u in usersWithoutDept" 
-                        :key="u.id" 
+                      <label
+                        v-for="u in usersWithoutDept"
+                        :key="u.id"
                         class="user-item"
                         :class="{ checked: roleForm.user_ids.includes(u.id) }"
                       >
-                        <input 
-                          type="checkbox" 
-                          :value="u.id" 
-                          v-model="roleForm.user_ids" 
+                        <input
+                          type="checkbox"
+                          :value="u.id"
+                          v-model="roleForm.user_ids"
                         />
                         <div class="user-avatar">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -276,11 +276,11 @@
               <button class="btn btn-secondary" type="button" @click="handleCancel">
                 取消
               </button>
-              <button 
-                v-if="editingRole && !editingRole.is_system" 
-                class="btn btn-danger" 
-                type="button" 
-                @click="handleRemove" 
+              <button
+                v-if="editingRole && !editingRole.is_system"
+                class="btn btn-danger"
+                type="button"
+                @click="handleRemove"
                 :disabled="deletingRoleId===editingRole.id"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -327,7 +327,7 @@ watch(showRoleForm, (visible) => {
     // 重置展开状态
     Object.keys(expandedDepts).forEach(k => delete expandedDepts[k]);
     Object.keys(expandedPositions).forEach(k => delete expandedPositions[k]);
-    
+
     // 默认展开所有部门和职位，方便用户直接查看所有可选用户
     setTimeout(() => {
       const depts = sortedDepartments.value;
@@ -475,7 +475,7 @@ function selectDept(deptId) {
       return empDeptId === deptId && emp.user;
     })
     .map(emp => emp.user.id || emp.user);
-  
+
   if (isDeptAllSelected(deptId)) {
     roleForm.value.user_ids = roleForm.value.user_ids.filter(id => !deptUserIds.includes(id));
   } else {
@@ -502,7 +502,7 @@ function selectPosition(deptId, posId) {
   const posUserIds = getPositionEmployees(deptId, posId)
     .filter(emp => emp.user)
     .map(emp => emp.user.id || emp.user);
-  
+
   if (isPositionAllSelected(deptId, posId)) {
     roleForm.value.user_ids = roleForm.value.user_ids.filter(id => !posUserIds.includes(id));
   } else {
