@@ -140,6 +140,9 @@ const router = createRouter({
 
     // 无权限页面
     { path: '/403', component: () => import('../pages/auth/Forbidden.vue'), meta: { requiresAuth: true } },
+
+    // 未匹配路径重定向到首页（导航守卫会处理跳转到登录页）
+    { path: '/:pathMatch(.*)*', redirect: '/' },
   ]
 });
 
@@ -155,7 +158,12 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if(!auth.ready){
-    await auth.fetchMe();
+    // 超时保护：最多等3秒，避免白屏
+    await Promise.race([
+      auth.fetchMe(),
+      new Promise(resolve => setTimeout(resolve, 3000))
+    ]);
+    if (!auth.ready) auth.ready = true;
   }
   if(to.meta.requiresAuth && !auth.isAuthenticated){
     // 未登录时跳转到登录页
