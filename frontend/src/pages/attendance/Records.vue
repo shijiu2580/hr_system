@@ -414,7 +414,7 @@ async function doCheckIn(notes) {
       showMessage('success', '签到成功！');
       await loadToday();
     } else {
-      showMessage('error', resp.message || '签到失败');
+      showMessage('error', resp.error?.message || '签到失败');
     }
   } catch (e) {
     showMessage('error', '签到失败：' + (e.message || '网络错误'));
@@ -430,7 +430,7 @@ async function doCheckOut(notes) {
       showMessage('success', '签退成功！');
       await loadToday();
     } else {
-      showMessage('error', resp.message || '签退失败');
+      showMessage('error', resp.error?.message || '签退失败');
     }
   } catch (e) {
     showMessage('error', '签退失败：' + (e.message || '网络错误'));
@@ -446,7 +446,7 @@ async function doUpdateCheckOut() {
       showMessage('success', '签退时间已更新！');
       await loadToday();
     } else {
-      showMessage('error', resp.message || '更新失败');
+      showMessage('error', resp.error?.message || '更新失败');
     }
   } catch (e) {
     showMessage('error', '更新失败：' + (e.message || '网络错误'));

@@ -401,8 +401,8 @@ async function load() {
 
   // 并行加载请假和出差数据
   const [leavesResp, tripsResp] = await Promise.all([
-    api.get('/leaves/'),
-    api.get('/business-trips/')
+    api.get('/leaves/', { params: { page_size: 9999 } }),
+    api.get('/business-trips/', { params: { page_size: 9999 } })
   ]);
 
   const allItems = [];

@@ -531,14 +531,14 @@ async function loadList() {
 
 async function loadDepartments() {
   try {
-    const res = await api.get('/departments/')
+    const res = await api.get('/departments/', { params: { page_size: 9999 } })
     departments.value = res.data?.results || res.data || []
   } catch (e) {}
 }
 
 async function loadPositions() {
   try {
-    const res = await api.get('/positions/')
+    const res = await api.get('/positions/', { params: { page_size: 9999 } })
     positions.value = res.data?.results || res.data || []
   } catch (e) {}
 }

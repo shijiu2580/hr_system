@@ -195,14 +195,18 @@ async function submitForm() {
       formData.append('attachment', form.value.file);
     }
 
-    await api.post('/leaves/', formData, {
+    const resp = await api.post('/leaves/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
-    showSuccessModal.value = true;
+    if (resp.success) {
+      showSuccessModal.value = true;
+    } else {
+      alert(resp.error?.message || '提交失败，请稍后重试');
+    }
   } catch (e) {
     console.error(e);
-    alert(e.response?.data?.message || '提交失败，请稍后重试');
+    alert('提交失败，请稍后重试');
   } finally {
     submitting.value = false;
   }

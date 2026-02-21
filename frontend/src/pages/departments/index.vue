@@ -583,9 +583,9 @@ async function loadData() {
   loading.value = true
   try {
     const [deptRes, posRes, empRes] = await Promise.all([
-      api.get('/departments/'),
-      api.get('/positions/'),
-      api.get('/employees/')
+      api.get('/departments/', { params: { page_size: 9999 } }),
+      api.get('/positions/', { params: { page_size: 9999 } }),
+      api.get('/employees/', { params: { page_size: 9999 } })
     ])
 
     const deptList = deptRes.data?.results || deptRes.data || []

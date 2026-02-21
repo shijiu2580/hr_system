@@ -69,10 +69,10 @@ onMounted(async () => {
   try {
     const [empRes, usersRes, deptsRes, posRes, locRes] = await Promise.all([
       api.get(`/employees/${id}/`),
-      api.get('/users/manage/'),
-      api.get('/departments/'),
-      api.get('/positions/'),
-      api.get('/checkin-locations/')
+      api.get('/users/manage/', { params: { page_size: 9999 } }),
+      api.get('/departments/', { params: { page_size: 9999 } }),
+      api.get('/positions/', { params: { page_size: 9999 } }),
+      api.get('/checkin-locations/', { params: { page_size: 9999 } })
     ])
     // 兼容两种返回：直接对象 或 { success: true, data: {...} }
     employee.value = empRes.data?.data || empRes.data
