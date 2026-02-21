@@ -80,6 +80,15 @@ class Permissions:
     REPORT_SALARY = 'report.salary'           # 薪资报表
     REPORT_LEAVE = 'report.leave'             # 请假报表
 
+    # -------- BI 报表 --------
+    BI_VIEW = 'bi.view'                       # 查看BI报表
+    BI_DEPARTMENT_COST = 'bi.department_cost'  # 部门人力成本分析
+    BI_ATTENDANCE_HEAT = 'bi.attendance_heat'  # 考勤热力图
+    BI_TURNOVER = 'bi.turnover'               # 人员流动分析
+    BI_SALARY_RANGE = 'bi.salary_range'       # 薪资分布分析
+    BI_LEAVE_BALANCE = 'bi.leave_balance'     # 假期余额分析
+    BI_DAILY_ATTENDANCE = 'bi.daily_attendance' # 每日出勤趋势
+
     # -------- 系统管理 --------
     SYSTEM_VIEW = 'system.view'               # 查看系统设置
     SYSTEM_LOG = 'system.log'                 # 查看系统日志
@@ -196,6 +205,15 @@ PERMISSION_GROUPS = {
         (Permissions.REPORT_SALARY, '薪资报表', '查看薪资统计报表'),
         (Permissions.REPORT_LEAVE, '请假报表', '查看请假统计报表'),
     ],
+    'BI 报表': [
+        (Permissions.BI_VIEW, '查看BI报表', '访问BI报表页面'),
+        (Permissions.BI_DEPARTMENT_COST, '部门成本分析', '查看部门人力成本分析'),
+        (Permissions.BI_ATTENDANCE_HEAT, '考勤热力图', '查看考勤热力图分析'),
+        (Permissions.BI_TURNOVER, '人员流动分析', '查看人员流动趋势分析'),
+        (Permissions.BI_SALARY_RANGE, '薪资分布分析', '查看薪资区间分布分析'),
+        (Permissions.BI_LEAVE_BALANCE, '假期余额分析', '查看假期使用与余额分析'),
+        (Permissions.BI_DAILY_ATTENDANCE, '每日出勤趋势', '查看每日出勤率趋势'),
+    ],
     '系统管理': [
         (Permissions.SYSTEM_VIEW, '查看系统设置', '查看系统配置'),
         (Permissions.SYSTEM_LOG, '查看系统日志', '查看系统日志'),
@@ -265,6 +283,9 @@ DEFAULT_ROLES = {
             Permissions.DOCUMENT_VIEW, Permissions.DOCUMENT_UPLOAD,
             Permissions.DOCUMENT_MANAGE,
             Permissions.REPORT_VIEW, Permissions.REPORT_EXPORT,
+            Permissions.BI_VIEW, Permissions.BI_DEPARTMENT_COST, Permissions.BI_ATTENDANCE_HEAT,
+            Permissions.BI_TURNOVER, Permissions.BI_SALARY_RANGE, Permissions.BI_LEAVE_BALANCE,
+            Permissions.BI_DAILY_ATTENDANCE,
             Permissions.USER_VIEW,
             Permissions.ONBOARDING_VIEW_ALL, Permissions.ONBOARDING_APPROVE, Permissions.ONBOARDING_REJECT,
             Permissions.RESIGNATION_VIEW_ALL, Permissions.RESIGNATION_APPROVE,
@@ -284,6 +305,7 @@ DEFAULT_ROLES = {
             Permissions.EXPENSE_VIEW_ALL, Permissions.EXPENSE_APPROVE,
             Permissions.DOCUMENT_VIEW, Permissions.DOCUMENT_UPLOAD,
             Permissions.REPORT_VIEW,
+            Permissions.BI_VIEW,
             Permissions.RESIGNATION_VIEW_ALL, Permissions.RESIGNATION_APPROVE,
         ],
     },

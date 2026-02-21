@@ -237,7 +237,7 @@
               <RouterLink to="/reports" class="submenu-item">
                 <span>大数据报表</span>
               </RouterLink>
-              <RouterLink to="/bi" class="submenu-item">
+              <RouterLink to="/bi" class="submenu-item" v-if="canViewBI">
                 <span>BI 报表</span>
               </RouterLink>
             </div>
@@ -560,7 +560,10 @@ const canApproveExpense = computed(() =>
   isAdmin() || hasPermission(Permissions.EXPENSE_APPROVE)
 );
 const canViewReports = computed(() =>
-  isAdmin() || hasPermission(Permissions.REPORT_VIEW)
+  isAdmin() || hasPermission(Permissions.REPORT_VIEW) || hasPermission(Permissions.BI_VIEW)
+);
+const canViewBI = computed(() =>
+  isAdmin() || hasPermission(Permissions.BI_VIEW)
 );
 const canViewSystem = computed(() =>
   isAdmin() || hasPermission(Permissions.SYSTEM_VIEW)

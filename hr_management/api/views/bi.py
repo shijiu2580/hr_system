@@ -15,7 +15,7 @@ from ...rbac import Permissions
 class BIDepartmentCostAPIView(views.APIView):
     """部门人力成本分析：各部门薪资总额、人均薪资、占比"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
-    rbac_perms = [Permissions.REPORT_SALARY]
+    rbac_perms = [Permissions.BI_DEPARTMENT_COST]
 
     def _get_all_descendant_ids(self, dept):
         ids = [dept.id]
@@ -88,7 +88,7 @@ class BIDepartmentCostAPIView(views.APIView):
 class BIAttendanceHeatmapAPIView(views.APIView):
     """考勤热力图：按周几×时段统计打卡频次"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
-    rbac_perms = [Permissions.REPORT_ATTENDANCE]
+    rbac_perms = [Permissions.BI_ATTENDANCE_HEAT]
 
     def get(self, request):
         days = int(request.query_params.get('days', 30))
@@ -125,7 +125,7 @@ class BIAttendanceHeatmapAPIView(views.APIView):
 class BITurnoverAPIView(views.APIView):
     """员工流动率分析：月度入职/离职/净增长"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
-    rbac_perms = [Permissions.REPORT_EMPLOYEE]
+    rbac_perms = [Permissions.BI_TURNOVER]
 
     def get(self, request):
         months = int(request.query_params.get('months', 12))
@@ -188,7 +188,7 @@ class BITurnoverAPIView(views.APIView):
 class BISalaryRangeAPIView(views.APIView):
     """薪资区间分布：统计各薪资段人数"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
-    rbac_perms = [Permissions.REPORT_SALARY]
+    rbac_perms = [Permissions.BI_SALARY_RANGE]
 
     def get(self, request):
         today = timezone.now().date()
@@ -227,7 +227,7 @@ class BISalaryRangeAPIView(views.APIView):
 class BILeaveBalanceAPIView(views.APIView):
     """请假趋势与部门对比"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
-    rbac_perms = [Permissions.REPORT_LEAVE]
+    rbac_perms = [Permissions.BI_LEAVE_BALANCE]
 
     def _get_all_descendant_ids(self, dept):
         ids = [dept.id]
@@ -284,7 +284,7 @@ class BILeaveBalanceAPIView(views.APIView):
 class BIDailyAttendanceAPIView(views.APIView):
     """每日出勤率趋势（折线图用）"""
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
-    rbac_perms = [Permissions.REPORT_ATTENDANCE]
+    rbac_perms = [Permissions.BI_DAILY_ATTENDANCE]
 
     def get(self, request):
         days = int(request.query_params.get('days', 30))

@@ -123,7 +123,7 @@ const router = createRouter({
     // 系统管理（管理员）
     { path: '/system', component: System, meta: { requiresAuth: true, permissions: [Permissions.SYSTEM_VIEW] } },
     { path: '/reports', component: Reports, meta: { requiresAuth: true, permissions: [Permissions.REPORT_VIEW] } },
-    { path: '/bi', component: BIReports, meta: { requiresAuth: true, permissions: [Permissions.REPORT_VIEW] } },
+    { path: '/bi', component: BIReports, meta: { requiresAuth: true, permissions: [Permissions.BI_VIEW] } },
     { path: '/documents', component: Documents, meta: { requiresAuth: true } },
     { path: '/documents/upload', component: DocumentForm, meta: { requiresAuth: true, permissions: [Permissions.DOCUMENT_UPLOAD] } },
     { path: '/documents/:id/edit', component: DocumentForm, meta: { requiresAuth: true, permissions: [Permissions.DOCUMENT_MANAGE] } },
