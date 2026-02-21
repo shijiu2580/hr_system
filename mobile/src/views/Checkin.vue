@@ -185,6 +185,7 @@ const notes = ref('')
 // 工作日判断
 const pageLoading = ref(true)
 const isWorkday = ref(true)
+const isOvertime = ref(false)
 const holidayName = ref('')
 
 const hasCheckedIn = computed(() => !!todayRecord.value?.check_in_time)
@@ -213,8 +214,11 @@ const buttonStatusClass = computed(() => {
   return 'status-start'
 })
 
-// 是否需要填写备注
+// 是否需要填写备注（仅真正的工作日才判定迟到/早退，休息日加班打卡不需要）
 const showNotesInput = computed(() => {
+  // 休息日加班打卡不需要填原因
+  if (isOvertime.value) return false
+
   const now = new Date()
   const hours = now.getHours()
   const minutes = now.getMinutes()
@@ -225,7 +229,7 @@ const showNotesInput = computed(() => {
     return isWorkday.value && isLateTime
   }
   if (!hasCheckedOut.value) {
-    // 工作日18点前签退需要填写早退原因；休息日/节假日不判断早退
+    // 工作日18点前签退需要填写早退原因
     return isWorkday.value && hours < 18
   }
   return false
@@ -269,6 +273,7 @@ function showOvertimeConfirm() {
     title: '加班打卡',
     message: '今日为休息日，确定要进行加班打卡吗？',
   }).then(() => {
+    isOvertime.value = true  // 标记为加班打卡
     isWorkday.value = true  // 临时设为工作日以显示打卡界面
   }).catch(() => {})
 }
