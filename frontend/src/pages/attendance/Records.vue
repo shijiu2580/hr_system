@@ -367,8 +367,8 @@ function updateClock() {
 async function handleCheckIn() {
   const now = new Date();
   const hours = now.getHours();
-  // 工作日9:00-18:00之间签到算迟到，需要填原因；休息日/节假日不判断迟到（算加班签到）
-  const isLate = isWorkday.value && hours >= 9 && hours < 18;
+  // 工作日9:00后签到算迟到，需要填原因；休息日/节假日不判断迟到（算加班签到）
+  const isLate = isWorkday.value && hours >= 9;
 
   if (isLate) {
     // 迟到需要填写原因
@@ -417,7 +417,8 @@ async function doCheckIn(notes) {
       showMessage('error', resp.error?.message || '签到失败');
     }
   } catch (e) {
-    showMessage('error', '签到失败：' + (e.message || '网络错误'));
+    const msg = e.response?.data?.error?.message || e.response?.data?.message || e.message || '网络错误';
+    showMessage('error', '签到失败：' + msg);
   }
   punching.value = false;
 }
@@ -433,7 +434,8 @@ async function doCheckOut(notes) {
       showMessage('error', resp.error?.message || '签退失败');
     }
   } catch (e) {
-    showMessage('error', '签退失败：' + (e.message || '网络错误'));
+    const msg = e.response?.data?.error?.message || e.response?.data?.message || e.message || '网络错误';
+    showMessage('error', '签退失败：' + msg);
   }
   punching.value = false;
 }
@@ -449,7 +451,8 @@ async function doUpdateCheckOut() {
       showMessage('error', resp.error?.message || '更新失败');
     }
   } catch (e) {
-    showMessage('error', '更新失败：' + (e.message || '网络错误'));
+    const msg = e.response?.data?.error?.message || e.response?.data?.message || e.message || '网络错误';
+    showMessage('error', '更新失败：' + msg);
   }
   punching.value = false;
 }
