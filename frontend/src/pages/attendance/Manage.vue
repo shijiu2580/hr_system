@@ -812,7 +812,19 @@ function getStatus(item) {
   const isLate = checkIn !== null && checkIn > 9 * 60;
   let isEarlyLeave = false;
   if (!item.check_out_time && item.check_in_time) {
-    isEarlyLeave = true;
+    // 未签退：只有超过18:00才视为早退
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    if (item.date === today) {
+      // 今天：当前时间超过18点且未签退才算早退
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      if (currentMinutes >= 18 * 60) {
+        isEarlyLeave = true;
+      }
+    } else {
+      // 历史日期：没签退视为早退
+      isEarlyLeave = true;
+    }
   } else if (checkOut !== null) {
     isEarlyLeave = checkOut < 18 * 60;
   }
