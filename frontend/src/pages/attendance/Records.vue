@@ -250,15 +250,13 @@ function getStatus(item) {
 
   const isLate = checkIn && checkIn.totalMinutes > 9 * 60;
 
-  // 检查是否早退（没签退 或 18:00前签退）
+  // 检查是否早退
   const checkOut = parseTime(item.check_out_time);
-  // 工作日：有签到但没签退，且当前时间超过18点，视为早退
   let isEarlyLeave = false;
   if (checkIn && !checkOut) {
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    // 超过18点还没签退，判定为早退
-    if (currentMinutes >= 18 * 60) {
+    // 今天未签退：不判定早退（还没下班）
+    // 历史日期未签退：视为早退
+    if (dateStr !== todayStr) {
       isEarlyLeave = true;
     }
   } else if (checkOut) {
