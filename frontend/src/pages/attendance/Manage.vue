@@ -829,7 +829,7 @@ function getStatus(item) {
   }
 
   if (isLate && isEarlyLeave) return 'late_and_early';
-  if (isLate) return 'late';
+  if (isLate) return 'late_and_normal';
   if (isEarlyLeave) return 'early_leave';
 
   return 'normal';
@@ -841,6 +841,7 @@ function getStatusLabel(item) {
     normal: '正常',
     overtime: '加班',
     late: '迟到',
+    late_and_normal: '迟到/正常',
     early_leave: '早退',
     late_and_early: '迟到/早退',
     absent: '缺勤'
@@ -891,7 +892,7 @@ async function handleExport() {
       const d = new Date(item.date);
       const weekDay = weekDays[d.getDay()];
       const status = getStatus(item);
-      const statusMap = { normal: '正常', late: '迟到', early_leave: '早退', late_and_early: '迟到/早退', absent: '缺勤' };
+      const statusMap = { normal: '正常', late: '迟到', late_and_normal: '迟到/正常', early_leave: '早退', late_and_early: '迟到/早退', absent: '缺勤' };
       return [
         item.date,
         weekDay,
@@ -1509,6 +1510,10 @@ async function doApprove(id, action, comments) {
 }
 
 .status-text.status-late {
+  color: #d97706;
+}
+
+.status-text.status-late_and_normal {
   color: #d97706;
 }
 

@@ -269,7 +269,7 @@ function getStatus(item) {
   }
 
   if (isLate && isEarlyLeave) return 'late_and_early';
-  if (isLate) return 'late';
+  if (isLate) return 'late_and_normal';
   if (isEarlyLeave) return 'early_leave';
 
   return 'normal';
@@ -282,6 +282,7 @@ function getStatusLabel(item) {
     normal: '正常',
     overtime: '加班',
     late: '迟到',
+    late_and_normal: '迟到/正常',
     early_leave: '早退',
     late_and_early: '迟到/早退',
     absent: '缺勤',
@@ -687,6 +688,7 @@ onUnmounted(() => {
 .status-text.status-normal { color: #059669; }
 .status-text.status-overtime { color: #2563eb; }
 .status-text.status-late { color: #d97706; }
+.status-text.status-late_and_normal { color: #d97706; }
 .status-text.status-early_leave { color: #d97706; }
 .status-text.status-late_and_early { color: #dc2626; }
 .status-text.status-absent { color: #dc2626; }
