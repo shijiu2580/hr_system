@@ -254,9 +254,14 @@ function getStatus(item) {
   const checkOut = parseTime(item.check_out_time);
   let isEarlyLeave = false;
   if (checkIn && !checkOut) {
-    // 今天未签退：不判定早退（还没下班）
-    // 历史日期未签退：视为早退
-    if (dateStr !== todayStr) {
+    if (dateStr === todayStr) {
+      // 今天未签退：18点前算早退，18点后算正常
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      if (currentMinutes < 18 * 60) {
+        isEarlyLeave = true;
+      }
+    } else {
+      // 历史日期未签退：视为早退
       isEarlyLeave = true;
     }
   } else if (checkOut) {

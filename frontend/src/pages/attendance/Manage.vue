@@ -812,13 +812,12 @@ function getStatus(item) {
   const isLate = checkIn !== null && checkIn > 9 * 60;
   let isEarlyLeave = false;
   if (!item.check_out_time && item.check_in_time) {
-    // 未签退：只有超过18:00才视为早退
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     if (item.date === today) {
-      // 今天：当前时间超过18点且未签退才算早退
+      // 今天未签退：18点前算早退，18点后算正常
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      if (currentMinutes >= 18 * 60) {
+      if (currentMinutes < 18 * 60) {
         isEarlyLeave = true;
       }
     } else {
