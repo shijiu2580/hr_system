@@ -253,16 +253,19 @@ function getStatus(item) {
   // 检查是否早退
   const checkOut = parseTime(item.check_out_time);
   let isEarlyLeave = false;
+  let isNotCheckedOut = false;
   if (checkIn && !checkOut) {
     // 今天未签退：还在上班，不算早退
-    // 历史日期未签退：视为早退
+    // 历史日期未签退：视为未签退
     if (dateStr !== todayStr) {
-      isEarlyLeave = true;
+      isNotCheckedOut = true;
     }
   } else if (checkOut) {
     isEarlyLeave = checkOut.totalMinutes < 18 * 60;
   }
 
+  if (isNotCheckedOut && isLate) return 'late_not_checked_out';
+  if (isNotCheckedOut) return 'not_checked_out';
   if (isLate && isEarlyLeave) return 'late_and_early';
   if (isLate) return 'late_and_normal';
   if (isEarlyLeave) return 'early_leave';
@@ -280,6 +283,8 @@ function getStatusLabel(item) {
     late_and_normal: '迟到/正常',
     early_leave: '早退',
     late_and_early: '迟到/早退',
+    not_checked_out: '未签退',
+    late_not_checked_out: '迟到/未签退',
     absent: '缺勤',
     not_checked_in: '未签到'
   };
@@ -686,6 +691,8 @@ onUnmounted(() => {
 .status-text.status-late_and_normal { color: #d97706; }
 .status-text.status-early_leave { color: #d97706; }
 .status-text.status-late_and_early { color: #dc2626; }
+.status-text.status-not_checked_out { color: #dc2626; }
+.status-text.status-late_not_checked_out { color: #dc2626; }
 .status-text.status-absent { color: #dc2626; }
 .status-text.status-not_checked_in { color: #d97706; }
 

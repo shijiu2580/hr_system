@@ -813,12 +813,14 @@ function getStatus(item) {
   let isEarlyLeave = false;
   if (!item.check_out_time && item.check_in_time) {
     // 今天未签退：还在上班，不算早退
-    // 历史日期未签退：视为早退
+    // 历史日期未签退：视为未签退
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     if (item.date !== today) {
-      isEarlyLeave = true;
+      if (isLate) return 'late_not_checked_out';
+      return 'not_checked_out';
     }
+    return isLate ? 'late_and_normal' : 'normal';
   } else if (checkOut !== null) {
     isEarlyLeave = checkOut < 18 * 60;
   }
@@ -839,6 +841,8 @@ function getStatusLabel(item) {
     late_and_normal: '迟到/正常',
     early_leave: '早退',
     late_and_early: '迟到/早退',
+    not_checked_out: '未签退',
+    late_not_checked_out: '迟到/未签退',
     absent: '缺勤'
   };
   const statusText = map[status] || '正常';
@@ -887,7 +891,7 @@ async function handleExport() {
       const d = new Date(item.date);
       const weekDay = weekDays[d.getDay()];
       const status = getStatus(item);
-      const statusMap = { normal: '正常', late: '迟到', late_and_normal: '迟到/正常', early_leave: '早退', late_and_early: '迟到/早退', absent: '缺勤' };
+      const statusMap = { normal: '正常', late: '迟到', late_and_normal: '迟到/正常', early_leave: '早退', late_and_early: '迟到/早退', not_checked_out: '未签退', late_not_checked_out: '迟到/未签退', absent: '缺勤' };
       return [
         item.date,
         weekDay,
@@ -1517,6 +1521,14 @@ async function doApprove(id, action, comments) {
 }
 
 .status-text.status-late_and_early {
+  color: #dc2626;
+}
+
+.status-text.status-not_checked_out {
+  color: #dc2626;
+}
+
+.status-text.status-late_not_checked_out {
   color: #dc2626;
 }
 
