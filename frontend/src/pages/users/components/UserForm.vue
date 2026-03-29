@@ -30,21 +30,11 @@
     <fieldset class="fieldset">
       <legend>权限设置</legend>
       <div class="grid">
-        <FormField label="管理员" :error="errors.is_staff">
-          <CustomSelect
-            v-model="model.is_staff"
-            :options="[{ value: false, label: '否' }, { value: true, label: '是' }]"
-            placeholder="选择"
-            @change="onStaffChange"
-          />
-          <span v-if="model.is_superuser && !model.is_staff" class="field-hint warning">超级管理员必须是管理员</span>
-        </FormField>
         <FormField label="超级管理员" :error="errors.is_superuser">
           <CustomSelect
             v-model="model.is_superuser"
             :options="[{ value: false, label: '否' }, { value: true, label: '是' }]"
             placeholder="选择"
-            @change="onSuperuserChange"
           />
           <span v-if="model.is_superuser" class="field-hint info">超级管理员拥有所有权限</span>
         </FormField>
@@ -53,10 +43,18 @@
     <fieldset class="fieldset">
       <legend>角色分配</legend>
       <div class="role-list">
-        <label v-for="role in roles" :key="role.id" class="role-checkbox">
-          <input type="checkbox" :value="role.id" v-model="model.role_ids" />
-          <span>{{ role.name }} ({{ role.code }})</span>
-        </label>
+        <CustomSelect
+          v-model="selectedRoleId"
+          :options="roleOptions"
+          placeholder="请选择角色"
+          searchable
+        />
+        <p class="muted" style="font-size:12px;">下拉中展示的是业务角色名称，保存后自动绑定该角色。</p>
+        <div v-if="selectedRoleInfo" class="role-intro-box">
+          <p class="role-intro-title">{{ selectedRoleInfo.title }}</p>
+          <p class="role-intro-content">{{ selectedRoleInfo.content }}</p>
+          <p class="role-intro-extra">{{ selectedRoleInfo.extra }}</p>
+        </div>
         <p v-if="!roles.length" class="muted" style="font-size:12px;">暂无可分配角色</p>
       </div>
     </fieldset>
@@ -101,10 +99,78 @@ const errors = reactive({});
 const dirty = computed(() => original.value && JSON.stringify(stripReactive(model)) !== JSON.stringify(stripReactive(original.value)));
 const isValid = computed(() => validate(false));
 
+const ROLE_META = {
+  admin: { scene: '系统总控', audience: '平台负责人', description: '维护系统配置、权限策略与关键操作。' },
+  auditor: { scene: '审计合规', audience: '风控/审计人员', description: '查看日志与报表，跟踪关键操作记录。' },
+  department_manager: { scene: '部门管理', audience: '业务部门负责人', description: '处理部门审批、团队人员与日常事务。' },
+  dept_manager: { scene: '部门管理', audience: '业务部门负责人', description: '处理部门审批、团队人员与日常事务。' },
+  employees: { scene: '员工自助', audience: '普通员工', description: '用于考勤、请假与个人资料维护。' },
+  finance: { scene: '财务结算', audience: '财务人员', description: '负责薪资发放、报销审核与财务导出。' },
+  hr_manager: { scene: '人事管理', audience: 'HR 管理层', description: '覆盖人事全流程与跨模块审批。' },
+  hr_staff: { scene: '人事执行', audience: 'HR 专员', description: '处理员工档案、流程跟进与日常维护。' },
+};
+
+const roleOptions = computed(() => {
+  const opts = (props.roles || []).map((role) => ({
+    value: String(role.id),
+    label: `${role.name} - ${role.description || ROLE_META[role.code]?.description || '按岗位职责授权'}`,
+  }));
+  return opts;
+});
+
+const selectedRoleInfo = computed(() => {
+  const id = selectedRoleId.value;
+  if (!id) {
+    return {
+      title: '默认角色',
+      content: '正在应用默认角色，请稍候。',
+      extra: '系统会默认选择“普通员工”。',
+    };
+  }
+  const role = (props.roles || []).find((item) => String(item.id) === id);
+  if (!role) return null;
+  const meta = ROLE_META[role.code] || {};
+  return {
+    title: `${role.name}（${meta.scene || '通用角色'}）`,
+    content: role.description || meta.description || '按岗位职责授权。',
+    extra: `适用人群：${meta.audience || '由管理员按需分配'}`,
+  };
+});
+
+const selectedRoleId = computed({
+  get() {
+    if (!model.role_ids?.length) return '';
+    return String(model.role_ids[0]);
+  },
+  set(val) {
+    if (val === '' || val === null || val === undefined) {
+      const fallbackId = getDefaultRoleId();
+      model.role_ids = fallbackId ? [fallbackId] : [];
+      return;
+    }
+    model.role_ids = [Number(val)];
+  },
+});
+
+function getDefaultRoleId() {
+  const allRoles = props.roles || [];
+  if (!allRoles.length) return null;
+  const employeeRole = allRoles.find((r) => r.code === 'employees');
+  return employeeRole ? Number(employeeRole.id) : Number(allRoles[0].id);
+}
+
+function ensureRoleSelected() {
+  if (model.role_ids?.length) return;
+  const defaultRoleId = getDefaultRoleId();
+  if (defaultRoleId) {
+    model.role_ids = [defaultRoleId];
+  }
+}
+
 function makeBlank() {
   return {
     username: '', password: '', email: '', first_name: '', last_name: '',
-    is_active: true, is_staff: false, is_superuser: false, role_ids: []
+    is_active: true, is_superuser: false, role_ids: []
   };
 }
 
@@ -118,8 +184,13 @@ watch(() => props.value, (v) => {
     Object.assign(model, makeBlank());
     original.value = JSON.parse(JSON.stringify(stripReactive(model)));
   }
+  ensureRoleSelected();
   validate(false);
 }, { immediate: true });
+
+watch(() => props.roles, () => {
+  ensureRoleSelected();
+}, { immediate: true, deep: true });
 
 function pickEditable(u) {
   return {
@@ -129,24 +200,9 @@ function pickEditable(u) {
     first_name: u.first_name || '',
     last_name: u.last_name || '',
     is_active: Boolean(u.is_active),
-    is_staff: Boolean(u.is_staff),
     is_superuser: Boolean(u.is_superuser),
     role_ids: (u.roles || []).map(r => r.id)
   };
-}
-
-// 权限联动：设置超级管理员时自动设置为管理员
-function onSuperuserChange() {
-  if (model.is_superuser) {
-    model.is_staff = true;
-  }
-}
-
-// 权限联动：取消管理员时自动取消超级管理员
-function onStaffChange() {
-  if (!model.is_staff) {
-    model.is_superuser = false;
-  }
 }
 
 async function onSubmit() {
@@ -158,6 +214,8 @@ async function onSubmit() {
   }
   try {
     const payload = JSON.parse(JSON.stringify(stripReactive(model)));
+    // 不再提供独立管理员概念：只有超管才携带 is_staff=true。
+    payload.is_staff = Boolean(payload.is_superuser);
     // 编辑时如果密码为空则移除该字段
     if (isEdit.value && !payload.password) {
       delete payload.password;
@@ -225,10 +283,16 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 button[type=button] { background: #6b7280; }
 .error { color: #dc2626; font-size: 12px; }
 .dirty-tip { font-size: 11px; color: #6b7280; }
-.role-list { display: flex; flex-direction: column; gap: .5rem; }
-.role-checkbox { display: flex; align-items: center; gap: .5rem; font-size: 13px; padding: .4rem .6rem; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer; transition: .15s; }
-.role-checkbox:hover { background: #f9fafb; border-color: #3b82f6; }
-.role-checkbox input[type=checkbox] { width: auto; }
+.role-list { display: flex; flex-direction: column; gap: .6rem; }
+.role-intro-box {
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  border-radius: 8px;
+  padding: .55rem .65rem;
+}
+.role-intro-title { margin: 0; font-size: 13px; color: #1e3a8a; font-weight: 700; }
+.role-intro-content { margin: .25rem 0 0; font-size: 12px; color: #1f2937; }
+.role-intro-extra { margin: .2rem 0 0; font-size: 12px; color: #334155; }
 .form-field { display: flex; flex-direction: column; }
 .form-field.invalid input, .form-field.invalid select { border-color: #dc2626; background: #fef2f2; }
 .field-hint { font-size: 11px; margin-top: 4px; padding: 2px 6px; border-radius: 4px; }

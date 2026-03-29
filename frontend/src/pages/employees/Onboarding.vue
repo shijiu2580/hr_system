@@ -376,7 +376,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/utils/api'
 import CustomSelect from '@/components/CustomSelect.vue'
 import DeptTreeSelect from '@/components/DeptTreeSelect.vue'
@@ -436,6 +436,16 @@ const positionOptions = computed(() => {
     { label: '请选择职位', value: '' },
     ...positions.value.map(p => ({ label: p.name, value: p.id }))
   ]
+})
+
+const positionDepartmentMap = computed(() => {
+  const map = new Map()
+  for (const position of positions.value || []) {
+    if (position?.id && position?.department?.id) {
+      map.set(String(position.id), String(position.department.id))
+    }
+  }
+  return map
 })
 
 const toast = ref({ show: false, message: '', type: 'success' })
@@ -579,6 +589,14 @@ function approveOnboard(row) {
   approveVisible.value = true
   detailVisible.value = false
 }
+
+watch(() => approveForm.value.position_id, (positionId) => {
+  if (positionId === '' || positionId == null) return
+  const departmentId = positionDepartmentMap.value.get(String(positionId))
+  if (departmentId) {
+    approveForm.value.department_id = departmentId
+  }
+})
 
 async function confirmApprove() {
   if (!approveForm.value.department_id || !approveForm.value.position_id || !approveForm.value.hire_date) {

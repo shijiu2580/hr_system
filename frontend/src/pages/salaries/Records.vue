@@ -207,7 +207,7 @@
 
     <!-- 底部 -->
     <div class="table-footer">
-      <span class="total-count">共{{ filtered.length }}条</span>
+      <span class="total-count">共{{ totalCount }}条</span>
       <div class="pagination">
         <span class="page-size-label">每页</span>
         <CustomSelect
@@ -548,13 +548,14 @@ async function confirmDisburse() {
   } finally {
     disbursing.value = false;
     // 无论成功失败，都重新加载数据
-    fetchData().catch(() => {});
+    load().catch(() => {});
   }
 }
 
 // 数据状态
 const loading = ref(false);
 const records = ref([]);
+const totalCount = ref(0);
 const message = ref(null);
 const detailItem = ref(null);
 const exporting = ref(false);
@@ -773,37 +774,6 @@ const lastMonth = computed(() => {
 const filtered = computed(() => {
   let result = [...records.value];
 
-  // 员工筛选
-  if (filterEmployee.value) {
-    result = result.filter(r => r.employee?.id === filterEmployee.value);
-  }
-
-  // 默认模式：显示上个月已发放 + 所有未发放
-  if (showLastMonthAndUnpaid.value && !filterYear.value && !filterMonth.value && !filterStatus.value) {
-    const { year: lastY, month: lastM } = lastMonth.value;
-    result = result.filter(r => {
-      // 未发放的全部显示
-      if (!r.paid) return true;
-      // 已发放的只显示上个月
-      return r.year === lastY && r.month === lastM;
-    });
-  } else {
-    // 手动筛选模式
-    if (filterYear.value) {
-      result = result.filter(r => String(r.year) === filterYear.value);
-    }
-    if (filterMonth.value) {
-      result = result.filter(r => String(r.month) === filterMonth.value);
-    }
-    if (filterStatus.value) {
-      if (filterStatus.value === 'paid') {
-        result = result.filter(r => r.paid);
-      } else if (filterStatus.value === 'unpaid') {
-        result = result.filter(r => !r.paid);
-      }
-    }
-  }
-
   // 排序
   if (sortField.value) {
     result.sort((a, b) => {
@@ -829,13 +799,12 @@ const filtered = computed(() => {
 
 // 总页数
 const totalPages = computed(() => {
-  return Math.max(1, Math.ceil(filtered.value.length / pageSize.value));
+  return Math.max(1, Math.ceil(totalCount.value / pageSize.value));
 });
 
 // 分页后的数据
 const paged = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  return filtered.value.slice(start, start + pageSize.value);
+  return filtered.value;
 });
 
 // 排序切换
@@ -988,22 +957,35 @@ function showMessage(type, text) {
   }, 3000);
 }
 
-// 加载数据
+async function loadEmployees() {
+  const empRes = await api.get('/employees/', { params: { page_size: 500 } });
+  employeeOptions.value = (empRes.data.results || empRes.data || []).map(e => ({
+    id: e.id,
+    name: e.name,
+    employee_id: e.employee_id || '-'
+  }));
+}
+
+// 加载数据（服务端分页）
 async function load() {
   loading.value = true;
   try {
-    const [salaryRes, empRes] = await Promise.all([
-      api.get('/salaries/', { params: { page_size: 9999 } }),
-      api.get('/employees/', { params: { page_size: 9999 } })
-    ]);
-    records.value = salaryRes.data.results || salaryRes.data || [];
-    employeeOptions.value = (empRes.data.results || empRes.data || []).map(e => ({
-      id: e.id,
-      name: e.name,
-      employee_id: e.employee_id || '-'
-    }));
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value,
+    };
 
-    // 默认显示上个月已发放 + 所有未发放（不设置筛选条件）
+    if (filterEmployee.value) params.employee = filterEmployee.value;
+    if (filterYear.value) params.year = filterYear.value;
+    if (filterMonth.value) params.month = filterMonth.value;
+    if (filterStatus.value === 'paid') params.paid = 'true';
+    if (filterStatus.value === 'unpaid') params.paid = 'false';
+
+    const salaryRes = await api.get('/salaries/', { params });
+    const list = salaryRes.data.results || salaryRes.data || [];
+
+    records.value = list;
+    totalCount.value = Number(salaryRes.data.count || list.length || 0);
   } catch (err) {
     showMessage('error', '加载失败');
   } finally {
@@ -1012,7 +994,8 @@ async function load() {
 }
 
 onMounted(() => {
-  load();
+  showLastMonthAndUnpaid.value = false;
+  Promise.all([load(), loadEmployees()]).catch(() => {});
   document.addEventListener('click', handleClickOutside);
 });
 
@@ -1025,6 +1008,17 @@ watch([filterYear, filterMonth, filterStatus], ([year, month, status]) => {
   if (year || month || status) {
     showLastMonthAndUnpaid.value = false;
   }
+  currentPage.value = 1;
+  load();
+});
+
+watch([filterEmployee], () => {
+  currentPage.value = 1;
+  load();
+});
+
+watch([currentPage, pageSize], () => {
+  load();
 });
 
 // 重置筛选（恢复默认模式）
@@ -1034,8 +1028,9 @@ function resetFilters() {
   filterStatus.value = '';
   filterEmployee.value = null;
   employeeSearchText.value = '';
-  showLastMonthAndUnpaid.value = true;
+  showLastMonthAndUnpaid.value = false;
   currentPage.value = 1;
+  load();
 }
 </script>
 

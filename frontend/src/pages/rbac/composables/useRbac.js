@@ -28,6 +28,10 @@ const savingPerm = ref(false);
 const deletingPermId = ref(null);
 const permForm = ref({ key: '', name: '', description: '' });
 
+// 删除确认弹框状态
+const showDeleteConfirm = ref(false);
+const deleteContext = ref({ type: '', id: null, name: '' });
+
 export function useRbac() {
   // 数据加载
   async function loadRoles() {
@@ -156,8 +160,7 @@ export function useRbac() {
     }
   }
 
-  async function removeRole(r) {
-    if (!confirm(`确认删除角色 "${r.name}"?`)) return;
+  async function performRemoveRole(r) {
     deletingRoleId.value = r.id;
     error.value = '';
     success.value = '';
@@ -231,8 +234,7 @@ export function useRbac() {
     }
   }
 
-  async function removePerm(p) {
-    if (!confirm(`确认删除权限 "${p.name}"?`)) return;
+  async function performRemovePerm(p) {
     deletingPermId.value = p.id;
     error.value = '';
     success.value = '';
@@ -249,6 +251,34 @@ export function useRbac() {
     } finally {
       deletingPermId.value = null;
     }
+  }
+
+  function removeRole(r) {
+    deleteContext.value = { type: 'role', id: r.id, name: r.name };
+    showDeleteConfirm.value = true;
+  }
+
+  function removePerm(p) {
+    deleteContext.value = { type: 'perm', id: p.id, name: p.name };
+    showDeleteConfirm.value = true;
+  }
+
+  function cancelDeleteConfirm() {
+    showDeleteConfirm.value = false;
+    deleteContext.value = { type: '', id: null, name: '' };
+  }
+
+  async function confirmDelete() {
+    const ctx = deleteContext.value;
+    if (!ctx?.id || !ctx?.type) return;
+
+    showDeleteConfirm.value = false;
+    if (ctx.type === 'role') {
+      await performRemoveRole({ id: ctx.id, name: ctx.name });
+    } else if (ctx.type === 'perm') {
+      await performRemovePerm({ id: ctx.id, name: ctx.name });
+    }
+    deleteContext.value = { type: '', id: null, name: '' };
   }
 
   // 辅助函数
@@ -273,21 +303,23 @@ export function useRbac() {
     loadingRoles,
     loadingPerms,
     loadingUsers,
-    
+
     // 角色表单
     showRoleForm,
     editingRole,
     savingRole,
     deletingRoleId,
     roleForm,
-    
+
     // 权限表单
     showPermForm,
     editingPerm,
     savingPerm,
     deletingPermId,
     permForm,
-    
+    showDeleteConfirm,
+    deleteContext,
+
     // 方法
     loadRoles,
     loadPerms,
@@ -305,6 +337,8 @@ export function useRbac() {
     cancelPerm,
     submitPerm,
     removePerm,
+    confirmDelete,
+    cancelDeleteConfirm,
     getRoleUserCount,
     getPermRoleCount
   };

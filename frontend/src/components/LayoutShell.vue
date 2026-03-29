@@ -11,7 +11,7 @@
         <span class="logo-text"> 系统</span>
       </h1>
 
-      <div class="nav-group">
+      <div class="nav-group" @click.capture="handleSidebarNavClick">
         <RouterLink to="/" class="nav-item">
           <span class="icon-box">
             <img class="icon" src="/icons/dashboard.svg" alt="" />
@@ -25,13 +25,20 @@
             class="nav-item nav-item-parent"
             :class="{ 'has-active': isEmployeesActive }"
             @mouseenter="preloadSubmenu('employees')"
-            @click="toggleSubmenu('employees')"
           >
-            <span class="icon-box">
-              <img class="icon" src="/icons/employees.svg" alt="" />
-            </span>
-            <span class="text-box">员工</span>
-            <span class="arrow-box" v-show="!sidebarCollapsed">
+            <button type="button" class="nav-item-main" @click="navigateToSection('/employees', 'employees')">
+              <span class="icon-box">
+                <img class="icon" src="/icons/employees.svg" alt="" />
+              </span>
+              <span class="text-box">员工</span>
+            </button>
+            <button
+              v-show="!sidebarCollapsed"
+              type="button"
+              class="arrow-box toggle-button"
+              :aria-expanded="submenuOpen.employees ? 'true' : 'false'"
+              @click.stop="toggleSubmenu('employees')"
+            >
               <svg
                 width="12"
                 height="12"
@@ -41,10 +48,10 @@
               >
                 <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/>
               </svg>
-            </span>
+            </button>
           </div>
               <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.employees && !sidebarCollapsed">
+            <div :class="['submenu', { 'submenu-hover-reveal': submenuRevealMode === 'hover' }]" v-show="submenuOpen.employees && !sidebarCollapsed">
               <RouterLink to="/employees/manage" class="submenu-item" v-if="canManageEmployees">
                 <span>员工管理</span>
               </RouterLink>
@@ -65,13 +72,20 @@
             class="nav-item nav-item-parent"
             :class="{ 'has-active': isAttendanceActive }"
             @mouseenter="preloadSubmenu('attendance')"
-            @click="toggleSubmenu('attendance')"
           >
-            <span class="icon-box">
-              <img class="icon" src="/icons/attendance.svg" alt="" />
-            </span>
-            <span class="text-box">考勤</span>
-            <span class="arrow-box" v-show="!sidebarCollapsed">
+            <button type="button" class="nav-item-main" @click="navigateToSection('/attendance', 'attendance')">
+              <span class="icon-box">
+                <img class="icon" src="/icons/attendance.svg" alt="" />
+              </span>
+              <span class="text-box">考勤</span>
+            </button>
+            <button
+              v-show="!sidebarCollapsed"
+              type="button"
+              class="arrow-box toggle-button"
+              :aria-expanded="submenuOpen.attendance ? 'true' : 'false'"
+              @click.stop="toggleSubmenu('attendance')"
+            >
               <svg
                 width="12"
                 height="12"
@@ -81,10 +95,10 @@
               >
                 <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/>
               </svg>
-            </span>
+            </button>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.attendance && !sidebarCollapsed">
+            <div :class="['submenu', { 'submenu-hover-reveal': submenuRevealMode === 'hover' }]" v-show="submenuOpen.attendance && !sidebarCollapsed">
               <RouterLink to="/attendance/records" class="submenu-item">
                 <span>考勤记录</span>
               </RouterLink>
@@ -111,13 +125,20 @@
             class="nav-item nav-item-parent"
             :class="{ 'has-active': isLeavesActive }"
             @mouseenter="preloadSubmenu('leaves')"
-            @click="toggleSubmenu('leaves')"
           >
-            <span class="icon-box">
-              <img class="icon" src="/icons/leaves.svg" alt="" />
-            </span>
-            <span class="text-box">请假</span>
-            <span class="arrow-box" v-show="!sidebarCollapsed">
+            <button type="button" class="nav-item-main" @click="navigateToSection('/leaves', 'leaves')">
+              <span class="icon-box">
+                <img class="icon" src="/icons/leaves.svg" alt="" />
+              </span>
+              <span class="text-box">请假</span>
+            </button>
+            <button
+              v-show="!sidebarCollapsed"
+              type="button"
+              class="arrow-box toggle-button"
+              :aria-expanded="submenuOpen.leaves ? 'true' : 'false'"
+              @click.stop="toggleSubmenu('leaves')"
+            >
               <svg
                 width="12"
                 height="12"
@@ -127,10 +148,10 @@
               >
                 <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/>
               </svg>
-            </span>
+            </button>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.leaves && !sidebarCollapsed">
+            <div :class="['submenu', { 'submenu-hover-reveal': submenuRevealMode === 'hover' }]" v-show="submenuOpen.leaves && !sidebarCollapsed">
               <RouterLink to="/leaves/apply" class="submenu-item">
                 <span>请假申请</span>
               </RouterLink>
@@ -151,13 +172,20 @@
             class="nav-item nav-item-parent"
             :class="{ 'has-active': isSalariesActive }"
             @mouseenter="preloadSubmenu('salaries')"
-            @click="toggleSubmenu('salaries')"
           >
-            <span class="icon-box">
-              <img class="icon" src="/icons/salaries.svg" alt="" />
-            </span>
-            <span class="text-box">薪资</span>
-            <span class="arrow-box" v-show="!sidebarCollapsed">
+            <button type="button" class="nav-item-main" @click="navigateToSection('/salaries', 'salaries')">
+              <span class="icon-box">
+                <img class="icon" src="/icons/salaries.svg" alt="" />
+              </span>
+              <span class="text-box">薪资</span>
+            </button>
+            <button
+              v-show="!sidebarCollapsed"
+              type="button"
+              class="arrow-box toggle-button"
+              :aria-expanded="submenuOpen.salaries ? 'true' : 'false'"
+              @click.stop="toggleSubmenu('salaries')"
+            >
               <svg
                 width="12"
                 height="12"
@@ -167,10 +195,10 @@
               >
                 <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/>
               </svg>
-            </span>
+            </button>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.salaries && !sidebarCollapsed">
+            <div :class="['submenu', { 'submenu-hover-reveal': submenuRevealMode === 'hover' }]" v-show="submenuOpen.salaries && !sidebarCollapsed">
               <RouterLink to="/salaries" class="submenu-item" v-if="canViewAllSalary">
                 <span>薪资管理</span>
               </RouterLink>
@@ -214,13 +242,20 @@
             class="nav-item nav-item-parent"
             :class="{ 'has-active': isReportsActive }"
             @mouseenter="preloadSubmenu('reports')"
-            @click="toggleSubmenu('reports')"
           >
-            <span class="icon-box">
-              <img class="icon" src="/icons/reports.svg" alt="" />
-            </span>
-            <span class="text-box">报表</span>
-            <span class="arrow-box" v-show="!sidebarCollapsed">
+            <button type="button" class="nav-item-main" @click="navigateToSection('/reports', 'reports')">
+              <span class="icon-box">
+                <img class="icon" src="/icons/reports.svg" alt="" />
+              </span>
+              <span class="text-box">报表</span>
+            </button>
+            <button
+              v-show="!sidebarCollapsed"
+              type="button"
+              class="arrow-box toggle-button"
+              :aria-expanded="submenuOpen.reports ? 'true' : 'false'"
+              @click.stop="toggleSubmenu('reports')"
+            >
               <svg
                 width="12"
                 height="12"
@@ -230,10 +265,10 @@
               >
                 <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/>
               </svg>
-            </span>
+            </button>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.reports && !sidebarCollapsed">
+            <div :class="['submenu', { 'submenu-hover-reveal': submenuRevealMode === 'hover' }]" v-show="submenuOpen.reports && !sidebarCollapsed">
               <RouterLink to="/reports" class="submenu-item">
                 <span>大数据报表</span>
               </RouterLink>
@@ -251,13 +286,20 @@
             class="nav-item nav-item-parent"
             :class="{ 'has-active': isResignationActive }"
             @mouseenter="preloadSubmenu('resignation')"
-            @click="toggleSubmenu('resignation')"
           >
-            <span class="icon-box">
-              <img class="icon" src="/icons/resignation.svg" alt="" />
-            </span>
-            <span class="text-box">离职申请</span>
-            <span class="arrow-box" v-show="!sidebarCollapsed">
+            <button type="button" class="nav-item-main" @click="navigateToSection('/resignation', 'resignation')">
+              <span class="icon-box">
+                <img class="icon" src="/icons/resignation.svg" alt="" />
+              </span>
+              <span class="text-box">离职申请</span>
+            </button>
+            <button
+              v-show="!sidebarCollapsed"
+              type="button"
+              class="arrow-box toggle-button"
+              :aria-expanded="submenuOpen.resignation ? 'true' : 'false'"
+              @click.stop="toggleSubmenu('resignation')"
+            >
               <svg
                 width="12"
                 height="12"
@@ -267,10 +309,10 @@
               >
                 <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"/>
               </svg>
-            </span>
+            </button>
           </div>
           <transition name="submenu">
-            <div class="submenu" v-show="submenuOpen.resignation && !sidebarCollapsed">
+            <div :class="['submenu', { 'submenu-hover-reveal': submenuRevealMode === 'hover' }]" v-show="submenuOpen.resignation && !sidebarCollapsed">
               <RouterLink to="/resignation/progress" class="submenu-item">
                 <span>离职进度</span>
               </RouterLink>
@@ -443,7 +485,8 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter, useRoute } from 'vue-router';
 import { hasPermission, isAdmin, Permissions } from '../utils/permissions';
-import { preloadSubmenu } from '../router';
+import { preloadCommonRoutes, preloadSubmenu } from '../router';
+import { refreshRouteView } from '../utils/routeRefresh';
 import api from '../utils/api';
 
 const auth = useAuthStore();
@@ -455,6 +498,14 @@ const isMobile = ref(false);
 const sidebarOpen = ref(false);
 const collapsed = ref(true);
 const showNotifications = ref(false);
+const submenuRevealMode = ref('instant');
+const SIDEBAR_HOVER_OPEN_DELAY = 60;
+const SIDEBAR_HOVER_CLOSE_DELAY = 170;
+const SIDEBAR_COLLAPSE_AFTER_SUBMENU_MS = 60;
+let hoverOpenTimer = null;
+let hoverCloseTimer = null;
+let hoverSubmenuOpenTimer = null;
+let sidebarCollapseTimer = null;
 const pendingItems = ref({
   attendance: 0,      // 补签审批
   leave: 0,           // 请假审批
@@ -601,23 +652,98 @@ const sidebarCollapsed = computed(() => {
   return collapsed.value;
 });
 
+function clearHoverTimers() {
+  if (hoverOpenTimer) {
+    clearTimeout(hoverOpenTimer);
+    hoverOpenTimer = null;
+  }
+  if (hoverCloseTimer) {
+    clearTimeout(hoverCloseTimer);
+    hoverCloseTimer = null;
+  }
+  if (hoverSubmenuOpenTimer) {
+    clearTimeout(hoverSubmenuOpenTimer);
+    hoverSubmenuOpenTimer = null;
+  }
+  if (sidebarCollapseTimer) {
+    clearTimeout(sidebarCollapseTimer);
+    sidebarCollapseTimer = null;
+  }
+}
+
+function openSubmenuByName(name, revealMode = 'instant') {
+  submenuRevealMode.value = revealMode;
+
+  if (!name) {
+    closeAllSubmenus();
+    return;
+  }
+
+  Object.keys(submenuOpen.value).forEach(key => {
+    submenuOpen.value[key] = key === name;
+  });
+  preloadSubmenu(name);
+}
+
+function scheduleSidebarOpen() {
+  if (hoverCloseTimer) {
+    clearTimeout(hoverCloseTimer);
+    hoverCloseTimer = null;
+  }
+  if (!collapsed.value) return;
+
+  hoverOpenTimer = setTimeout(() => {
+    collapsed.value = false;
+
+    // 悬停展开时按与点击一级菜单相同的节奏触发二级菜单动画
+    hoverSubmenuOpenTimer = setTimeout(() => {
+      openSubmenuByName(getActiveSubmenuName(), 'hover');
+      hoverSubmenuOpenTimer = null;
+    }, 24);
+
+    hoverOpenTimer = null;
+  }, SIDEBAR_HOVER_OPEN_DELAY);
+}
+
+function scheduleSidebarClose() {
+  if (hoverOpenTimer) {
+    clearTimeout(hoverOpenTimer);
+    hoverOpenTimer = null;
+  }
+  if (collapsed.value) return;
+
+  hoverCloseTimer = setTimeout(() => {
+    const hasOpenSubmenu = Object.values(submenuOpen.value).some(v => v);
+    closeAllSubmenus();
+
+    if (hasOpenSubmenu) {
+      sidebarCollapseTimer = setTimeout(() => {
+        collapsed.value = true;
+        sidebarCollapseTimer = null;
+      }, SIDEBAR_COLLAPSE_AFTER_SUBMENU_MS);
+    } else {
+      collapsed.value = true;
+    }
+
+    hoverCloseTimer = null;
+  }, SIDEBAR_HOVER_CLOSE_DELAY);
+}
+
 // 悬停折叠逻辑
 function hoverIn() {
   if (isMobile.value) return;
-  collapsed.value = false;
+  scheduleSidebarOpen();
 }
 
 function hoverOut() {
   if (isMobile.value) return;
-  // 子菜单展开时不折叠，等用户点击子菜单项导航后再收起
-  const hasOpenSubmenu = Object.values(submenuOpen.value).some(v => v);
-  if (hasOpenSubmenu) return;
-  collapsed.value = true;
+  scheduleSidebarClose();
 }
 
 // 点击内容区时收起侧边栏和子菜单
 function collapseIfOpen() {
   if (isMobile.value) return;
+  clearHoverTimers();
   const hasOpenSubmenu = Object.values(submenuOpen.value).some(v => v);
   if (hasOpenSubmenu || !collapsed.value) {
     closeAllSubmenus();
@@ -645,6 +771,13 @@ const submenuOpen = ref({
 });
 
 function toggleSubmenu(name) {
+  clearHoverTimers();
+  submenuRevealMode.value = 'instant';
+
+  if (!isMobile.value) {
+    collapsed.value = false;
+  }
+
   const willOpen = !submenuOpen.value[name];
   // 先关闭其他子菜单
   Object.keys(submenuOpen.value).forEach(key => {
@@ -661,7 +794,80 @@ function toggleSubmenu(name) {
   }
 }
 
+function getActiveSubmenuName(path = route.path) {
+  if (path.startsWith('/employees')) return 'employees';
+  if (path.startsWith('/attendance')) return 'attendance';
+  if (path.startsWith('/leaves')) return 'leaves';
+  if (path.startsWith('/salaries')) return 'salaries';
+  if (path.startsWith('/resignation')) return 'resignation';
+  if (path.startsWith('/reports') || path.startsWith('/bi')) return 'reports';
+  return null;
+}
+
+function syncSubmenuWithRoute() {
+  const activeName = getActiveSubmenuName();
+  Object.keys(submenuOpen.value).forEach(key => {
+    submenuOpen.value[key] = key === activeName && !sidebarCollapsed.value;
+  });
+}
+
+function navigateToSection(path, name) {
+  showNotifications.value = false;
+  clearHoverTimers();
+  submenuRevealMode.value = 'instant';
+  preloadSubmenu(name);
+
+  if (!isMobile.value) {
+    collapsed.value = false;
+    openSubmenuByName(name, 'instant');
+  }
+
+  if (route.path !== path) {
+    router.push(path);
+    return;
+  }
+
+  api.clearCache();
+  refreshRouteView(route.fullPath);
+
+  if (isMobile.value) {
+    closeSidebar();
+  }
+}
+
+function handleSidebarNavClick(event) {
+  if (event.target.closest('.submenu-item')) {
+    // 点击二级菜单时禁用文字特效，只保留激活框变化
+    submenuRevealMode.value = 'instant';
+  }
+
+  const link = event.target.closest('a[href]');
+  if (!link) return;
+
+  let targetUrl;
+  try {
+    targetUrl = new URL(link.href, window.location.origin);
+  } catch (_) {
+    return;
+  }
+
+  const targetKey = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+  if (targetUrl.origin !== window.location.origin || targetKey !== route.fullPath) {
+    return;
+  }
+
+  event.preventDefault();
+  showNotifications.value = false;
+  api.clearCache();
+  refreshRouteView(route.fullPath);
+
+  if (isMobile.value) {
+    closeSidebar();
+  }
+}
+
 function closeAllSubmenus() {
+  submenuRevealMode.value = 'instant';
   Object.keys(submenuOpen.value).forEach(key => {
     submenuOpen.value[key] = false;
   });
@@ -676,6 +882,42 @@ const isResignationActive = computed(() => route.path.startsWith('/resignation')
 const isReportsActive = computed(() => route.path.startsWith('/reports') || route.path.startsWith('/bi'));
 
 let pendingInterval = null;
+let warmupStarted = false;
+
+function scheduleIdleWork(task) {
+  if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(() => task(), { timeout: 1500 });
+    return;
+  }
+  window.setTimeout(task, 250);
+}
+
+function buildWarmupGroups() {
+  const groups = ['dashboard', 'organization'];
+
+  if (canManageEmployees.value) groups.push('employees');
+  if (isAdmin() || hasPermission(Permissions.ATTENDANCE_VIEW_ALL) || hasPermission(Permissions.ATTENDANCE_APPROVE) || hasPermission(Permissions.ATTENDANCE_LOCATION)) {
+    groups.push('attendance');
+  }
+  if (isAdmin() || hasPermission(Permissions.LEAVE_VIEW) || hasPermission(Permissions.LEAVE_APPROVE) || hasPermission(Permissions.TRIP_CREATE)) {
+    groups.push('leaves');
+    groups.push('resignation');
+  }
+  if (canViewAllSalary.value || canApproveExpense.value) groups.push('salaries');
+  if (canViewReports.value) groups.push('reports');
+  if (canViewSystem.value || canViewRbac.value || canViewUsers.value) groups.push('system');
+
+  return Array.from(new Set(groups));
+}
+
+function startRouteWarmup() {
+  if (warmupStarted || !auth.ready || !auth.user) return;
+  warmupStarted = true;
+
+  scheduleIdleWork(() => {
+    preloadCommonRoutes(buildWarmupGroups());
+  });
+}
 
 // 错误处理函数（用于正确清理）
 function handleGlobalError(e) {
@@ -694,9 +936,12 @@ onMounted(() => {
     // 每5分钟刷新一次
     pendingInterval = setInterval(fetchPendingApprovals, 5 * 60 * 1000);
   }
+
+  startRouteWarmup();
 });
 
 onUnmounted(() => {
+  clearHoverTimers();
   window.removeEventListener('resize', updateIsMobile);
   window.removeEventListener('error', handleGlobalError);
   if (pendingInterval) {
@@ -706,17 +951,23 @@ onUnmounted(() => {
 });
 
 watch(() => route.fullPath, () => {
+  showNotifications.value = false;
   if (isMobile.value) {
     closeSidebar();
   } else {
-    // 桌面端导航后收起侧边栏和子菜单
-    closeAllSubmenus();
-    collapsed.value = true;
+    syncSubmenuWithRoute();
   }
 });
 
+watch(() => [auth.ready, auth.user?.id], () => {
+  startRouteWarmup();
+}, { immediate: true });
+
 function updateIsMobile() {
   isMobile.value = window.innerWidth <= 960;
+  if (isMobile.value) {
+    clearHoverTimers();
+  }
   if (!isMobile.value) {
     sidebarOpen.value = false;
     collapsed.value = true;
@@ -730,6 +981,16 @@ function updateIsMobile() {
   display: flex;
   min-height: 100vh;
   background: #f8fafc;
+  --sidebar-motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --sidebar-motion-duration: .52s;
+  --sidebar-fade-duration: .34s;
+  --submenu-motion-duration: .67s;
+  --submenu-enter-duration: .92s;
+  --submenu-leave-duration: .42s;
+  --submenu-row-height: 30px;
+  --submenu-enter-delay: 0s;
+  --submenu-expand-ease: cubic-bezier(.22, .61, .36, 1);
+  --submenu-motion-ease: cubic-bezier(.12, .96, .2, 1);
 }
 
 /* ==================== 侧边栏 ==================== */
@@ -747,11 +1008,11 @@ function updateIsMobile() {
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 50;
-  transition: width .35s cubic-bezier(.4, 0, .2, 1), box-shadow .35s cubic-bezier(.4, 0, .2, 1), transform .3s cubic-bezier(.4, 0, .2, 1);
+  transition: width var(--sidebar-motion-duration) var(--sidebar-motion-ease), box-shadow .5s ease, transform var(--sidebar-motion-duration) var(--sidebar-motion-ease);
   box-shadow: 0 0 0 rgba(0, 0, 0, 0);
   scrollbar-width: none;
   -ms-overflow-style: none;
-  will-change: width, box-shadow;
+  will-change: width, box-shadow, transform;
 }
 
 .layout-sidebar::-webkit-scrollbar {
@@ -786,14 +1047,17 @@ function updateIsMobile() {
 }
 
 .logo-text {
-  transition: opacity .3s ease, transform .3s ease;
+  display: inline-block;
+  transition: opacity var(--sidebar-fade-duration) ease, clip-path var(--sidebar-motion-duration) var(--sidebar-motion-ease), transform var(--sidebar-motion-duration) var(--sidebar-motion-ease);
+  clip-path: inset(0 0 0 0);
   opacity: 1;
   transform: translateX(0);
 }
 
 .layout-sidebar.collapsed .logo-text {
+  clip-path: inset(0 100% 0 0);
   opacity: 0;
-  transform: translateX(-8px);
+  transform: translateX(-6px);
   pointer-events: none;
 }
 
@@ -841,16 +1105,19 @@ function updateIsMobile() {
 .nav-group a .text-box,
 .nav-item-parent .text-box {
   flex: 1;
-  transition: opacity .3s ease, transform .3s ease;
+  display: block;
+  transition: opacity var(--sidebar-fade-duration) ease, clip-path var(--sidebar-motion-duration) var(--sidebar-motion-ease), transform var(--sidebar-motion-duration) var(--sidebar-motion-ease);
   overflow: hidden;
+  clip-path: inset(0 0 0 0);
   transform: translateX(0);
   opacity: 1;
 }
 
 .layout-sidebar.collapsed .nav-group a .text-box,
 .layout-sidebar.collapsed .nav-item-parent .text-box {
+  clip-path: inset(0 100% 0 0);
   opacity: 0;
-  transform: translateX(-8px);
+  transform: translateX(-6px);
   pointer-events: none;
 }
 
@@ -860,11 +1127,27 @@ function updateIsMobile() {
   .nav-item-parent:hover {
     background: #e2e8f0;
   }
+
+  .nav-group a.router-link-active:hover,
+  .nav-item-parent.has-active:hover {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .nav-item-parent.has-active:hover {
+    background: rgba(37, 99, 235, .1);
+    color: #2563eb;
+  }
+
+  .nav-item-parent.has-active .nav-item-main,
+  .nav-item-parent.has-active .toggle-button {
+    color: inherit;
+  }
 }
 
 .nav-group a.nav-item:active,
 .nav-item-parent:active {
-  transform: scale(0.96);
+  transform: none;
 }
 
 .nav-group a.router-link-active {
@@ -880,7 +1163,6 @@ function updateIsMobile() {
 .nav-item-parent {
   display: flex;
   align-items: center;
-  padding: .55rem 0;
   border-radius: 6px;
   color: #1e293b;
   font-size: 14px;
@@ -888,8 +1170,22 @@ function updateIsMobile() {
   white-space: nowrap;
   width: 100%;
   box-sizing: border-box;
+  min-width: 0;
+  transition: background .44s ease, color .44s ease;
+}
+
+.nav-item-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  padding: .55rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  transition: background .2s;
 }
 
 .nav-item-parent.has-active {
@@ -903,11 +1199,20 @@ function updateIsMobile() {
   justify-content: center;
   align-items: center;
   margin-right: 8px;
-  transition: transform .2s;
+  transition: transform .48s var(--sidebar-motion-ease), opacity .35s ease;
+}
+
+.toggle-button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 6px;
 }
 
 .arrow-box svg {
-  transition: transform .2s;
+  transition: transform .5s var(--sidebar-motion-ease);
 }
 
 .arrow-box svg.rotated {
@@ -917,19 +1222,20 @@ function updateIsMobile() {
 .submenu {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 4px 27px 4px 28px;
+  gap: 0;
+  padding: 2px 18px 2px 20px;
   overflow: hidden;
-  transition: all .35s ease-out, opacity .35s ease, max-height .35s ease;
+  transition: max-height var(--submenu-motion-duration) var(--submenu-expand-ease);
   white-space: nowrap;
-  max-height: 200px;
-  opacity: 1;
+  max-height: 220px;
+  will-change: max-height;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .layout-sidebar.collapsed .submenu {
   max-height: 0;
-  opacity: 0;
-  padding: 0 27px 0 28px;
+  padding: 0 18px 0 20px;
   pointer-events: none;
 }
 
@@ -938,13 +1244,34 @@ function updateIsMobile() {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: .5rem .75rem;
+  min-height: var(--submenu-row-height);
+  padding: 0 .75rem;
   border-radius: 6px;
   text-decoration: none;
   color: #64748b;
   font-size: 13px;
-  transition: all .2s;
+  flex: 0 0 var(--submenu-row-height);
+  transition: background .22s ease, transform .22s ease;
   white-space: nowrap;
+}
+
+.submenu-item > span {
+  display: block;
+  width: auto;
+  line-height: 1.2;
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  text-align: center;
+  transition: none;
+  backface-visibility: hidden;
+}
+
+.submenu.submenu-hover-reveal .submenu-item > span {
+  overflow: hidden;
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transform: translateX(0);
+  transition: opacity var(--sidebar-fade-duration) ease, clip-path var(--sidebar-motion-duration) var(--sidebar-motion-ease), transform var(--sidebar-motion-duration) var(--sidebar-motion-ease);
 }
 
 .submenu-item:hover {
@@ -953,7 +1280,7 @@ function updateIsMobile() {
 }
 
 .submenu-item:active {
-  transform: scale(0.96);
+  transform: none;
 }
 
 .submenu-item.router-link-active {
@@ -963,19 +1290,44 @@ function updateIsMobile() {
 
 /* ==================== 子菜单动画 ==================== */
 .submenu-enter-active {
-  transition: all 0.6s ease-out;
-  max-height: 200px;
+  transition: max-height var(--submenu-enter-duration) var(--submenu-expand-ease) var(--submenu-enter-delay);
+  max-height: 220px;
 }
 
 .submenu-leave-active {
-  transition: all 0.4s ease-in;
-  max-height: 200px;
+  transition: max-height var(--submenu-leave-duration) var(--submenu-expand-ease);
+  max-height: 220px;
 }
 
 .submenu-enter-from,
 .submenu-leave-to {
-  opacity: 0;
   max-height: 0;
+}
+
+.submenu-enter-from.submenu-hover-reveal .submenu-item > span,
+.submenu-leave-to.submenu-hover-reveal .submenu-item > span {
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  transform: translateX(-6px);
+}
+
+.submenu-enter-to,
+.submenu-leave-from {
+  max-height: 220px;
+}
+
+.submenu-enter-to.submenu-hover-reveal .submenu-item > span,
+.submenu-leave-from.submenu-hover-reveal .submenu-item > span {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transform: translateX(0);
+}
+
+.submenu-leave-active.submenu-hover-reveal .submenu-item > span {
+  transition: none;
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transform: translateX(0);
 }
 
 /* ==================== 主内容区 ==================== */
@@ -1000,7 +1352,7 @@ function updateIsMobile() {
   right: 0;
   left: 64px;
   z-index: 30;
-  transition: left 0.35s cubic-bezier(.4, 0, .2, 1);
+  transition: left var(--sidebar-motion-duration) var(--sidebar-motion-ease);
 }
 
 .layout-sidebar:not(.collapsed) ~ .layout-main .top-bar {

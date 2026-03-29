@@ -22,21 +22,22 @@ class SystemSummaryAPIView(views.APIView):
         dept_count = Department.objects.count()
         pos_count = Position.objects.count()
 
-        today = timezone.now().date()
+        current_time = timezone.localtime()
+        today = timezone.localdate()
         last7 = today - timezone.timedelta(days=6)
         attendance_7d = Attendance.objects.filter(date__gte=last7, date__lte=today).count()
         leave_pending = LeaveRequest.objects.filter(status='pending').count()
-        leave_recent = LeaveRequest.objects.filter(created_at__gte=timezone.now()-timezone.timedelta(days=7)).count()
+        leave_recent = LeaveRequest.objects.filter(created_at__gte=current_time-timezone.timedelta(days=7)).count()
 
         year = today.year
         salary_records_year = SalaryRecord.objects.filter(year=year).count()
-        logs_24h = SystemLog.objects.filter(timestamp__gte=timezone.now()-timezone.timedelta(hours=24)).count()
+        logs_24h = SystemLog.objects.filter(timestamp__gte=current_time-timezone.timedelta(hours=24)).count()
         perm_count = RBACPermission.objects.count()
         role_count = Role.objects.count()
 
         response_data = {
             'detail': 'ok',
-            'timestamp': timezone.now().isoformat(),
+            'timestamp': current_time.isoformat(),
             'data': {
                 'employees': {'total': emp_total, 'active': emp_active, 'inactive': emp_total - emp_active},
                 'org': {'departments': dept_count, 'positions': pos_count},
@@ -64,6 +65,11 @@ class MyTodoSummaryAPIView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        cache_key = f"dashboard_todo_summary_u{request.user.id}"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
         # 直属上级待办：离职申请（manager stage）
         managed_dept_ids = list(
             Department.objects.filter(manager__user=request.user).values_list('id', flat=True)
@@ -123,7 +129,7 @@ class MyTodoSummaryAPIView(views.APIView):
             if remaining > 0:
                 append_items(hr_leave_qs.order_by('created_at'), 'hr', remaining)
 
-        return Response({
+        response_data = {
             'detail': 'ok',
             'timestamp': timezone.now().isoformat(),
             'data': {
@@ -134,7 +140,11 @@ class MyTodoSummaryAPIView(views.APIView):
                 },
                 'items': items,
             }
-        })
+        }
+
+        # 待办短缓存，平衡实时性和接口响应速度
+        cache.set(cache_key, response_data, 15)
+        return Response(response_data)
 
 
 class AttendanceTrendAPIView(views.APIView):
@@ -247,11 +257,11 @@ class LogCalendarStatsAPIView(views.APIView):
     def get(self, request):
         from calendar import monthrange
 
-        now = timezone.now()
-        year = now.year
-        month = now.month
+        today = timezone.localdate()
+        year = today.year
+        month = today.month
         days_in_month = monthrange(year, month)[1]
-        first_day = now.replace(day=1).date()
+        first_day = today.replace(day=1)
         last_day = first_day.replace(day=days_in_month)
 
         base_levels = {k: 0 for k, _ in SystemLog.LEVEL_CHOICES}
@@ -284,7 +294,7 @@ class LogCalendarStatsAPIView(views.APIView):
             'detail': 'ok',
             'year': year,
             'month': month,
-            'today': now.date().isoformat(),
+            'today': today.isoformat(),
             'days': day_items
         })
 

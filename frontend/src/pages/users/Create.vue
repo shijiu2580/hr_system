@@ -19,7 +19,7 @@
     </div>
 
     <section class="card form-card">
-      <div v-if="loadingRoles" class="loading-dots-text">
+      <div v-if="loadingOptions" class="loading-dots-text">
         <div class="dots">
           <span class="dot"></span>
           <span class="dot"></span>
@@ -54,12 +54,13 @@ const error = ref('')
 
 onMounted(async () => {
   try {
-    const res = await api.get('/rbac/roles/')
+    const res = await api.get('/roles/')
     if (res.success) {
       const payload = res.data
       roles.value = payload?.results || payload || []
     } else {
       roles.value = []
+      error.value = res.error?.message || '加载角色失败'
     }
   } catch (e) {
     error.value = '加载角色失败：' + (e.response?.data?.detail || e.message)

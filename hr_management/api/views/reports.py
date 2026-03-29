@@ -1,15 +1,350 @@
 """大数据报表 API 视图"""
 from rest_framework import permissions, views
 from rest_framework.response import Response
+from django.core.cache import cache
 from django.utils import timezone
 from django.db.models import Sum, Count, Avg, Q
-from django.db.models.functions import TruncMonth, TruncDate
+from django.db.models.functions import TruncMonth
 from datetime import timedelta
 from decimal import Decimal
 
 from ...models import Employee, Department, Position, Attendance, LeaveRequest, SalaryRecord
 from ...permissions import HasRBACPermission
 from ...rbac import Permissions
+from ...services import CacheKeys
+
+
+ATTENDANCE_COLORS = {
+    'normal': '#22c55e',
+    'late': '#f97316',
+    'early_leave': '#eab308',
+    'absent': '#ef4444',
+    'leave': '#a855f7',
+}
+
+
+def build_department_distribution_data():
+    departments = list(Department.objects.values('id', 'name', 'parent_id'))
+    labels = []
+    values = []
+    colors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+        '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1'
+    ]
+
+    if not departments:
+        return {'detail': 'ok', 'labels': [], 'values': [], 'colors': [], 'total': 0}
+
+    children_map = {}
+    names = {}
+    top_level_ids = []
+    for dept in departments:
+        dept_id = dept['id']
+        names[dept_id] = dept['name']
+        parent_id = dept['parent_id']
+        children_map.setdefault(parent_id, []).append(dept_id)
+        if parent_id is None:
+            top_level_ids.append(dept_id)
+
+    active_counts = {
+        row['department_id']: row['cnt']
+        for row in Employee.objects.filter(is_active=True, department_id__isnull=False)
+        .values('department_id').annotate(cnt=Count('id'))
+    }
+
+    def count_department_tree(root_id):
+        total = 0
+        stack = [root_id]
+        while stack:
+            current_id = stack.pop()
+            total += active_counts.get(current_id, 0)
+            stack.extend(children_map.get(current_id, []))
+        return total
+
+    dept_data = []
+    for dept_id in top_level_ids:
+        count = count_department_tree(dept_id)
+        if count > 0:
+            dept_data.append({'name': names[dept_id], 'count': count})
+
+    dept_data.sort(key=lambda item: item['count'], reverse=True)
+    labels.extend(item['name'] for item in dept_data)
+    values.extend(item['count'] for item in dept_data)
+
+    no_dept_count = Employee.objects.filter(is_active=True, department__isnull=True).count()
+    if no_dept_count > 0:
+        labels.append('未分配部门')
+        values.append(no_dept_count)
+
+    return {
+        'detail': 'ok',
+        'labels': labels,
+        'values': values,
+        'colors': colors[:len(labels)],
+        'total': sum(values),
+    }
+
+
+def build_monthly_salary_data(months=12, include_current=False):
+    months = max(1, min(int(months), 24))
+    today = timezone.localdate()
+    end_index = today.year * 12 + (today.month - 1)
+    if not include_current:
+        end_index -= 1
+
+    results = []
+    for i in range(months - 1, -1, -1):
+        target_index = end_index - i
+        year = target_index // 12
+        month = (target_index % 12) + 1
+        stats = SalaryRecord.objects.filter(year=year, month=month).aggregate(
+            total=Sum('net_salary'),
+            count=Count('id'),
+            avg=Avg('net_salary'),
+        )
+        results.append({
+            'year': year,
+            'month': month,
+            'label': f'{year}-{str(month).zfill(2)}',
+            'total': float(stats['total'] or 0),
+            'count': stats['count'] or 0,
+            'avg': float(stats['avg'] or 0),
+        })
+
+    return {
+        'detail': 'ok',
+        'months': months,
+        'include_current': include_current,
+        'labels': [item['label'] for item in results],
+        'totals': [item['total'] for item in results],
+        'counts': [item['count'] for item in results],
+        'records': results,
+    }
+
+
+def build_attendance_rate_data(days=30):
+    days = max(1, min(int(days), 90))
+    today = timezone.localdate()
+    start_date = today - timedelta(days=days - 1)
+    qs = Attendance.objects.filter(date__gte=start_date, date__lte=today)
+
+    status_mapping = {
+        'check_in': 'normal',
+        'check_out': 'normal',
+        'late': 'late',
+        'early_leave': 'early_leave',
+        'absent': 'absent',
+        'leave': 'leave',
+    }
+    stats = {
+        'normal': {'label': '正常出勤', 'count': 0},
+        'late': {'label': '迟到', 'count': 0},
+        'early_leave': {'label': '早退', 'count': 0},
+        'absent': {'label': '缺勤', 'count': 0},
+        'leave': {'label': '请假', 'count': 0},
+    }
+
+    for row in qs.values('attendance_type').annotate(cnt=Count('id')):
+        mapped = status_mapping.get(row['attendance_type'], row['attendance_type'])
+        if mapped in stats:
+            stats[mapped]['count'] += row['cnt']
+
+    total = sum(item['count'] for item in stats.values())
+    present_count = stats['normal']['count'] + stats['late']['count'] + stats['early_leave']['count']
+    attendance_rate = round(present_count / total * 100, 1) if total > 0 else 0
+
+    labels = []
+    values = []
+    colors = []
+    for key, item in stats.items():
+        if item['count'] > 0:
+            labels.append(item['label'])
+            values.append(item['count'])
+            colors.append(ATTENDANCE_COLORS[key])
+
+    empty = total == 0
+    if empty:
+        labels = ['暂无考勤数据']
+        values = [1]
+        colors = ['#e5e7eb']
+
+    return {
+        'detail': 'ok',
+        'days': days,
+        'labels': labels,
+        'values': values,
+        'colors': colors,
+        'total': total,
+        'attendance_rate': attendance_rate,
+        'stats': stats,
+        'empty': empty,
+    }
+
+
+def build_leave_analysis_data(days=90):
+    days = max(1, min(int(days), 365))
+    since = timezone.now() - timedelta(days=days)
+    qs = LeaveRequest.objects.filter(created_at__gte=since)
+
+    type_stats = {leave_type: {'label': label, 'count': 0, 'days': 0} for leave_type, label in LeaveRequest.LEAVE_TYPE_CHOICES}
+    for row in qs.values('leave_type').annotate(cnt=Count('id'), total_days=Sum('days')):
+        leave_type = row['leave_type']
+        if leave_type in type_stats:
+            type_stats[leave_type]['count'] = row['cnt']
+            type_stats[leave_type]['days'] = row['total_days'] or 0
+
+    status_stats = {status: {'label': label, 'count': 0} for status, label in LeaveRequest.STATUS_CHOICES}
+    for row in qs.values('status').annotate(cnt=Count('id')):
+        status = row['status']
+        if status in status_stats:
+            status_stats[status]['count'] = row['cnt']
+
+    monthly = qs.annotate(month=TruncMonth('created_at')).values('month').annotate(cnt=Count('id')).order_by('month')
+    trend_labels = []
+    trend_values = []
+    for row in monthly:
+        if row['month']:
+            trend_labels.append(row['month'].strftime('%Y-%m'))
+            trend_values.append(row['cnt'])
+
+    return {
+        'detail': 'ok',
+        'days': days,
+        'type_stats': type_stats,
+        'status_stats': status_stats,
+        'trend': {'labels': trend_labels, 'values': trend_values},
+        'total': qs.count(),
+    }
+
+
+def build_employee_growth_data(months=12):
+    months = max(1, min(int(months), 24))
+    today = timezone.localdate()
+    results = []
+    for i in range(months - 1, -1, -1):
+        target_index = today.year * 12 + today.month - 1 - i
+        target_year = target_index // 12
+        target_month = (target_index % 12) + 1
+        if target_month == 12:
+            month_end_date = today.replace(year=target_year, month=12, day=31)
+        else:
+            from datetime import date
+            next_month = target_month + 1
+            next_year = target_year
+            if next_month > 12:
+                next_month = 1
+                next_year += 1
+            month_end_date = date(next_year, next_month, 1) - timedelta(days=1)
+
+        if target_year == today.year and target_month == today.month:
+            month_end_date = today
+
+        from datetime import datetime
+        month_end_dt = datetime.combine(month_end_date, datetime.max.time())
+        if timezone.is_aware(timezone.now()):
+            month_end_dt = timezone.make_aware(month_end_dt)
+
+        total = Employee.objects.filter(created_at__lte=month_end_dt).count()
+        active = Employee.objects.filter(created_at__lte=month_end_dt, is_active=True).count()
+        results.append({'date': f'{target_year}-{str(target_month).zfill(2)}', 'total': total, 'active': active})
+
+    return {
+        'detail': 'ok',
+        'months': months,
+        'labels': [item['date'] for item in results],
+        'total_series': [item['total'] for item in results],
+        'active_series': [item['active'] for item in results],
+    }
+
+
+def build_position_distribution_data():
+    pos_stats = Position.objects.annotate(
+        employee_count=Count('employee', filter=Q(employee__is_active=True))
+    ).values('name', 'employee_count').order_by('-employee_count')[:15]
+
+    labels = []
+    values = []
+    for pos in pos_stats:
+        if pos['employee_count'] > 0:
+            labels.append(pos['name'])
+            values.append(pos['employee_count'])
+
+    return {'detail': 'ok', 'labels': labels, 'values': values, 'total': sum(values)}
+
+
+def build_report_overview_data():
+    today = timezone.localdate()
+    this_month_start = today.replace(day=1)
+    last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
+    end_index = today.year * 12 + (today.month - 1)
+    payroll_index = end_index - 1
+    prev_payroll_index = end_index - 2
+    payroll_year = payroll_index // 12
+    payroll_month = (payroll_index % 12) + 1
+    prev_payroll_year = prev_payroll_index // 12
+    prev_payroll_month = (prev_payroll_index % 12) + 1
+
+    emp_total = Employee.objects.count()
+    emp_active = Employee.objects.filter(is_active=True).count()
+    emp_pending = Employee.objects.filter(onboard_status='pending').count()
+    emp_new_this_month = Employee.objects.filter(hire_date__gte=this_month_start).count()
+    emp_new_last_month = Employee.objects.filter(hire_date__gte=last_month_start, hire_date__lt=this_month_start).count()
+
+    salary_this_month = SalaryRecord.objects.filter(year=payroll_year, month=payroll_month, paid=True).aggregate(total=Sum('net_salary'))['total'] or Decimal('0')
+    salary_last_month = SalaryRecord.objects.filter(year=prev_payroll_year, month=prev_payroll_month, paid=True).aggregate(total=Sum('net_salary'))['total'] or Decimal('0')
+
+    attendance_this_month = Attendance.objects.filter(date__gte=this_month_start, date__lte=today).count()
+    normal_attendance = Attendance.objects.filter(
+        date__gte=this_month_start,
+        date__lte=today,
+        attendance_type__in=['check_in', 'check_out', 'late', 'early_leave'],
+    ).count()
+    late_this_month = Attendance.objects.filter(date__gte=this_month_start, date__lte=today, attendance_type='late').count()
+    attendance_rate = round(normal_attendance / attendance_this_month * 100, 1) if attendance_this_month > 0 else 0
+
+    leave_this_month = LeaveRequest.objects.filter(created_at__date__gte=this_month_start).count()
+    leave_pending = LeaveRequest.objects.filter(status='pending').count()
+
+    return {
+        'detail': 'ok',
+        'timestamp': timezone.now().isoformat(),
+        'employees': {
+            'total': emp_total,
+            'active': emp_active,
+            'pending': emp_pending,
+            'new_this_month': emp_new_this_month,
+            'new_last_month': emp_new_last_month,
+            'growth': emp_new_this_month - emp_new_last_month,
+        },
+        'salary': {
+            'this_month': float(salary_this_month),
+            'last_month': float(salary_last_month),
+            'change': float(salary_this_month - salary_last_month),
+        },
+        'attendance': {
+            'this_month': attendance_this_month,
+            'late_this_month': late_this_month,
+            'rate': attendance_rate,
+        },
+        'leaves': {
+            'this_month': leave_this_month,
+            'pending': leave_pending,
+        },
+    }
+
+
+def build_report_snapshot_data():
+    return {
+        'detail': 'ok',
+        'timestamp': timezone.now().isoformat(),
+        'overview': build_report_overview_data(),
+        'department_distribution': build_department_distribution_data(),
+        'monthly_salary': build_monthly_salary_data(months=12),
+        'attendance_rate': build_attendance_rate_data(days=30),
+        'leave_analysis': build_leave_analysis_data(days=90),
+        'employee_growth': build_employee_growth_data(months=12),
+        'position_distribution': build_position_distribution_data(),
+    }
 
 
 class DepartmentDistributionAPIView(views.APIView):
@@ -17,56 +352,8 @@ class DepartmentDistributionAPIView(views.APIView):
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.REPORT_EMPLOYEE]
 
-    def _get_all_descendant_ids(self, dept):
-        """递归获取部门及其所有子部门的ID列表"""
-        ids = [dept.id]
-        for child in dept.children.all():
-            ids.extend(self._get_all_descendant_ids(child))
-        return ids
-
     def get(self, request):
-        # 只统计顶级部门（parent为空），子部门员工数累加到父部门
-        top_level_depts = Department.objects.filter(parent__isnull=True)
-
-        labels = []
-        values = []
-        colors = [
-            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1'
-        ]
-
-        dept_data = []
-        for dept in top_level_depts:
-            # 获取该部门及所有子部门的ID
-            all_dept_ids = self._get_all_descendant_ids(dept)
-            # 统计这些部门的所有在职员工
-            count = Employee.objects.filter(
-                is_active=True,
-                department_id__in=all_dept_ids
-            ).count()
-            if count > 0:
-                dept_data.append({'name': dept.name, 'count': count})
-
-        # 按人数降序排列
-        dept_data.sort(key=lambda x: x['count'], reverse=True)
-
-        for item in dept_data:
-            labels.append(item['name'])
-            values.append(item['count'])
-
-        # 统计未分配部门的员工
-        no_dept_count = Employee.objects.filter(is_active=True, department__isnull=True).count()
-        if no_dept_count > 0:
-            labels.append('未分配部门')
-            values.append(no_dept_count)
-
-        return Response({
-            'detail': 'ok',
-            'labels': labels,
-            'values': values,
-            'colors': colors[:len(labels)],
-            'total': sum(values)
-        })
+        return Response(build_department_distribution_data())
 
 
 class MonthlySalaryAPIView(views.APIView):
@@ -75,51 +362,8 @@ class MonthlySalaryAPIView(views.APIView):
     rbac_perms = [Permissions.REPORT_SALARY]
 
     def get(self, request):
-        months = int(request.query_params.get('months', 12))
-        months = max(1, min(months, 24))
         include_current = str(request.query_params.get('include_current', '')).lower() in ('1', 'true', 'yes', 'y')
-
-        # 获取最近N个月的薪资数据
-        today = timezone.now().date()
-        # 默认不包含当月（当月工资通常尚未生成/发放，避免趋势图末尾出现 0 断崖）
-        end_index = today.year * 12 + (today.month - 1)
-        if not include_current:
-            end_index -= 1
-
-        results = []
-        for i in range(months - 1, -1, -1):
-            target_index = end_index - i
-            y = target_index // 12
-            m = (target_index % 12) + 1
-
-            stats = SalaryRecord.objects.filter(year=y, month=m).aggregate(
-                total=Sum('net_salary'),
-                count=Count('id'),
-                avg=Avg('net_salary')
-            )
-
-            results.append({
-                'year': y,
-                'month': m,
-                'label': f'{y}-{str(m).zfill(2)}',
-                'total': float(stats['total'] or 0),
-                'count': stats['count'] or 0,
-                'avg': float(stats['avg'] or 0)
-            })
-
-        labels = [r['label'] for r in results]
-        totals = [r['total'] for r in results]
-        counts = [r['count'] for r in results]
-
-        return Response({
-            'detail': 'ok',
-            'months': months,
-            'include_current': include_current,
-            'labels': labels,
-            'totals': totals,
-            'counts': counts,
-            'records': results
-        })
+        return Response(build_monthly_salary_data(request.query_params.get('months', 12), include_current))
 
 
 class AttendanceRateAPIView(views.APIView):
@@ -128,67 +372,7 @@ class AttendanceRateAPIView(views.APIView):
     rbac_perms = [Permissions.REPORT_ATTENDANCE]
 
     def get(self, request):
-        days = int(request.query_params.get('days', 30))
-        days = max(1, min(days, 90))
-
-        today = timezone.now().date()
-        start_date = today - timedelta(days=days - 1)
-
-        # 统计各类型考勤
-        qs = Attendance.objects.filter(date__gte=start_date, date__lte=today)
-
-        # 考勤状态映射：将 check_in/check_out 视为"正常出勤"
-        status_mapping = {
-            'check_in': 'normal',
-            'check_out': 'normal',
-            'late': 'late',
-            'early_leave': 'early_leave',
-            'absent': 'absent',
-            'leave': 'leave',
-        }
-
-        # 统计用的分类
-        stats = {
-            'normal': {'label': '正常出勤', 'count': 0},
-            'late': {'label': '迟到', 'count': 0},
-            'early_leave': {'label': '早退', 'count': 0},
-            'absent': {'label': '缺勤', 'count': 0},
-            'leave': {'label': '请假', 'count': 0},
-        }
-
-        for row in qs.values('attendance_type').annotate(cnt=Count('id')):
-            t = row['attendance_type']
-            mapped = status_mapping.get(t, t)
-            if mapped in stats:
-                stats[mapped]['count'] += row['cnt']
-
-        total = sum(s['count'] for s in stats.values())
-
-        # 计算出勤率（正常+迟到+早退）/ 总数
-        present_count = stats['normal']['count'] + stats['late']['count'] + stats['early_leave']['count']
-        attendance_rate = 0
-        if total > 0:
-            attendance_rate = round(present_count / total * 100, 1)
-
-        # 只返回有数据的项
-        labels = []
-        values = []
-        colors = ['#22c55e', '#f97316', '#eab308', '#ef4444', '#a855f7']
-
-        for i, (key, s) in enumerate(stats.items()):
-            if s['count'] > 0:
-                labels.append(s['label'])
-                values.append(s['count'])
-
-        return Response({
-            'detail': 'ok',
-            'days': days,
-            'labels': labels,
-            'values': values,
-            'total': total,
-            'attendance_rate': attendance_rate,
-            'stats': stats
-        })
+        return Response(build_attendance_rate_data(request.query_params.get('days', 30)))
 
 
 class LeaveAnalysisAPIView(views.APIView):
@@ -197,56 +381,7 @@ class LeaveAnalysisAPIView(views.APIView):
     rbac_perms = [Permissions.REPORT_LEAVE]
 
     def get(self, request):
-        days = int(request.query_params.get('days', 90))
-        days = max(1, min(days, 365))
-
-        since = timezone.now() - timedelta(days=days)
-        qs = LeaveRequest.objects.filter(created_at__gte=since)
-
-        # 按类型统计
-        type_stats = {}
-        for t, label in LeaveRequest.LEAVE_TYPE_CHOICES:
-            type_stats[t] = {'label': label, 'count': 0, 'days': 0}
-
-        for row in qs.values('leave_type').annotate(
-            cnt=Count('id'),
-            total_days=Sum('days')
-        ):
-            t = row['leave_type']
-            if t in type_stats:
-                type_stats[t]['count'] = row['cnt']
-                type_stats[t]['days'] = row['total_days'] or 0
-
-        # 按状态统计
-        status_stats = {}
-        for s, label in LeaveRequest.STATUS_CHOICES:
-            status_stats[s] = {'label': label, 'count': 0}
-
-        for row in qs.values('status').annotate(cnt=Count('id')):
-            s = row['status']
-            if s in status_stats:
-                status_stats[s]['count'] = row['cnt']
-
-        # 按月趋势
-        monthly = qs.annotate(
-            month=TruncMonth('created_at')
-        ).values('month').annotate(cnt=Count('id')).order_by('month')
-
-        trend_labels = []
-        trend_values = []
-        for row in monthly:
-            if row['month']:
-                trend_labels.append(row['month'].strftime('%Y-%m'))
-                trend_values.append(row['cnt'])
-
-        return Response({
-            'detail': 'ok',
-            'days': days,
-            'type_stats': type_stats,
-            'status_stats': status_stats,
-            'trend': {'labels': trend_labels, 'values': trend_values},
-            'total': qs.count()
-        })
+        return Response(build_leave_analysis_data(request.query_params.get('days', 90)))
 
 
 class EmployeeGrowthAPIView(views.APIView):
@@ -255,67 +390,7 @@ class EmployeeGrowthAPIView(views.APIView):
     rbac_perms = [Permissions.REPORT_EMPLOYEE]
 
     def get(self, request):
-        months = int(request.query_params.get('months', 12))
-        months = max(1, min(months, 24))
-
-        today = timezone.now().date()
-
-        results = []
-        # 按月份精确计算，从当前月往前推
-        for i in range(months - 1, -1, -1):
-            # 计算目标月份
-            target_index = today.year * 12 + today.month - 1 - i
-            target_year = target_index // 12
-            target_month = (target_index % 12) + 1
-
-            # 月末日期时间（包含整天）
-            if target_month == 12:
-                month_end_date = today.replace(year=target_year, month=12, day=31)
-            else:
-                from datetime import date
-                next_m = target_month + 1
-                next_y = target_year
-                if next_m > 12:
-                    next_m = 1
-                    next_y += 1
-                month_end_date = date(next_y, next_m, 1) - timedelta(days=1)
-
-            # 如果是当前月，用今天的日期
-            if target_year == today.year and target_month == today.month:
-                month_end_date = today
-
-            # 月末日期转换为datetime（含当天）
-            from datetime import datetime
-            month_end_dt = datetime.combine(month_end_date, datetime.max.time())
-            if timezone.is_aware(timezone.now()):
-                month_end_dt = timezone.make_aware(month_end_dt)
-
-            # 员工总数：根据记录创建时间统计（更准确，避免hire_date缺失问题）
-            total = Employee.objects.filter(created_at__lte=month_end_dt).count()
-            # 在职人数：创建于该月末之前且当前在职
-            # 注意：这里简化处理，假设员工一旦创建就计入，is_active表示当前状态
-            active = Employee.objects.filter(
-                created_at__lte=month_end_dt,
-                is_active=True
-            ).count()
-
-            results.append({
-                'date': f'{target_year}-{str(target_month).zfill(2)}',
-                'total': total,
-                'active': active
-            })
-
-        labels = [r['date'] for r in results]
-        total_series = [r['total'] for r in results]
-        active_series = [r['active'] for r in results]
-
-        return Response({
-            'detail': 'ok',
-            'months': months,
-            'labels': labels,
-            'total_series': total_series,
-            'active_series': active_series
-        })
+        return Response(build_employee_growth_data(request.query_params.get('months', 12)))
 
 
 class PositionDistributionAPIView(views.APIView):
@@ -324,24 +399,7 @@ class PositionDistributionAPIView(views.APIView):
     rbac_perms = [Permissions.REPORT_EMPLOYEE]
 
     def get(self, request):
-        pos_stats = Position.objects.annotate(
-            employee_count=Count('employee', filter=Q(employee__is_active=True))
-        ).values('id', 'name', 'employee_count').order_by('-employee_count')[:15]
-
-        labels = []
-        values = []
-
-        for pos in pos_stats:
-            if pos['employee_count'] > 0:
-                labels.append(pos['name'])
-                values.append(pos['employee_count'])
-
-        return Response({
-            'detail': 'ok',
-            'labels': labels,
-            'values': values,
-            'total': sum(values)
-        })
+        return Response(build_position_distribution_data())
 
 
 class ReportOverviewAPIView(views.APIView):
@@ -350,90 +408,25 @@ class ReportOverviewAPIView(views.APIView):
     rbac_perms_any = [Permissions.REPORT_EMPLOYEE, Permissions.REPORT_SALARY, Permissions.REPORT_ATTENDANCE, Permissions.REPORT_LEAVE]
 
     def get(self, request):
-        today = timezone.now().date()
-        this_month_start = today.replace(day=1)
-        last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
-        # 统计口径：本月发放的通常是“上个月工资”。因此这里按“工资所属月份(year/month)”统计：
-        # - this_month: 上个月工资（例如 1 月显示 12 月工资）
-        # - last_month: 上上个月工资（例如 1 月较上月对比 11 月工资）
-        end_index = today.year * 12 + (today.month - 1)
-        payroll_index = end_index - 1
-        prev_payroll_index = end_index - 2
-        payroll_year = payroll_index // 12
-        payroll_month = (payroll_index % 12) + 1
-        prev_payroll_year = prev_payroll_index // 12
-        prev_payroll_month = (prev_payroll_index % 12) + 1
+        cached_data = cache.get(CacheKeys.REPORT_OVERVIEW)
+        if cached_data:
+            return Response(cached_data)
 
-        # 员工统计
-        emp_total = Employee.objects.count()
-        emp_active = Employee.objects.filter(is_active=True).count()
-        emp_pending = Employee.objects.filter(onboard_status='pending').count()
-        emp_new_this_month = Employee.objects.filter(hire_date__gte=this_month_start).count()
-        emp_new_last_month = Employee.objects.filter(
-            hire_date__gte=last_month_start,
-            hire_date__lt=this_month_start
-        ).count()
+        response_data = build_report_overview_data()
+        cache.set(CacheKeys.REPORT_OVERVIEW, response_data, CacheKeys.TIMEOUT_SHORT)
+        return Response(response_data)
 
-        # 薪资统计
-        salary_this_month = SalaryRecord.objects.filter(
-            year=payroll_year,
-            month=payroll_month,
-            paid=True,
-        ).aggregate(total=Sum('net_salary'))['total'] or Decimal('0')
-        salary_last_month = SalaryRecord.objects.filter(
-            year=prev_payroll_year,
-            month=prev_payroll_month,
-            paid=True,
-        ).aggregate(total=Sum('net_salary'))['total'] or Decimal('0')
 
-        # 考勤统计 (本月)
-        attendance_this_month = Attendance.objects.filter(
-            date__gte=this_month_start, date__lte=today
-        ).count()
-        # 正常出勤包括 check_in, check_out, late, early_leave (都算到岗)
-        normal_attendance = Attendance.objects.filter(
-            date__gte=this_month_start, date__lte=today,
-            attendance_type__in=['check_in', 'check_out', 'late', 'early_leave']
-        ).count()
-        late_this_month = Attendance.objects.filter(
-            date__gte=this_month_start, date__lte=today,
-            attendance_type='late'
-        ).count()
+class ReportSnapshotAPIView(views.APIView):
+    """报表页快照接口，减少前端多次往返请求。"""
+    permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
+    rbac_perms_any = [Permissions.REPORT_EMPLOYEE, Permissions.REPORT_SALARY, Permissions.REPORT_ATTENDANCE, Permissions.REPORT_LEAVE]
 
-        # 出勤率 = 到岗人次 / 总记录数
-        attendance_rate = 0
-        if attendance_this_month > 0:
-            attendance_rate = round(normal_attendance / attendance_this_month * 100, 1)
+    def get(self, request):
+        cached_data = cache.get(CacheKeys.REPORT_SNAPSHOT)
+        if cached_data:
+            return Response(cached_data)
 
-        # 请假统计 (本月)
-        leave_this_month = LeaveRequest.objects.filter(
-            created_at__date__gte=this_month_start
-        ).count()
-        leave_pending = LeaveRequest.objects.filter(status='pending').count()
-
-        return Response({
-            'detail': 'ok',
-            'timestamp': timezone.now().isoformat(),
-            'employees': {
-                'total': emp_total,
-                'active': emp_active,
-                'pending': emp_pending,
-                'new_this_month': emp_new_this_month,
-                'new_last_month': emp_new_last_month,
-                'growth': emp_new_this_month - emp_new_last_month
-            },
-            'salary': {
-                'this_month': float(salary_this_month),
-                'last_month': float(salary_last_month),
-                'change': float(salary_this_month - salary_last_month)
-            },
-            'attendance': {
-                'this_month': attendance_this_month,
-                'late_this_month': late_this_month,
-                'rate': attendance_rate
-            },
-            'leaves': {
-                'this_month': leave_this_month,
-                'pending': leave_pending
-            }
-        })
+        response_data = build_report_snapshot_data()
+        cache.set(CacheKeys.REPORT_SNAPSHOT, response_data, CacheKeys.TIMEOUT_SHORT)
+        return Response(response_data)

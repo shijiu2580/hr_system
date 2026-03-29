@@ -114,8 +114,8 @@ def cached_user_permissions(user) -> Set[str]:
     if not user or not user.is_authenticated:
         return set()
 
-    # 超级管理员和管理员返回特殊标记
-    if user.is_superuser or user.is_staff:
+    # 仅超级管理员返回特殊标记
+    if user.is_superuser:
         return {'*'}  # 通配符表示所有权限
 
     # 尝试从缓存获取

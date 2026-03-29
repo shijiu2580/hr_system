@@ -9,7 +9,7 @@
       <!-- 一级：侧边栏父导航 -->
       <div v-for="nav in navGroups" :key="nav.name" class="page-group">
         <div class="page-group-header" @click="toggleNav(nav.name)">
-          <div class="page-group-icon">
+          <div v-if="nav.icon" class="page-group-icon">
             <img :src="nav.icon" alt="" />
           </div>
           <span class="page-group-title">{{ nav.name }}</span>

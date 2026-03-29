@@ -10,7 +10,10 @@ from .base import LoggingMixin
 from ...models import Employee, Attendance, AttendanceSupplement, CheckInLocation
 from ...permissions import IsStaffOrOwnRelated, get_managed_department_ids, HasRBACPermission
 from ...rbac import Permissions
-from ...utils import log_event, api_success, api_error, get_client_ip
+from ...utils import (
+    log_event, api_success, api_error, get_client_ip,
+    is_workday, get_attendance_cutoff_times, strip_auto_absent_note,
+)
 from ..serializers import AttendanceSerializer, AttendanceWriteSerializer, CheckInLocationSerializer, CheckInLocationWriteSerializer
 
 
@@ -237,14 +240,12 @@ class AttendanceCheckAPIView(views.APIView):
                         code='out_of_range',
                         extra={'distance': int(distance), 'location': nearest_loc.name, 'radius': nearest_loc.radius}
                 ), status=400)
-        from ...utils import is_workday
-
         today = timezone.localdate()
         local_now = timezone.localtime()
         current_time = local_now.time()
-
-        late_cutoff = datetime.time(9, 0, 0)
-        early_leave_cutoff = datetime.time(18, 0, 0)
+        cutoff_times = get_attendance_cutoff_times()
+        late_cutoff = cutoff_times['check_in_deadline']
+        early_leave_cutoff = cutoff_times['check_out_deadline']
 
         # 判断今天是否为工作日（休息日加班不判断迟到/早退）
         is_today_workday = is_workday(today)
@@ -272,18 +273,21 @@ class AttendanceCheckAPIView(views.APIView):
                     if is_late and not notes.strip():
                         return Response(api_error('签到已超过 09:00，请填写迟到原因', code='reason_required'), status=400)
                     rec.check_in_time = current_time
-                    if is_late and rec.attendance_type == 'check_in':
-                        rec.attendance_type = 'late'
+                    if rec.attendance_type in ('check_in', 'absent'):
+                        rec.attendance_type = 'late' if is_late else 'check_in'
+
+                    clean_notes = strip_auto_absent_note(rec.notes)
+                    note_parts = [clean_notes] if clean_notes else []
                     if notes:
-                        # 迟到时添加标签
-                        rec.notes = f'迟到原因：{notes}' if is_late else notes
-                    elif not is_today_workday and not rec.notes:
-                        rec.notes = '加班'
+                        note_parts.append(f'迟到原因：{notes}' if is_late else notes)
+                    elif not is_today_workday and not clean_notes:
+                        note_parts.append('加班')
+                    rec.notes = '\n'.join(part for part in note_parts if part).strip()
                     rec.save(update_fields=['check_in_time', 'attendance_type', 'notes'])
                     log_event(user=request.user, action='补签/更新签到', detail=f'{emp.employee_id} {today}', ip=get_client_ip(request))
 
             elif action == 'check_out':
-                if not rec:
+                if not rec or not rec.check_in_time:
                     return Response(api_error('尚未签到，不能签退', code='no_record'), status=400)
 
                 is_update = rec.check_out_time is not None
@@ -313,7 +317,7 @@ class AttendanceCheckAPIView(views.APIView):
                 log_event(user=request.user, action=action_text, detail=f'{emp.employee_id} {today}', ip=get_client_ip(request))
 
             elif action == 'update_check_out':
-                if not rec:
+                if not rec or not rec.check_in_time:
                     return Response(api_error('尚未签到，无法更新签退时间', code='no_record'), status=400)
                 if not rec.check_out_time:
                     return Response(api_error('尚未签退，请先签退', code='not_checked_out'), status=400)

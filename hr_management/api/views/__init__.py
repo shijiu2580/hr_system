@@ -40,7 +40,7 @@ from .system import (
     SystemLogListAPIView, system_log_clear,
     CompanyDocumentListCreateAPIView, CompanyDocumentDetailAPIView,
     backups_list, backup_create, backup_clean, backup_restore,
-    health_check, health_report, system_metrics
+    health_check, health_report, system_metrics, apm_overview
 )
 from .export import export_employees, export_salaries, export_attendance, export_leaves, export_my_salary_slip, export_salary_template
 from .import_data import (
@@ -56,7 +56,7 @@ from .base import (
 from .reports import (
     DepartmentDistributionAPIView, MonthlySalaryAPIView, AttendanceRateAPIView,
     LeaveAnalysisAPIView, EmployeeGrowthAPIView, PositionDistributionAPIView,
-    ReportOverviewAPIView
+    ReportOverviewAPIView, ReportSnapshotAPIView
 )
 from .bi import (
     BIDepartmentCostAPIView, BIAttendanceHeatmapAPIView, BITurnoverAPIView,

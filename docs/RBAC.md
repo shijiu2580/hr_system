@@ -4,6 +4,12 @@
 
 本系统采用 **基于角色的访问控制（Role-Based Access Control, RBAC）** 模型，实现灵活、可扩展的权限管理。通过角色作为用户与权限之间的桥梁，简化权限分配，支持细粒度的功能访问控制。
 
+当前仓库中有两套初始化命令：
+- `init_rbac`：基于 [django_hr_system/hr_management/rbac.py](django_hr_system/hr_management/rbac.py) 的点号风格权限键，例如 `employee.view`
+- `init_rbac_permissions`：用于快速生成示例权限与角色，默认以后台管理/初始化脚本为主
+
+前端路由守卫、权限指令和大部分界面展示目前仍以 `employee.view` 这一类点号风格 key 为准。
+
 ## 🏗️ 系统架构
 
 ### 核心概念
@@ -191,6 +197,8 @@ class RBACPermission(models.Model):
 | **部门经理** | `department_manager` | 部门数据、审批权限 |
 | **普通员工** | `employee` | 个人数据查看、申请提交 |
 
+> 注意：`init_rbac_permissions --with-roles` 生成的示例角色代码与名称略有不同，例如 `dept_manager`、`employees`、`auditor`。如果你是通过启动脚本初始化数据，请以数据库中的实际角色为准。
+
 ---
 
 ## 💻 开发指南
@@ -288,10 +296,16 @@ if (hasPermission([Permissions.LEAVE_APPROVE, Permissions.TRIP_APPROVE], 'any'))
 ### 初始化 RBAC 数据
 
 ```bash
-# 首次部署必须执行
+# 首次部署，推荐执行示例权限/角色初始化
+python manage.py init_rbac_permissions --with-roles
+
+# 强制更新示例角色的权限集合
+python manage.py init_rbac_permissions --with-roles --force
+
+# 兼容旧权限体系（点号风格 key）
 python manage.py init_rbac
 
-# 强制更新（同步新增的权限和角色）
+# 强制同步旧权限体系
 python manage.py init_rbac --force
 ```
 
@@ -301,7 +315,7 @@ python manage.py init_rbac --force
 
 1. **超级管理员 (`is_superuser`) 和 `is_staff` 用户自动拥有所有权限**
 2. **`admin` 角色也自动拥有所有权限**，无需单独配置
-3. 新增权限后需运行 `init_rbac --force` 同步到数据库
+3. 新增权限后需根据你使用的权限体系运行 `init_rbac --force` 或 `init_rbac_permissions --with-roles --force`
 4. 前后端权限常量需保持一致（后端 `rbac.py`，前端 `permissions.js`）
 5. 无权限访问时前端会重定向到 403 页面
 

@@ -30,8 +30,8 @@ def user_has_rbac_permission(user, permission_key):
     if not user or not user.is_authenticated:
         return False
 
-    # 超级管理员和系统管理员拥有所有权限
-    if user.is_superuser or user.is_staff:
+    # 仅超级管理员拥有全量直通权限
+    if user.is_superuser:
         return True
 
     return has_permission_cached(user, permission_key)
@@ -67,8 +67,8 @@ class HasRBACPermission(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        # 超级管理员和管理员直接放行
-        if request.user.is_superuser or request.user.is_staff:
+        # 仅超级管理员直接放行
+        if request.user.is_superuser:
             return True
 
         method = request.method

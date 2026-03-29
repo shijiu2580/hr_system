@@ -63,7 +63,7 @@ onMounted(async () => {
   try {
     const [userRes, rolesRes] = await Promise.all([
       api.get(`/users/manage/${id}/`),
-      api.get('/rbac/roles/')
+      api.get('/roles/')
     ])
 
     if (!userRes.success) throw new Error(userRes.error?.message || '加载用户失败')
@@ -74,6 +74,7 @@ onMounted(async () => {
       roles.value = payload?.results || payload || []
     } else {
       roles.value = []
+      error.value = rolesRes.error?.message || '角色列表加载失败'
     }
   } catch (e) {
     error.value = '加载失败：' + (e.response?.data?.detail || e.message)

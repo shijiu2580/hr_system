@@ -35,18 +35,41 @@
     <RoleForm />
     <PermissionForm />
 
+    <!-- 删除确认弹框 -->
+    <Teleport to="body">
+      <transition name="modal">
+        <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="cancelDeleteConfirm">
+          <div class="confirm-modal">
+            <div class="confirm-header">
+              <h3>确认删除</h3>
+              <button class="close-btn" @click="cancelDeleteConfirm">×</button>
+            </div>
+            <p class="confirm-text">
+              确定删除{{ deleteContext.type === 'role' ? '角色' : '权限' }}
+              <strong>“{{ deleteContext.name }}”</strong>吗？
+            </p>
+            <p class="confirm-warning">该操作不可撤销，请谨慎操作。</p>
+            <div class="confirm-actions">
+              <button class="btn-secondary" @click="cancelDeleteConfirm">取消</button>
+              <button class="btn-danger" @click="confirmDelete">确认删除</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
+
     <!-- Tab 切换 -->
     <div class="tab-bar">
-      <button 
-        class="tab-btn" 
+      <button
+        class="tab-btn"
         :class="{ active: activeTab === 'roles' }"
         @click="activeTab = 'roles'"
       >
         角色列表
         <span class="tab-count">{{ roles.length }}</span>
       </button>
-      <button 
-        class="tab-btn" 
+      <button
+        class="tab-btn"
         :class="{ active: activeTab === 'permissions' }"
         @click="activeTab = 'permissions'"
       >
@@ -79,9 +102,13 @@ const {
   permissions,
   showRoleForm,
   showPermForm,
+  showDeleteConfirm,
+  deleteContext,
   reload,
   startCreateRole,
-  startCreatePerm
+  startCreatePerm,
+  confirmDelete,
+  cancelDeleteConfirm
 } = useRbac();
 
 onMounted(reload);
@@ -252,5 +279,81 @@ onMounted(reload);
 .tab-btn.active .tab-count {
   background: #dbeafe;
   color: #2563eb;
+}
+
+.confirm-modal {
+  width: min(420px, 92vw);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+  padding: 1rem 1rem 0.9rem;
+}
+
+.confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.confirm-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.confirm-text {
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+}
+
+.confirm-warning {
+  margin: 0.5rem 0 0;
+  font-size: 13px;
+  color: #b91c1c;
+}
+
+.confirm-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-danger {
+  padding: 0.5rem 1rem;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6000;
 }
 </style>

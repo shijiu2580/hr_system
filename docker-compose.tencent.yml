@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build: ./frontend
+    container_name: hr-frontend
+    ports:
+      - "127.0.0.1:3000:80"
+    restart: unless-stopped
+    networks:
+      - hr_entry_network
+
+  mobile:
+    build: ./mobile
+    container_name: hr-mobile
+    ports:
+      - "127.0.0.1:3001:80"
+    restart: unless-stopped
+    networks:
+      - hr_entry_network
+
+networks:
+  hr_entry_network:
+    driver: bridge

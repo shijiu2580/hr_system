@@ -194,42 +194,52 @@ django_hr_system/
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-username/django_hr_system.git
-cd django_hr_system
+git clone https://github.com/shijiu2580/hr_system.git
+cd hr_system
 
-# 2. 一键启动所有服务
+# 2. 复制并编辑生产环境变量
+cp .env.example .env
+# 修改 DATABASE_URL / REDIS_URL / SECRET_KEY / 邮件账号等配置
+
+# 3. 一键启动所有服务（Nginx + Web + Mobile + API + PostgreSQL + Redis）
 docker compose up -d --build
 
-# 3. 创建超级管理员
+# 4. 创建超级管理员
 docker exec -it hr-backend python manage.py createsuperuser
 
-# 4. 🎉 访问系统
-# 📍 Web 管理端:  http://localhost:3000
-# 📍 移动端 H5:   http://localhost:3001
-# 📍 API 接口:    http://localhost:8000/api/
+# 5. 🎉 访问系统
+# 📍 Web 管理端:  http://localhost
+# 📍 移动端 H5:   http://m.canway.site (配置 DNS 后)
+# 📍 API 接口:    http://localhost/api/
 ```
 
+> 说明：当前 Docker 编排默认通过网关 Nginx 统一入口，不再直接暴露 backend/frontend/mobile 的容器端口。
+
 ### 🛠️ 方式二：本地开发环境
+
+> 💡 当前仓库已经切到项目内虚拟环境开发流程：推荐直接使用 `uv` 或一键脚本；本地开发端口为 Web `5173`、Mobile `5174`、API `8000`。
 
 <details>
 <summary><b>📦 后端启动</b></summary>
 
 ```powershell
-# 创建虚拟环境
-python -m venv venv
-.\venv\Scripts\Activate.ps1
+# 创建项目虚拟环境（推荐）
+uv venv venv --python 3.11
 
 # 安装依赖
-pip install -r requirements.txt
+uv pip install --python .\venv\Scripts\python.exe -r requirements.txt
 
 # 数据库迁移
-python manage.py migrate
+.\venv\Scripts\python.exe manage.py migrate
+
+# 初始化 RBAC 示例权限/角色
+.\venv\Scripts\python.exe manage.py init_rbac_permissions --with-roles
 
 # 创建管理员
-python manage.py createsuperuser
+.\venv\Scripts\python.exe manage.py createsuperuser
 
 # 启动服务 → http://127.0.0.1:8000
-python manage.py runserver
+.\venv\Scripts\python.exe manage.py runserver
 ```
 </details>
 
@@ -261,9 +271,14 @@ npm run dev
 # Windows 一键启动
 .\scripts\start_dev.ps1
 
-# 首次运行（自动安装依赖）
+# 首次运行（自动安装 Python/前端依赖、迁移数据库、初始化 RBAC 示例角色）
 .\scripts\start_dev.ps1 -Install
 ```
+
+脚本当前行为：
+- 优先使用项目内 [django_hr_system/venv/Scripts/python.exe](django_hr_system/venv/Scripts/python.exe)
+- 优先使用 D 盘的 npm 环境
+- `-Install` 时优先使用 `uv` 安装 Python 依赖，避免 Windows 编码导致的 `pip` 读取失败
 
 ---
 
@@ -286,7 +301,8 @@ npm run dev
 SECRET_KEY=your-super-secret-key-here
 DEBUG=False
 ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
-DATABASE_PATH=/app/db.sqlite3
+DATABASE_URL=postgresql://hr_user:change_me@postgres:5432/hr_system
+REDIS_URL=redis://redis:6379/1
 
 # 邮件服务（密码重置）
 EMAIL_HOST=smtp.qq.com
@@ -308,6 +324,133 @@ VITE_API_BASE_URL=http://127.0.0.1:8000/api
 ---
 
 ## 🔒 生产部署
+
+### 当前推荐架构（双机）
+
+| 服务器 | 角色 | 承载服务 | 对外职责 |
+|------|------|----------|----------|
+| 腾讯云 | 入口层 | Nginx + HTTPS + frontend + mobile | `canway.site` / `m.canway.site` / `api.canway.site` |
+| 阿里云 | 核心层 | gateway + backend + PostgreSQL + Redis | API、管理后台、数据库、缓存、媒体文件 |
+
+> 说明：当前项目不建议做双后端双活。原因是 Django 应用启动时会自动拉起简易 scheduler，且媒体文件默认写本地磁盘。更稳的方案是“腾讯云入口层 + 阿里云核心业务层”。
+
+<details>
+<summary><b>🏗️ 双机部署文件说明</b></summary>
+
+```text
+docker-compose.tencent.yml    # 腾讯云入口层，只启动 Web/Mobile 容器
+docker-compose.aliyun.yml     # 阿里云核心层，只启动 gateway/backend/postgres/redis
+nginx/canway.site.conf        # 腾讯云 HTTPS 正式入口配置
+nginx/canway.site.http.conf   # 腾讯云 HTTP 调试/应急入口配置
+nginx/docker.core.conf        # 阿里云核心层网关配置
+scripts/reset_postgres_sequences.py  # SQLite -> PostgreSQL 导入后重置序列
+```
+</details>
+
+<details>
+<summary><b>🚀 双机部署步骤（腾讯云入口层 + 阿里云核心层）</b></summary>
+
+```bash
+# 1. 腾讯云：拉代码并启动入口层容器
+git clone https://github.com/shijiu2580/hr_system.git
+cd hr_system
+docker compose -f docker-compose.tencent.yml up -d --build
+
+# 2. 腾讯云：安装并启用 Nginx / HTTPS
+apt install -y nginx certbot python3-certbot-nginx
+cp nginx/canway.site.conf /etc/nginx/sites-available/canway.site
+ln -sf /etc/nginx/sites-available/canway.site /etc/nginx/sites-enabled/canway.site
+nginx -t && systemctl reload nginx
+certbot certonly --nginx \
+    -d canway.site -d www.canway.site -d m.canway.site -d api.canway.site
+
+# 3. 阿里云：拉代码并启动核心层容器
+git clone https://github.com/shijiu2580/hr_system.git
+cd hr_system
+docker-compose -f docker-compose.aliyun.yml up -d --build
+```
+
+上线验证：
+
+```bash
+curl -I https://canway.site/
+curl -I https://m.canway.site/
+curl -I https://api.canway.site/api/health/
+```
+</details>
+
+<details>
+<summary><b>🗃️ SQLite 迁移到 PostgreSQL（已验证）</b></summary>
+
+```bash
+# 1. 本地导出 SQLite 数据
+python manage.py dumpdata \
+    --natural-foreign \
+    --natural-primary \
+    --exclude contenttypes \
+    --exclude auth.permission \
+    --exclude sessions \
+    --indent 2 > sqlite_to_pg_export.json
+
+# 2. 备份阿里云 PostgreSQL
+docker exec hr-postgres pg_dump -U hr_user -d hr_system > backups/hr_system_before_import.sql
+
+# 3. 上传导出文件到阿里云
+scp sqlite_to_pg_export.json aliyun-hr:/opt/hr_system/sqlite_to_pg_export.json
+
+# 4. 停止核心入口与后端，避免导入期间产生并发写入
+docker stop hr-gateway hr-backend
+
+# 5. 清空阿里云 PG 现有业务数据
+docker run --rm --network hr_system_hr_core_network \
+    --env-file /opt/hr_system/.env \
+    -e DISABLE_SCHEDULER=true \
+    hr_system_backend:latest \
+    python manage.py flush --no-input
+
+# 6. 导入 JSON 数据
+docker run --rm --network hr_system_hr_core_network \
+    --env-file /opt/hr_system/.env \
+    -e DISABLE_SCHEDULER=true \
+    -v /opt/hr_system:/import \
+    hr_system_backend:latest \
+    python manage.py loaddata /import/sqlite_to_pg_export.json
+
+# 7. 重置 PostgreSQL 自增序列
+docker run --rm -w /app --network hr_system_hr_core_network \
+    --env-file /opt/hr_system/.env \
+    -e DISABLE_SCHEDULER=true \
+    -e PYTHONPATH=/app \
+    -v /opt/hr_system:/import \
+    hr_system_backend:latest \
+    python /import/scripts/reset_postgres_sequences.py
+
+# 8. 启动核心层服务
+docker-compose -f docker-compose.aliyun.yml up -d
+```
+
+本项目实测迁移过程中，额外处理了两类历史脏数据：
+
+- `Employee.gender` 的旧值 `male/female` 需要标准化为 `M/F`
+- 6 条 `VerificationCode.phone` 被错误写成邮箱地址，导入前应剔除
+</details>
+
+<details>
+<summary><b>🖼️ media 文件同步到阿里云</b></summary>
+
+```bash
+# 1. 上传本地 media 到阿里云临时目录
+scp -r media/* aliyun-hr:/opt/hr_system/media_sync_local/
+
+# 2. 写入后端容器挂载卷
+docker cp /opt/hr_system/media_sync_local/. hr-backend:/app/media/
+
+# 3. 校验文件数量
+docker exec hr-backend sh -c 'find /app/media -type f | wc -l'
+```
+
+说明：数据库迁移只迁表数据，不迁上传文件；头像、部门图标、公司文档等静态上传资源需要单独同步。
+</details>
 
 <details>
 <summary><b>🔐 SSL 证书配置</b></summary>

@@ -14,14 +14,24 @@ from .models import (
 from .services import CacheKeys
 
 
+def invalidate_analytics_caches(extra_keys=None):
+    keys = [
+        CacheKeys.DASHBOARD_SUMMARY,
+        CacheKeys.REPORT_OVERVIEW,
+        CacheKeys.REPORT_SNAPSHOT,
+    ]
+    if extra_keys:
+        keys.extend(extra_keys)
+    cache.delete_many(list(dict.fromkeys(keys)))
+
+
 # ============ 部门相关信号 ============
 @receiver([post_save, post_delete], sender=Department)
 def invalidate_department_cache(sender, instance, **kwargs):
     """部门变更时清除缓存"""
-    cache.delete_many([
+    invalidate_analytics_caches([
         CacheKeys.DEPARTMENT_TREE,
         CacheKeys.DEPARTMENT_LIST,
-        CacheKeys.DASHBOARD_SUMMARY,
     ])
 
 
@@ -31,8 +41,8 @@ def invalidate_employee_cache(sender, instance, **kwargs):
     """员工变更时清除缓存"""
     cache.delete_many([
         CacheKeys.EMPLOYEE_COUNT,
-        CacheKeys.DASHBOARD_SUMMARY,
     ])
+    invalidate_analytics_caches()
     # 清除该员工的考勤缓存
     cache.delete(CacheKeys.ATTENDANCE_TODAY.format(employee_id=instance.id))
 
@@ -49,20 +59,33 @@ def employee_locations_changed(sender, instance, action, **kwargs):
 def invalidate_attendance_cache(sender, instance, **kwargs):
     """考勤变更时清除缓存"""
     cache.delete(CacheKeys.ATTENDANCE_TODAY.format(employee_id=instance.employee_id))
-    cache.delete(CacheKeys.DASHBOARD_SUMMARY)
+    invalidate_analytics_caches()
 
 
 @receiver([post_save, post_delete], sender=AttendanceSupplement)
 def invalidate_supplement_cache(sender, instance, **kwargs):
     """补签申请变更时清除缓存"""
-    cache.delete(CacheKeys.DASHBOARD_SUMMARY)
+    invalidate_analytics_caches()
 
 
 # ============ 请假相关信号 ============
 @receiver([post_save, post_delete], sender=LeaveRequest)
 def invalidate_leave_cache(sender, instance, **kwargs):
     """请假变更时清除缓存"""
-    cache.delete(CacheKeys.DASHBOARD_SUMMARY)
+    invalidate_analytics_caches()
+
+
+@receiver([post_save, post_delete], sender=Position)
+def invalidate_position_cache(sender, instance, **kwargs):
+    """职位变更时清除相关缓存"""
+    cache.delete(CacheKeys.POSITION_LIST)
+    invalidate_analytics_caches()
+
+
+@receiver([post_save, post_delete], sender=SalaryRecord)
+def invalidate_salary_cache(sender, instance, **kwargs):
+    """薪资变更时清除相关缓存"""
+    invalidate_analytics_caches()
 
 
 # ============ 权限相关信号 ============

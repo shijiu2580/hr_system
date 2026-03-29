@@ -6,7 +6,7 @@
         <path d="M6 9l6 6 6-6" />
       </svg>
     </div>
-    <Teleport to="body">
+    <Teleport to="body" :disabled="disableTeleport">
       <Transition name="dropdown">
         <div v-if="isOpen" class="select-dropdown" :style="dropdownStyle" ref="dropdownRef" @click.stop>
           <div v-if="searchable" class="search-box">
@@ -20,7 +20,7 @@
               @keydown="onSearchKeydown"
             />
           </div>
-          <div class="options-list">
+          <div class="options-list" @wheel="onDropdownWheel">
             <div v-if="filteredOptions.length === 0" class="no-results">
               无匹配结果
             </div>
@@ -62,6 +62,12 @@ const dropdownRef = ref(null);
 const searchInput = ref(null);
 const searchQuery = ref('');
 const dropdownStyle = ref({});
+const DROPDOWN_GAP = 6;
+const MIN_DROPDOWN_HEIGHT = 180;
+const MAX_DROPDOWN_HEIGHT = 280;
+const insideDialog = ref(false);
+const disableTeleport = computed(() => insideDialog.value);
+const openDirection = ref('down');
 
 const displayValue = computed(() => {
   const found = props.options.find(o => o.value === props.modelValue);
@@ -91,23 +97,71 @@ function updateDropdownPosition() {
     zoom = parseFloat(bodyZoom) || 1;
   }
 
-  if (props.dropUp) {
-    // 向上展开
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  let spaceAbove = rect.top;
+  let spaceBelow = viewportHeight - rect.bottom;
+
+  // 在弹框内就地渲染时，按弹框容器可视区域计算空间，避免底部被截断。
+  if (disableTeleport.value) {
+    const container = selectRef.value.closest('dialog, .edit-dialog, .edit-modal');
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      spaceAbove = rect.top - containerRect.top;
+      spaceBelow = containerRect.bottom - rect.bottom;
+    }
+  }
+  const autoDropUp = !props.dropUp && spaceBelow < MIN_DROPDOWN_HEIGHT && spaceAbove > spaceBelow;
+  const preferredDirection = props.dropUp || autoDropUp ? 'up' : 'down';
+  const openUp = (openDirection.value || preferredDirection) === 'up';
+  const available = openUp ? spaceAbove : spaceBelow;
+  const maxHeight = Math.max(140, Math.min(MAX_DROPDOWN_HEIGHT, available - DROPDOWN_GAP));
+  const optionsMaxHeight = Math.max(96, maxHeight - (props.searchable ? 56 : 8));
+
+  if (disableTeleport.value) {
+    if (openUp) {
+      dropdownStyle.value = {
+        position: 'absolute',
+        top: `-${DROPDOWN_GAP}px`,
+        left: '0',
+        width: '100%',
+        maxHeight: `${maxHeight}px`,
+        '--options-max-height': `${optionsMaxHeight}px`,
+        zIndex: 1200,
+        transform: 'translateY(-100%)'
+      };
+    } else {
+      dropdownStyle.value = {
+        position: 'absolute',
+        top: `calc(100% + ${DROPDOWN_GAP}px)`,
+        left: '0',
+        width: '100%',
+        maxHeight: `${maxHeight}px`,
+        '--options-max-height': `${optionsMaxHeight}px`,
+        zIndex: 1200
+      };
+    }
+    return;
+  }
+
+  if (openUp) {
     dropdownStyle.value = {
       position: 'absolute',
-      top: `${(rect.top + scrollY) / zoom}px`,
+      top: `${(rect.top + scrollY - DROPDOWN_GAP) / zoom}px`,
       left: `${(rect.left + scrollX) / zoom}px`,
       width: `${rect.width / zoom}px`,
+      maxHeight: `${maxHeight / zoom}px`,
+      '--options-max-height': `${optionsMaxHeight / zoom}px`,
       zIndex: 99999,
       transform: 'translateY(-100%)'
     };
   } else {
-    // 默认向下展开
     dropdownStyle.value = {
       position: 'absolute',
-      top: `${(rect.bottom + scrollY) / zoom}px`,
+      top: `${(rect.bottom + scrollY + DROPDOWN_GAP) / zoom}px`,
       left: `${(rect.left + scrollX) / zoom}px`,
       width: `${rect.width / zoom}px`,
+      maxHeight: `${maxHeight / zoom}px`,
+      '--options-max-height': `${optionsMaxHeight / zoom}px`,
       zIndex: 99999
     };
   }
@@ -115,6 +169,12 @@ function updateDropdownPosition() {
 
 watch(isOpen, (val) => {
   if (val) {
+    const rect = selectRef.value?.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const spaceAbove = rect ? rect.top : 0;
+    const spaceBelow = rect ? (viewportHeight - rect.bottom) : 0;
+    const autoDropUp = !props.dropUp && spaceBelow < MIN_DROPDOWN_HEIGHT && spaceAbove > spaceBelow;
+    openDirection.value = (props.dropUp || autoDropUp) ? 'up' : 'down';
     updateDropdownPosition();
     if (props.searchable) {
       searchQuery.value = '';
@@ -122,8 +182,27 @@ watch(isOpen, (val) => {
         searchInput.value?.focus();
       });
     }
+  } else {
+    openDirection.value = 'down';
   }
 });
+
+function onViewportChange() {
+  if (!isOpen.value) return;
+  updateDropdownPosition();
+}
+
+function onDropdownWheel(e) {
+  const el = e.currentTarget;
+  if (!el) return;
+  const delta = e.deltaY;
+  const atTop = el.scrollTop <= 0;
+  const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+  // 阻止滚动穿透导致页面上下弹跳
+  if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+    e.preventDefault();
+  }
+}
 
 watch(searchQuery, () => {
   highlightedIndex.value = 0;
@@ -200,11 +279,14 @@ function onClickOutside(e) {
 }
 
 onMounted(() => {
+  insideDialog.value = !!selectRef.value?.closest('dialog, .edit-dialog, .edit-modal');
   document.addEventListener('click', onClickOutside);
+  window.addEventListener('resize', onViewportChange);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside);
+  window.removeEventListener('resize', onViewportChange);
 });
 </script>
 
@@ -302,6 +384,7 @@ onUnmounted(() => {
   padding: 0.35rem 0;
   z-index: 99999 !important;
   pointer-events: auto;
+  overflow: hidden;
 }
 
 .select-dropdown .search-box {
@@ -323,9 +406,10 @@ onUnmounted(() => {
 }
 
 .select-dropdown .options-list {
-  max-height: 280px;
+  max-height: var(--options-max-height, 280px);
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 .select-dropdown .no-results {

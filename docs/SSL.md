@@ -4,6 +4,16 @@
 
 本项目使用 **Let's Encrypt** 免费 SSL 证书，通过 **Certbot** 自动申请和续期。
 
+本文件仅针对生产环境。当前本地开发默认不启用 HTTPS，而是直接使用：
+- Web: `http://localhost:5173`
+- Mobile: `http://localhost:5174`
+- API: `http://127.0.0.1:8000`
+
+Docker / Nginx 场景下对外映射端口为：
+- Web: `3000`
+- Mobile: `3001`
+- API: `8000`
+
 ## 📋 域名列表
 
 | 域名 | 用途 |

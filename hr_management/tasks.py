@@ -297,12 +297,13 @@ def mark_absent_for_date(target_date=None):
     """
     from django.db.models import Q
     from .models import Attendance, Employee, LeaveRequest, BusinessTrip
-    from .utils import is_workday
+    from .utils import is_workday, get_attendance_cutoff_times, AUTO_ABSENT_NOTE
     import datetime
 
     today = timezone.localdate()
     now_time = timezone.localtime().time()
-    absent_cutoff = datetime.time(18, 0, 0)  # 18:00后未签到算缺勤
+    cutoff_times = get_attendance_cutoff_times()
+    absent_cutoff = cutoff_times['absent_mark_time']
 
     # 默认处理昨天，如果没有指定日期
     if target_date is None:
@@ -319,9 +320,9 @@ def mark_absent_for_date(target_date=None):
         logger.info("Skip marking absent for future date %s", target_date)
         return {'date': str(target_date), 'created': 0, 'skipped': 0}
     elif target_date == today:
-        # 当天数据：必须过了18:00才处理
+        # 当天数据：超过上班时间仍未签到，先标记缺勤；后续签到会自动转为迟到
         if now_time < absent_cutoff:
-            logger.info("Skip marking absent for today %s (before 18:00)", target_date)
+            logger.info("Skip marking absent for today %s (before absent cutoff)", target_date)
             return {'date': str(target_date), 'created': 0, 'skipped': 0, 'reason': 'before_cutoff'}
     # 过去日期直接处理
 
@@ -357,7 +358,7 @@ def mark_absent_for_date(target_date=None):
             date=target_date,
             defaults={
                 'attendance_type': 'absent',
-                'notes': '全天未签到，自动标记缺勤',
+                'notes': AUTO_ABSENT_NOTE if target_date == today else '全天未签到，自动标记缺勤',
             }
         )
         if created_flag:
@@ -652,8 +653,8 @@ def setup_scheduled_tasks():
     # 每天补齐缺勤记录，默认处理前一天（兜底）
     scheduler.register('mark_absent_daily', lambda: mark_absent_for_date.sync(None), 86400)
 
-    # 每小时检查当天缺勤（18:00后生效）
-    scheduler.register('mark_absent_today', lambda: mark_absent_today.sync(), 3600)
+    # 每10分钟检查当天缺勤（上班后未签到先标记缺勤，后续签到可自动转迟到）
+    scheduler.register('mark_absent_today', lambda: mark_absent_today.sync(), 600)
 
     # 每小时刷新缓存
     scheduler.register('refresh_cache', _refresh_cache, 3600)

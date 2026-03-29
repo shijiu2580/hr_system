@@ -78,6 +78,9 @@
         <div class="chart-container-sm">
           <canvas ref="attendanceChartRef"></canvas>
         </div>
+        <p class="chart-footnote" :class="{ empty: attendanceMeta.empty }">
+          {{ attendanceMeta.empty ? '最近 30 天暂无考勤记录，系统会在上班时间后自动补缺勤。' : `出勤率 ${attendanceMeta.rate}% · 样本 ${attendanceMeta.total} 条` }}
+        </p>
       </div>
 
       <div class="chart-card large">
@@ -134,6 +137,7 @@ const attendanceChartRef = ref(null);
 const leaveChartRef = ref(null);
 const empGrowthChartRef = ref(null);
 const positionChartRef = ref(null);
+const attendanceMeta = ref({ empty: false, total: 0, rate: 0 });
 
 let deptChart, salaryChart, attendanceChart, leaveChart, empGrowthChart, positionChart;
 
@@ -148,16 +152,7 @@ function destroyCharts() {
   });
 }
 
-async function loadOverview() {
-  const res = await api.get('/reports/overview/');
-  if (!res.success) throw new Error(res.error?.message || '加载概览失败');
-  overview.value = res.data;
-}
-
-async function loadDeptChart() {
-  const res = await api.get('/reports/department_distribution/');
-  if (!res.success) throw new Error(res.error?.message || '加载部门分布失败');
-  const data = res.data;
+function renderDeptChart(data = {}) {
   if (!deptChartRef.value) return;
   if (deptChart) deptChart.destroy();
   deptChart = new Chart(deptChartRef.value.getContext('2d'), {
@@ -180,10 +175,7 @@ async function loadDeptChart() {
   });
 }
 
-async function loadSalaryChart() {
-  const res = await api.get('/reports/monthly_salary/?months=12');
-  if (!res.success) throw new Error(res.error?.message || '加载薪资趋势失败');
-  const data = res.data;
+function renderSalaryChart(data = {}) {
   if (!salaryChartRef.value) return;
   if (salaryChart) salaryChart.destroy();
   salaryChart = new Chart(salaryChartRef.value.getContext('2d'), {
@@ -209,10 +201,12 @@ async function loadSalaryChart() {
   });
 }
 
-async function loadAttendanceChart() {
-  const res = await api.get('/reports/attendance_rate/?days=30');
-  if (!res.success) throw new Error(res.error?.message || '加载考勤统计失败');
-  const data = res.data;
+function renderAttendanceChart(data = {}) {
+  attendanceMeta.value = {
+    empty: !!data.empty,
+    total: data.total || 0,
+    rate: data.attendance_rate || 0,
+  };
   if (!attendanceChartRef.value) return;
   if (attendanceChart) attendanceChart.destroy();
   attendanceChart = new Chart(attendanceChartRef.value.getContext('2d'), {
@@ -221,9 +215,7 @@ async function loadAttendanceChart() {
       labels: data.labels,
       datasets: [{
         data: data.values,
-        backgroundColor: [
-          '#22c55e', '#f97316', '#ef4444', '#e5e7eb', '#a855f7'
-        ]
+        backgroundColor: data.colors || ['#e5e7eb']
       }]
     },
     options: {
@@ -232,14 +224,12 @@ async function loadAttendanceChart() {
   });
 }
 
-async function loadLeaveChart() {
-  const res = await api.get('/reports/leave_analysis/?days=90');
-  if (!res.success) throw new Error(res.error?.message || '加载请假分析失败');
-  const data = res.data;
+function renderLeaveChart(data = {}) {
   if (!leaveChartRef.value) return;
   if (leaveChart) leaveChart.destroy();
-  const labels = Object.values(data.type_stats).map(i => i.label);
-  const values = Object.values(data.type_stats).map(i => i.count);
+  const stats = Object.values(data.type_stats || {});
+  const labels = stats.map(item => item.label);
+  const values = stats.map(item => item.count);
   leaveChart = new Chart(leaveChartRef.value.getContext('2d'), {
     type: 'bar',
     data: {
@@ -257,10 +247,7 @@ async function loadLeaveChart() {
   });
 }
 
-async function loadEmpGrowthChart() {
-  const res = await api.get('/reports/employee_growth/?months=12');
-  if (!res.success) throw new Error(res.error?.message || '加载员工增长失败');
-  const data = res.data;
+function renderEmpGrowthChart(data = {}) {
   if (!empGrowthChartRef.value) return;
   if (empGrowthChart) empGrowthChart.destroy();
   empGrowthChart = new Chart(empGrowthChartRef.value.getContext('2d'), {
@@ -290,10 +277,7 @@ async function loadEmpGrowthChart() {
   });
 }
 
-async function loadPositionChart() {
-  const res = await api.get('/reports/position_distribution/');
-  if (!res.success) throw new Error(res.error?.message || '加载职位分布失败');
-  const data = res.data;
+function renderPositionChart(data = {}) {
   if (!positionChartRef.value) return;
   if (positionChart) positionChart.destroy();
   positionChart = new Chart(positionChartRef.value.getContext('2d'), {
@@ -317,15 +301,19 @@ async function reloadAll() {
   loadingAll.value = true;
   error.value = '';
   try {
-    await Promise.all([
-      loadOverview(),
-      loadDeptChart(),
-      loadSalaryChart(),
-      loadAttendanceChart(),
-      loadLeaveChart(),
-      loadEmpGrowthChart(),
-      loadPositionChart()
-    ]);
+    const res = await api.get('/reports/snapshot/', { noCache: true, skipDuplicateCheck: true });
+    if (!res.success) {
+      throw new Error(res.error?.message || '加载报表快照失败');
+    }
+
+    const data = res.data || {};
+    overview.value = data.overview || null;
+    renderDeptChart(data.department_distribution || {});
+    renderSalaryChart(data.monthly_salary || {});
+    renderAttendanceChart(data.attendance_rate || {});
+    renderLeaveChart(data.leave_analysis || {});
+    renderEmpGrowthChart(data.employee_growth || {});
+    renderPositionChart(data.position_distribution || {});
   } catch (e) {
     console.error(e);
     error.value = e?.response?.data?.detail || e.message || '加载失败';
@@ -560,6 +548,17 @@ onBeforeUnmount(() => {
   position: relative;
   height: 280px;
   width: 100%;
+}
+
+.chart-footnote {
+  margin: .6rem auto 0;
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+.chart-footnote.empty {
+  color: #94a3b8;
 }
 
 canvas {

@@ -3,17 +3,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安装依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
 # 复制并安装依赖
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --no-cache-dir --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip install --no-cache-dir -r requirements.txt gunicorn -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 设置 Python 环境变量（优化内存）
 ENV PYTHONDONTWRITEBYTECODE=1 \

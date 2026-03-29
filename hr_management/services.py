@@ -50,6 +50,10 @@ class CacheKeys:
     DASHBOARD_SUMMARY = 'dashboard_summary'
     DASHBOARD_CHARTS = 'dashboard_charts_{chart_type}'
 
+    # 报表
+    REPORT_OVERVIEW = 'report_overview'
+    REPORT_SNAPSHOT = 'report_snapshot'
+
     # 缓存超时时间(秒)
     TIMEOUT_VERY_SHORT = 30   # 30秒
     TIMEOUT_SHORT = 60        # 1分钟
@@ -377,8 +381,8 @@ class PermissionService:
         if cached is not None:
             return cached
 
-        # 超级管理员和管理员拥有所有权限
-        if user.is_superuser or user.is_staff:
+        # 仅超级管理员拥有所有权限
+        if user.is_superuser:
             from .rbac import Permissions
             permissions = [getattr(Permissions, attr) for attr in dir(Permissions)
                          if not attr.startswith('_') and isinstance(getattr(Permissions, attr), str)]

@@ -314,3 +314,21 @@ def system_metrics(request):
 
     return Response(api_success(metrics.get_metrics()))
 
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def apm_overview(request):
+    """APM 概览：慢接口排行与近期慢请求样本。"""
+    from ...permissions import user_has_rbac_permission
+    if not (request.user.is_superuser or request.user.is_staff or user_has_rbac_permission(request.user, 'system.view')):
+        return Response(api_error('无查看系统监控权限', code='forbidden'), status=403)
+
+    from ...monitoring import get_apm_snapshot
+    top_n = int(request.query_params.get('top_n', 10) or 10)
+    if top_n < 5:
+        top_n = 5
+    if top_n > 50:
+        top_n = 50
+
+    return Response(api_success(get_apm_snapshot(top_n=top_n)))
+

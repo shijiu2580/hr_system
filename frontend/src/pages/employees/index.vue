@@ -93,7 +93,7 @@
             v-if="isStaff"
             class="btn-danger-outline"
             :disabled="selected.length === 0 || deleting"
-            @click="batchDelete"
+            @click="openBatchDeleteModal"
           >
             {{ deleting ? '删除中...' : `批量删除${selected.length ? `(${selected.length})` : ''}` }}
           </button>
@@ -162,7 +162,7 @@
                   <div class="row-actions">
                     <button class="action-btn" @click="startEdit(e)">编辑</button>
                     <button class="action-btn" @click="openLocationModal(e)">关联地点</button>
-                    <button class="action-btn danger" @click="deleteOne(e)" :disabled="deleting">删除</button>
+                    <button class="action-btn danger" @click="openDeleteModal(e)" :disabled="deleting">删除</button>
                   </div>
                 </td>
               </tr>
@@ -256,6 +256,41 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+      <div class="modal-content modal-confirm">
+        <div class="modal-header">
+          <h3>{{ deleteMode === 'single' ? '确认删除员工' : '确认批量删除' }}</h3>
+          <button class="modal-close" @click="closeDeleteModal" :disabled="deleting">×</button>
+        </div>
+        <div class="modal-body">
+          <p v-if="deleteMode === 'single'" class="confirm-copy">
+            确定删除员工
+            <strong>{{ deleteTarget?.employee_id || '--' }}</strong>
+            <strong>{{ deleteTarget?.name || '--' }}</strong>
+            吗？
+          </p>
+          <p v-else class="confirm-copy">
+            确定删除选中的 <strong>{{ deleteIds.length }}</strong> 名员工吗？
+          </p>
+          <p class="confirm-warning">此操作不可撤销，删除后该员工档案及关联账号将无法恢复。</p>
+          <div v-if="deletePreview.length" class="delete-preview">
+            <div class="delete-preview-label">本次删除：</div>
+            <div class="delete-preview-list">
+              <span v-for="item in deletePreview" :key="item.id" class="delete-preview-tag">
+                {{ item.employee_id || '--' }} {{ item.name || '--' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="closeDeleteModal" :disabled="deleting">取消</button>
+          <button class="btn-danger-solid" @click="confirmDelete" :disabled="deleting || !deleteIds.length">
+            {{ deleting ? '删除中...' : '确认删除' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -289,6 +324,10 @@ const allLocations = ref([])
 const selectedLocationIds = ref([])
 const locationsLoading = ref(false)
 const savingLocations = ref(false)
+const showDeleteModal = ref(false)
+const deleteMode = ref('single')
+const deleteTarget = ref(null)
+const deleteIds = ref([])
 
 // filters
 const q = ref('')
@@ -314,6 +353,13 @@ const totalPages = computed(() => {
 // selection
 const selected = ref([])
 const deleting = ref(false)
+
+const deletePreview = computed(() => {
+  return deleteIds.value
+    .map(id => employees.value.find(emp => emp.id === id))
+    .filter(Boolean)
+    .slice(0, 6)
+})
 
 const selectAll = computed(() => employees.value.length > 0 && selected.value.length === employees.value.length)
 const indeterminate = computed(() => selected.value.length > 0 && selected.value.length < employees.value.length)
@@ -375,44 +421,53 @@ function startEdit(emp) {
   router.push(`/employees/${emp.id}/edit`)
 }
 
-async function deleteOne(emp) {
-  if (!isStaff.value) return
-  const ok = window.confirm(`确定删除 ${emp.employee_id || ''} ${emp.name || ''} 吗？此操作不可撤销。`)
-  if (!ok) return
+function openDeleteModal(emp) {
+  if (!isStaff.value || deleting.value || !emp?.id) return
+  deleteMode.value = 'single'
+  deleteTarget.value = emp
+  deleteIds.value = [emp.id]
+  showDeleteModal.value = true
+}
+
+function openBatchDeleteModal() {
+  if (!isStaff.value || deleting.value || !selected.value.length) return
+  deleteMode.value = 'batch'
+  deleteTarget.value = null
+  deleteIds.value = [...selected.value]
+  showDeleteModal.value = true
+}
+
+function resetDeleteState() {
+  showDeleteModal.value = false
+  deleteMode.value = 'single'
+  deleteTarget.value = null
+  deleteIds.value = []
+}
+
+function closeDeleteModal() {
+  if (deleting.value) return
+  resetDeleteState()
+}
+
+async function confirmDelete() {
+  if (!isStaff.value || !deleteIds.value.length) return
 
   deleting.value = true
   error.value = ''
   try {
-    const res = await api.delete(`/employees/${emp.id}/`)
-    if (!res.success) throw new Error(res.error?.message || '删除失败')
+    const ids = [...deleteIds.value]
+    for (const id of ids) {
+      const res = await api.delete(`/employees/${id}/`)
+      if (!res.success) {
+        throw new Error(res.error?.message || '删除失败')
+      }
+    }
+
+    selected.value = selected.value.filter(id => !ids.includes(id))
+    resetDeleteState()
     await loadEmployees()
   } catch (e) {
     error.value = e.message || '删除失败'
-  } finally {
-    deleting.value = false
-  }
-}
-
-async function batchDelete() {
-  if (!isStaff.value) return
-  if (!selected.value.length) return
-
-  const ok = window.confirm(`确定删除选中的 ${selected.value.length} 个员工吗？此操作不可撤销。`)
-  if (!ok) return
-
-  deleting.value = true
-  error.value = ''
-  try {
-    for (const id of selected.value) {
-      const res = await api.delete(`/employees/${id}/`)
-      if (!res.success) {
-        throw new Error(res.error?.message || '批量删除失败')
-      }
-    }
-    selected.value = []
-    await loadEmployees()
-  } catch (e) {
-    error.value = e.message || '批量删除失败'
   } finally {
     deleting.value = false
   }
@@ -1258,6 +1313,10 @@ onMounted(async () => {
   width: min(500px, 96vw);
 }
 
+.modal-content.modal-confirm {
+  width: min(460px, 96vw);
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -1323,6 +1382,76 @@ onMounted(async () => {
 .btn-cancel:hover {
   background: #f3f4f6;
   border-color: #9ca3af;
+}
+
+.btn-danger-solid {
+  padding: 8px 20px;
+  border: 1px solid #dc2626;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger-solid:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.btn-danger-solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirm-copy {
+  margin: 0;
+  font-size: 15px;
+  color: #0f172a;
+  line-height: 1.7;
+}
+
+.confirm-copy strong {
+  margin: 0 0.15rem;
+}
+
+.confirm-warning {
+  margin: 0.8rem 0 0;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.delete-preview {
+  margin-top: 1rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.delete-preview-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 0.55rem;
+}
+
+.delete-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.delete-preview-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #334155;
+  font-size: 12px;
 }
 
 .empty-hint {

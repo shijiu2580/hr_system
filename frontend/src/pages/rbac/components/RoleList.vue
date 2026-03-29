@@ -18,9 +18,9 @@
       <span class="dot"></span>
     </div>
     <div v-else-if="roles.length" class="role-cards">
-      <div v-for="r in roles" :key="r.id" class="role-card" :class="{ system: r.is_system }">
+      <div v-for="r in roles" :key="r.id" class="role-card">
         <div class="role-header">
-          <div class="role-icon" :class="{ system: r.is_system }">
+          <div class="role-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
@@ -29,19 +29,12 @@
             <strong>{{ r.name }}</strong>
             <code>{{ r.code }}</code>
           </div>
-          <span v-if="r.is_system" class="badge system">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            系统
-          </span>
-          <span v-else class="badge custom">
+          <span class="badge custom">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
               <path d="M12 20h9"/>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
             </svg>
-            自定义
+            可编辑
           </span>
         </div>
         <p class="role-desc">{{ r.description || '暂无描述' }}</p>
@@ -73,7 +66,7 @@
             </svg>
             编辑
           </button>
-          <button v-if="!r.is_system" class="btn danger small icon-btn" @click="handleRemove(r)" :disabled="deletingRoleId===r.id">
+          <button class="btn danger small icon-btn" @click="handleRemove(r)" :disabled="deletingRoleId===r.id">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -146,10 +139,6 @@ function handleRemove(r) {
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.role-card.system {
-  border-left: 3px solid #2563eb;
-}
-
 .role-header {
   display: flex;
   align-items: center;
@@ -165,10 +154,6 @@ function handleRemove(r) {
   border-radius: 8px;
   background: #eff6ff;
   color: #2563eb;
-}
-
-.role-icon.system {
-  background: #dbeafe;
 }
 
 .role-title {
@@ -205,11 +190,6 @@ function handleRemove(r) {
 .badge svg {
   width: 12px;
   height: 12px;
-}
-
-.badge.system {
-  background: #dbeafe;
-  color: #1d4ed8;
 }
 
 .badge.custom {

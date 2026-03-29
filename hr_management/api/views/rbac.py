@@ -32,11 +32,11 @@ class PermissionListAPIView(generics.ListAPIView):
 class PermissionGroupsAPIView(APIView):
     """获取权限分组信息"""
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
         # 获取数据库中的所有权限
         db_perms = {p.key: p for p in RBACPermission.objects.all()}
-        
+
         groups = []
         for group_name, perms in PERMISSION_GROUPS.items():
             group_perms = []
@@ -53,7 +53,7 @@ class PermissionGroupsAPIView(APIView):
                 'name': group_name,
                 'permissions': group_perms
             })
-        
+
         return Response(api_success(groups))
 
 
@@ -65,15 +65,15 @@ class PermissionListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     rbac_perms = [Permissions.RBAC_PERMISSION_MANAGE]
     pagination_class = None  # 不分页，返回全部
     log_model_name = '权限'
-    
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return RBACPermissionWriteSerializer
         return RBACPermissionSerializer
-    
+
     def get_log_detail(self, obj):
         return obj.key
-    
+
     def create(self, request, *args, **kwargs):
         ser = self.get_serializer(data=request.data)
         if not ser.is_valid():
@@ -90,15 +90,15 @@ class PermissionDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIVie
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.RBAC_PERMISSION_MANAGE]
     log_model_name = '权限'
-    
+
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
             return RBACPermissionWriteSerializer
         return RBACPermissionSerializer
-    
+
     def get_log_detail(self, obj):
         return obj.key
-    
+
     def update(self, request, *args, **kwargs):
         partial = request.method == 'PATCH'
         instance = self.get_object()
@@ -108,7 +108,7 @@ class PermissionDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIVie
         perm = ser.save()
         self.log_update(request, perm)
         return Response(api_success(RBACPermissionSerializer(perm).data))
-    
+
     def destroy(self, request, *args, **kwargs):
         perm = self.get_object()
         self.log_delete(request, perm)
@@ -124,15 +124,15 @@ class RoleListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.RBAC_ROLE_MANAGE]
     log_model_name = '角色'
-    
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return RoleWriteSerializer
         return RoleSerializer
-    
+
     def get_log_detail(self, obj):
         return obj.code
-    
+
     def create(self, request, *args, **kwargs):
         ser = self.get_serializer(data=request.data)
         if not ser.is_valid():
@@ -149,44 +149,28 @@ class RoleDetailAPIView(LoggingMixin, generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
     rbac_perms = [Permissions.RBAC_ROLE_MANAGE]
     log_model_name = '角色'
-    
+
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
             return RoleWriteSerializer
         return RoleSerializer
-    
+
     def get_log_detail(self, obj):
         return obj.code
-    
+
     def update(self, request, *args, **kwargs):
         role = self.get_object()
         partial = request.method == 'PATCH'
-        
-        # 系统角色：只允许修改用户关联，不允许修改其他字段
-        if role.is_system:
-            # 只处理用户关联更新
-            user_ids = request.data.get('user_ids')
-            if user_ids is not None:
-                from django.contrib.auth.models import User
-                users = User.objects.filter(id__in=user_ids)
-                # 更新角色的用户关联
-                role.users.set(users)
-                self.log_update(request, role)
-                return Response(api_success(RoleSerializer(role).data))
-            else:
-                return Response(api_error('系统角色权限不可修改', code='system_role_locked'), status=400)
-        
+
         ser = self.get_serializer(role, data=request.data, partial=partial)
         if not ser.is_valid():
             return Response(api_error('验证失败', errors=ser.errors), status=400)
         role = ser.save()
         self.log_update(request, role)
         return Response(api_success(RoleSerializer(role).data))
-    
+
     def destroy(self, request, *args, **kwargs):
         role = self.get_object()
-        if role.is_system:
-            return Response(api_error('系统角色不可删除', code='system_role_locked'), status=400)
         self.log_delete(request, role)
         code = role.code
         role.delete()

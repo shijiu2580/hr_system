@@ -737,7 +737,7 @@ class UserWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'role_ids']
+        fields = ['username', 'password', 'email', 'first_name', 'last_name', 'is_active', 'is_superuser', 'role_ids']
 
     def validate_password(self, value):
         # 创建时密码必填
@@ -748,6 +748,7 @@ class UserWriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         role_ids = validated_data.pop('role_ids', [])
         password = validated_data.pop('password')
+        validated_data['is_staff'] = bool(validated_data.get('is_superuser', False))
         user = User.objects.create_user(**validated_data, password=password)
         if role_ids:
             user.roles.set(role_ids)
@@ -756,6 +757,8 @@ class UserWriteSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         role_ids = validated_data.pop('role_ids', None)
         password = validated_data.pop('password', None)
+        target_is_superuser = bool(validated_data.get('is_superuser', instance.is_superuser))
+        validated_data['is_staff'] = target_is_superuser
         for k, v in validated_data.items():
             setattr(instance, k, v)
         if password:

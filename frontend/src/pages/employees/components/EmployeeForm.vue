@@ -300,6 +300,15 @@ const original = ref(null); // 用于dirty判断
 const errors = reactive({});
 const dirty = computed(() => original.value && JSON.stringify(stripReactive(model)) !== JSON.stringify(stripReactive(original.value)));
 const isValid = computed(() => validate(false));
+const positionDepartmentMap = computed(() => {
+  const map = new Map();
+  for (const position of props.positions || []) {
+    if (position?.id && position?.department?.id) {
+      map.set(String(position.id), String(position.department.id));
+    }
+  }
+  return map;
+});
 
 function makeBlank(){
   return {
@@ -331,6 +340,14 @@ watch(() => props.value, (v) => {
   }
   // 不在watch中调用validate，避免递归
 }, { immediate: true });
+
+watch(() => model.position_id, (positionId) => {
+  if (positionId === '' || positionId == null) return;
+  const departmentId = positionDepartmentMap.value.get(String(positionId));
+  if (departmentId) {
+    model.department_id = departmentId;
+  }
+});
 
 function pickEditable(e){
   return {

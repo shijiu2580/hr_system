@@ -48,9 +48,9 @@
           <span class="metric-desc">激活率 {{ activeRatio }}%</span>
         </div>
         <div class="metric-card">
-          <span class="metric-label">管理员</span>
-          <strong class="metric-value">{{ summary.staffCount }}</strong>
-          <span class="metric-desc">包含超管</span>
+          <span class="metric-label">RBAC 用户</span>
+          <strong class="metric-value">{{ summary.rbacCount }}</strong>
+          <span class="metric-desc">除超管外均走 RBAC</span>
         </div>
         <div class="metric-card">
           <span class="metric-label">超级管理员</span>
@@ -79,7 +79,7 @@
       />
       <CustomSelect
         v-model="staff"
-        :options="[{ value: '', label: '全部权限' }, { value: '1', label: '管理员' }, { value: 'super', label: '超级管理员' }]"
+        :options="[{ value: '', label: '全部权限' }, { value: 'rbac', label: 'RBAC 用户' }, { value: 'super', label: '超级管理员' }]"
         placeholder="全部权限"
         class="filter-select"
         @change="applyFilters"
@@ -143,12 +143,11 @@
                 </td>
                 <td>
                   <span v-if="u.is_superuser" class="permission-pill super">超管</span>
-                  <span v-else-if="u.is_staff" class="permission-pill admin">管理员</span>
-                  <span v-else class="permission-pill default">普通用户</span>
+                  <span v-else class="permission-pill default">RBAC 用户</span>
                 </td>
                 <td>
                   <div class="row-actions">
-                    <button class="btn-ghost btn-xs" @click="router.push(`/users/${u.id}/edit`)">编辑</button>
+                    <button class="btn-ghost btn-xs" @click="openEditDialog(u)">编辑</button>
                     <button class="btn-danger btn-xs" @click="confirmDelete(u)" :disabled="deletingId === u.id">
                       {{ deletingId === u.id ? '删除中...' : '删除' }}
                     </button>
@@ -159,6 +158,26 @@
           </table>
         </div>
         <p v-else class="empty">暂无符合条件的用户</p>
+
+        <div class="table-footer">
+          <span class="total-count">共{{ totalCount }}条</span>
+          <div class="pagination">
+            <span class="page-size-label">每页</span>
+            <CustomSelect
+              v-model="pageSize"
+              :options="pageSizeOptions"
+              class="page-size-custom-select"
+              :dropUp="true"
+              @change="onPageSizeChange"
+            />
+            <span class="page-size-label">条</span>
+            <button class="page-btn" :disabled="page <= 1" @click="goToPage(1)">«</button>
+            <button class="page-btn" :disabled="page <= 1" @click="goToPage(page - 1)">‹</button>
+            <span class="page-info">{{ page }} / {{ totalPages }}</span>
+            <button class="page-btn" :disabled="page >= totalPages" @click="goToPage(page + 1)">›</button>
+            <button class="page-btn" :disabled="page >= totalPages" @click="goToPage(totalPages)">»</button>
+          </div>
+        </div>
       </template>
     </section>
 
@@ -180,6 +199,30 @@
         <button class="btn-ghost" type="button" @click="closeSecond">返回</button>
       </div>
     </dialog>
+
+    <div v-if="editVisible" class="edit-modal" @click.self="closeEditDialog">
+      <div class="edit-dialog" role="dialog" aria-modal="true">
+        <div class="edit-dialog-header">
+          <div>
+            <h3>编辑用户</h3>
+            <p class="edit-subtitle">{{ editingUser?.username || '' }}</p>
+          </div>
+          <button type="button" class="alert-close" @click="closeEditDialog">×</button>
+        </div>
+        <div v-if="editError" class="alert alert-error" style="margin-bottom: 12px;">
+          <div class="alert-text">{{ editError }}</div>
+        </div>
+        <div v-if="editLoading" class="empty">加载用户数据中...</div>
+        <UserForm
+          v-else-if="editingUser"
+          :value="editingUser"
+          :roles="editRoles"
+          :loading="editSaving"
+          @save="saveEdit"
+          @cancel="closeEditDialog"
+        />
+      </div>
+    </div>
   </div>
 </template>
 <script setup>
@@ -187,6 +230,7 @@ import { ref, onMounted, nextTick, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../utils/api';
 import CustomSelect from '../../components/CustomSelect.vue';
+import UserForm from './components/UserForm.vue';
 
 const router = useRouter();
 
@@ -197,17 +241,36 @@ const deletingId = ref(null);
 const toDelete = ref(null);
 const confirmDialog = ref(null);
 const confirmDialog2 = ref(null);
+const editVisible = ref(false);
 const q = ref('');
 const active = ref('');
 const staff = ref('');
+const page = ref(1);
+const pageSize = ref(10);
+const totalCount = ref(0);
+const pageSizeOptions = [
+  { value: 10, label: '10' },
+  { value: 20, label: '20' },
+  { value: 50, label: '50' },
+];
+const editingUser = ref(null);
+const editRoles = ref([]);
+const editLoading = ref(false);
+const editSaving = ref(false);
+const editError = ref('');
+
+const totalPages = computed(() => {
+  const t = Math.ceil((totalCount.value || 0) / (pageSize.value || 10));
+  return t || 1;
+});
 
 const summary = computed(() => {
   const list = users.value || [];
   const total = list.length;
   const activeCount = list.filter((user) => user.is_active).length;
-  const staffCount = list.filter((user) => user.is_staff || user.is_superuser).length;
+  const rbacCount = list.filter((user) => !user.is_superuser).length;
   const superCount = list.filter((user) => user.is_superuser).length;
-  return { total, activeCount, staffCount, superCount };
+  return { total, activeCount, rbacCount, superCount };
 });
 
 const activeRatio = computed(() => {
@@ -221,13 +284,16 @@ async function loadUsers() {
     const params = {};
     if (q.value) params.q = q.value;
     if (active.value !== '') params.is_active = active.value;
-    if (staff.value === '1') params.is_staff = '1';
-    else if (staff.value === 'super') params.is_superuser = '1';
+    if (staff.value === 'super') params.is_superuser = '1';
+    else if (staff.value === 'rbac') params.is_superuser = '0';
+    params.page = page.value;
+    params.page_size = pageSize.value;
 
     const res = await api.get('/users/manage/', { params });
     if (res.success) {
       const data = res.data;
       users.value = data.results || data;
+      totalCount.value = Number(data.count ?? (Array.isArray(data) ? data.length : users.value.length) ?? 0);
     } else {
       error.value = res.error?.message || '加载失败';
     }
@@ -260,9 +326,79 @@ function extractErr(e) {
   return e.response?.data?.error?.message || e.response?.data?.detail || '操作失败';
 }
 
+async function openEditDialog(user) {
+  editLoading.value = true;
+  editError.value = '';
+  editingUser.value = null;
+  editVisible.value = true;
+  try {
+    const [userRes, rolesRes] = await Promise.all([
+      api.get(`/users/manage/${user.id}/`),
+      api.get('/roles/'),
+    ]);
+
+    if (!userRes.success) {
+      throw new Error(userRes.error?.message || '加载用户失败');
+    }
+    editingUser.value = userRes.data;
+
+    if (rolesRes.success) {
+      const payload = rolesRes.data;
+      editRoles.value = payload?.results || payload || [];
+    } else {
+      editRoles.value = [];
+      editError.value = rolesRes.error?.message || '角色列表加载失败';
+    }
+  } catch (e) {
+    editError.value = e.response?.data?.detail || e.message || '加载失败';
+  } finally {
+    editLoading.value = false;
+  }
+}
+
+function closeEditDialog() {
+  editVisible.value = false;
+  editLoading.value = false;
+  editSaving.value = false;
+  editError.value = '';
+  editingUser.value = null;
+  editRoles.value = [];
+}
+
+async function saveEdit(payload) {
+  if (!editingUser.value?.id) return;
+  editSaving.value = true;
+  editError.value = '';
+  try {
+    const res = await api.put(`/users/manage/${editingUser.value.id}/`, payload);
+    if (!res.success) {
+      editError.value = res.error?.message || '更新失败';
+      return;
+    }
+    closeEditDialog();
+    await loadUsers();
+  } catch (e) {
+    editError.value = e.response?.data?.detail || e.response?.data?.error?.message || '更新失败';
+  } finally {
+    editSaving.value = false;
+  }
+}
+
 function reload() { loadUsers(); }
-function applyFilters() { loadUsers(); }
-function resetFilters() { q.value = ''; active.value = ''; staff.value = ''; loadUsers(); }
+function applyFilters() { page.value = 1; loadUsers(); }
+function resetFilters() { q.value = ''; active.value = ''; staff.value = ''; page.value = 1; loadUsers(); }
+
+function goToPage(nextPage) {
+  const p = Math.max(1, Math.min(totalPages.value, Number(nextPage) || 1));
+  if (p === page.value) return;
+  page.value = p;
+  loadUsers();
+}
+
+function onPageSizeChange() {
+  page.value = 1;
+  loadUsers();
+}
 
 onMounted(async () => {
   await loadUsers();
@@ -334,7 +470,7 @@ onMounted(async () => {
 }
 
 .btn-primary {
-  background: #4f46e5;
+  background: #2563eb;
   color: #fff;
   border: none;
   cursor: pointer;
@@ -347,7 +483,7 @@ onMounted(async () => {
 }
 
 .btn-primary:not(:disabled):hover {
-  background: #4338ca;
+  background: #1d4ed8;
 }
 
 .btn-secondary {
@@ -556,7 +692,7 @@ onMounted(async () => {
   flex-shrink: 0;
   padding: 0 16px;
   height: 36px;
-  background: #4f46e5;
+  background: #2563eb;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -567,7 +703,7 @@ onMounted(async () => {
 }
 
 .btn-query:hover:not(:disabled) {
-  background: #4338ca;
+  background: #1d4ed8;
 }
 
 .btn-query:disabled {
@@ -810,6 +946,65 @@ onMounted(async () => {
   text-align: center;
 }
 
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.total-count {
+  font-size: 13px;
+  color: #475569;
+}
+
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-size-label {
+  font-size: 13px;
+  color: #475569;
+}
+
+.page-size-custom-select {
+  width: 82px;
+}
+
+.page-size-custom-select:deep(.custom-select) {
+  width: 82px;
+}
+
+.page-btn {
+  height: 36px;
+  min-width: 36px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #334155;
+  min-width: 52px;
+  text-align: center;
+}
+
 .confirm-dialog {
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
@@ -817,6 +1012,48 @@ onMounted(async () => {
   background: #fff;
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
   max-width: 360px;
+}
+
+.edit-dialog {
+  width: min(900px, 92vw);
+  max-height: 86vh;
+  overflow: visible;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
+  padding: 1rem 1rem 1.1rem;
+  background: #fff;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.edit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 70px 16px 16px;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.edit-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.edit-dialog-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.edit-subtitle {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .confirm-dialog::backdrop {

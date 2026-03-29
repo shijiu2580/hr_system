@@ -180,6 +180,9 @@ class Employee(models.Model):
         if not self.employee_id:
             self.employee_id = self.generate_employee_id()
 
+        if self.position_id and self.position and self.department_id != self.position.department_id:
+            self.department = self.position.department
+
         # 压缩头像
         if self.avatar and hasattr(self.avatar, 'file'):
             try:

@@ -1,4 +1,5 @@
 """通用工具函数集合（日志、响应包装、参数验证等）。"""
+from datetime import time as dt_time
 from typing import Optional, Any, Dict, List
 from functools import wraps
 from django.contrib.auth.models import User
@@ -112,6 +113,46 @@ def generate_verification_code() -> str:
     """生成6位数字验证码（使用密码学安全的随机数）"""
     import secrets
     return ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+
+
+AUTO_ABSENT_NOTE = '超过上班时间未签到，系统自动标记缺勤；后续签到将自动转为迟到'
+
+
+def _parse_time_setting(value, default: str) -> dt_time:
+    if isinstance(value, dt_time):
+        return value
+    try:
+        return dt_time.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return dt_time.fromisoformat(default)
+
+
+def get_attendance_cutoff_times() -> Dict[str, dt_time]:
+    from django.conf import settings
+
+    return {
+        'check_in_deadline': _parse_time_setting(
+            getattr(settings, 'ATTENDANCE_CHECK_IN_DEADLINE', '09:00:00'),
+            '09:00:00',
+        ),
+        'check_out_deadline': _parse_time_setting(
+            getattr(settings, 'ATTENDANCE_CHECK_OUT_DEADLINE', '18:00:00'),
+            '18:00:00',
+        ),
+        'absent_mark_time': _parse_time_setting(
+            getattr(settings, 'ATTENDANCE_ABSENT_MARK_TIME', '09:00:00'),
+            '09:00:00',
+        ),
+    }
+
+
+def strip_auto_absent_note(notes: Optional[str]) -> str:
+    if not notes:
+        return ''
+
+    lines = [line.strip() for line in str(notes).splitlines()]
+    kept = [line for line in lines if line and not line.startswith(AUTO_ABSENT_NOTE)]
+    return '\n'.join(kept).strip()
 
 
 # ============ 节假日API工具 ============

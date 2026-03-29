@@ -91,6 +91,32 @@ if not DEBUG and DATABASE_URL:
     DATABASES['default']['CONN_MAX_AGE'] = 60  # 连接保持60秒
     DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
+# Cache (Redis)
+REDIS_URL = config('REDIS_URL', default='')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': 3,
+                'SOCKET_TIMEOUT': 3,
+                'IGNORE_EXCEPTIONS': True,
+            },
+            'TIMEOUT': 300,
+        }
+    }
+else:
+    # 未配置 Redis 时回退到本地内存缓存，保证开发环境可用
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'hr-system-local-cache',
+            'TIMEOUT': 300,
+        }
+    }
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

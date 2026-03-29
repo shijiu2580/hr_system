@@ -33,7 +33,6 @@
                   <input
                     v-model.trim="roleForm.name"
                     required
-                    :disabled="editingRole?.is_system"
                     placeholder="例如：人事经理"
                   />
                 </div>
@@ -42,7 +41,7 @@
                   <input
                     v-model.trim="roleForm.code"
                     required
-                    :disabled="editingRole?.is_system || !!editingRole"
+                    :disabled="!!editingRole"
                     placeholder="例如：hr_manager"
                   />
                 </div>
@@ -53,7 +52,6 @@
                   v-model.trim="roleForm.description"
                   rows="2"
                   placeholder="可选，描述此角色的职责"
-                  :disabled="editingRole?.is_system"
                 ></textarea>
               </div>
             </div>
@@ -64,8 +62,8 @@
                 <span>权限分配</span>
                 <span class="badge">{{ roleForm.permission_ids.length }} 项已选</span>
                 <div class="section-actions">
-                  <button type="button" class="link-btn" @click="selectAllPerms" :disabled="editingRole?.is_system">全选</button>
-                  <button type="button" class="link-btn" @click="clearAllPerms" :disabled="editingRole?.is_system">清空</button>
+                  <button type="button" class="link-btn" @click="selectAllPerms">全选</button>
+                  <button type="button" class="link-btn" @click="clearAllPerms">清空</button>
                 </div>
               </div>
               <div class="permission-groups">
@@ -76,7 +74,7 @@
                     </svg>
                     <span class="perm-group-name">{{ group.name }}</span>
                     <span class="perm-group-count">{{ getGroupSelectedCount(group) }}/{{ group.permissions.length }}</span>
-                    <button type="button" class="mini-btn" @click.stop="selectGroup(group)" :disabled="editingRole?.is_system">
+                    <button type="button" class="mini-btn" @click.stop="selectGroup(group)">
                       {{ isGroupAllSelected(group) ? '取消' : '全选' }}
                     </button>
                   </div>
@@ -85,13 +83,12 @@
                       v-for="p in group.permissions"
                       :key="p.id"
                       class="perm-item"
-                      :class="{ checked: roleForm.permission_ids.includes(p.id), disabled: editingRole?.is_system }"
+                      :class="{ checked: roleForm.permission_ids.includes(p.id) }"
                     >
                       <input
                         type="checkbox"
                         :value="p.id"
                         v-model="roleForm.permission_ids"
-                        :disabled="editingRole?.is_system"
                       />
                       <div class="perm-info">
                         <span class="perm-name">{{ p.name }}</span>
@@ -277,7 +274,7 @@
                 取消
               </button>
               <button
-                v-if="editingRole && !editingRole.is_system"
+                v-if="editingRole"
                 class="btn btn-danger"
                 type="button"
                 @click="handleRemove"

@@ -1,21 +1,17 @@
 services:
-  # 边缘网关（统一入口）
   nginx:
     image: nginx:1.27-alpine
     container_name: hr-gateway
     ports:
       - "80:80"
     volumes:
-      - ./nginx/docker.gateway.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/docker.core.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - frontend
-      - mobile
       - backend
     restart: unless-stopped
     networks:
-      - hr_network
+      - hr_core_network
 
-  # Django 后端
   backend:
     build: .
     container_name: hr-backend
@@ -28,42 +24,48 @@ services:
     mem_reservation: 100m
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hr_user}:${POSTGRES_PASSWORD:-change_me}@pgbouncer:6432/${POSTGRES_DB:-hr_system}
     depends_on:
-      postgres:
-        condition: service_healthy
+      pgbouncer:
+        condition: service_started
       redis:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - hr_network
+      - hr_core_network
 
-  # Vue Web 前端
-  frontend:
-    build: ./frontend
-    container_name: hr-frontend
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: hr-pgbouncer
+    environment:
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_DBNAME: ${POSTGRES_DB:-hr_system}
+      DATABASES_USER: ${POSTGRES_USER:-hr_user}
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      PGBOUNCER_LISTEN_PORT: 6432
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 400
+      PGBOUNCER_DEFAULT_POOL_SIZE: 30
+      PGBOUNCER_RESERVE_POOL_SIZE: 10
+      PGBOUNCER_SERVER_RESET_QUERY: DISCARD ALL
+      PGBOUNCER_IGNORE_STARTUP_PARAMETERS: extra_float_digits
+      PGBOUNCER_ADMIN_USERS: ${POSTGRES_USER:-hr_user}
     expose:
-      - "80"
+      - "6432"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z 127.0.0.1 6432"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     depends_on:
-      - backend
-    mem_limit: 24m
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
-      - hr_network
+      - hr_core_network
 
-  # Vue Mobile H5 移动端
-  mobile:
-    build: ./mobile
-    container_name: hr-mobile
-    expose:
-      - "80"
-    depends_on:
-      - backend
-    mem_limit: 24m
-    restart: unless-stopped
-    networks:
-      - hr_network
-
-  # PostgreSQL 数据库
   postgres:
     image: postgres:16-alpine
     container_name: hr-postgres
@@ -80,9 +82,8 @@ services:
       retries: 10
     restart: unless-stopped
     networks:
-      - hr_network
+      - hr_core_network
 
-  # Redis 缓存
   redis:
     image: redis:7-alpine
     container_name: hr-redis
@@ -96,7 +97,7 @@ services:
       retries: 10
     restart: unless-stopped
     networks:
-      - hr_network
+      - hr_core_network
 
 volumes:
   postgres_data:
@@ -105,5 +106,5 @@ volumes:
   logs_data:
 
 networks:
-  hr_network:
+  hr_core_network:
     driver: bridge

@@ -18,7 +18,7 @@ from .api.views import (
     # Reports
     DepartmentDistributionAPIView, MonthlySalaryAPIView, AttendanceRateAPIView,
     LeaveAnalysisAPIView, EmployeeGrowthAPIView, PositionDistributionAPIView,
-    ReportOverviewAPIView,
+    ReportOverviewAPIView, ReportSnapshotAPIView,
     # BI
     BIDepartmentCostAPIView, BIAttendanceHeatmapAPIView, BITurnoverAPIView,
     BISalaryRangeAPIView, BILeaveBalanceAPIView, BIDailyAttendanceAPIView,
@@ -40,7 +40,7 @@ from .api.views import (
     SystemLogListAPIView, system_log_clear,
     CompanyDocumentListCreateAPIView, CompanyDocumentDetailAPIView,
     backups_list, backup_create, backup_clean, backup_restore,
-    health_check, health_report, system_metrics,
+    health_check, health_report, system_metrics, apm_overview,
     # RBAC
     RoleListAPIView, RoleListCreateAPIView, RoleDetailAPIView,
     PermissionListAPIView, PermissionListCreateAPIView, PermissionDetailAPIView,
@@ -86,6 +86,7 @@ urlpatterns = [
 
     # Reports (大数据报表)
     path('reports/overview/', ReportOverviewAPIView.as_view(), name='api_report_overview'),
+    path('reports/snapshot/', ReportSnapshotAPIView.as_view(), name='api_report_snapshot'),
     path('reports/department_distribution/', DepartmentDistributionAPIView.as_view(), name='api_dept_distribution'),
     path('reports/monthly_salary/', MonthlySalaryAPIView.as_view(), name='api_monthly_salary'),
     path('reports/attendance_rate/', AttendanceRateAPIView.as_view(), name='api_attendance_rate'),
@@ -173,6 +174,7 @@ urlpatterns = [
     path('system/health/', health_check, name='api_health_check'),
     path('system/health/report/', health_report, name='api_health_report'),
     path('system/metrics/', system_metrics, name='api_system_metrics'),
+    path('system/apm/', apm_overview, name='api_system_apm_overview'),
 
     # Company Documents
     path('documents/', CompanyDocumentListCreateAPIView.as_view(), name='api_company_documents'),

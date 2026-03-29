@@ -1,5 +1,5 @@
 """薪资管理 API 视图"""
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Q
@@ -11,13 +11,47 @@ from ...permissions import IsStaffOrOwnRelated, get_managed_department_ids, HasR
 from ...rbac import Permissions
 from ...utils import api_success, api_error
 from ...notifications import notify_salary_issued
+from ...pagination import StandardPagination
 from ..serializers import SalaryRecordSerializer, SalaryRecordWriteSerializer
+
+
+class SalaryListPagination(StandardPagination):
+    """薪资列表分页：默认更小页，避免一次性拉取过大数据量。"""
+    page_size = 50
+    max_page_size = 500
+
+
+class SalaryListFastSerializer(serializers.ModelSerializer):
+    """薪资列表轻量序列化器，兼容前端 item.employee.* 访问。"""
+    employee = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SalaryRecord
+        fields = [
+            'id', 'employee', 'year', 'month', 'basic_salary', 'bonus',
+            'overtime_pay', 'allowance', 'net_salary', 'paid', 'paid_at'
+        ]
+
+    def get_employee(self, obj):
+        emp = obj.employee
+        if not emp:
+            return None
+        return {
+            'id': emp.id,
+            'name': emp.name,
+            'employee_id': emp.employee_id,
+            'department': {
+                'id': emp.department_id,
+                'name': getattr(emp.department, 'name', None),
+            }
+        }
 
 
 class SalaryListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
     """薪资列表与创建"""
     serializer_class = SalaryRecordSerializer
     permission_classes = [permissions.IsAuthenticated, HasRBACPermission]
+    pagination_class = SalaryListPagination
     log_model_name = '薪资记录'
 
     # RBAC 权限
@@ -27,7 +61,12 @@ class SalaryListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
         return [Permissions.SALARY_VIEW]
 
     def get_queryset(self):
-        qs = SalaryRecord.objects.select_related('employee', 'employee__department').all().order_by('-year', '-month')
+        qs = SalaryRecord.objects.select_related(
+            'employee',
+            'employee__department',
+            'employee__position',
+            'employee__user',
+        ).all().order_by('-year', '-month')
         user = self.request.user
         if not user.is_staff:
             # 部门经理可看本部门所有员工薪资，普通员工只能看自己
@@ -46,12 +85,23 @@ class SalaryListCreateAPIView(LoggingMixin, generics.ListCreateAPIView):
         if year:
             qs = qs.filter(year=year)
 
+        month = self.request.query_params.get('month')
+        if month:
+            qs = qs.filter(month=month)
+
+        paid = self.request.query_params.get('paid')
+        if paid in ('true', '1', 'yes', 'paid'):
+            qs = qs.filter(paid=True)
+        elif paid in ('false', '0', 'no', 'unpaid'):
+            qs = qs.filter(paid=False)
+
         return qs
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return SalaryRecordWriteSerializer
-        return SalaryRecordSerializer
+        # 列表场景使用轻量序列化，显著降低序列化与响应体成本
+        return SalaryListFastSerializer
 
     def get_log_detail(self, obj):
         return f'{obj.employee.employee_id} {obj.year}-{obj.month}'

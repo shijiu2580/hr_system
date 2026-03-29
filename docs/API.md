@@ -4,13 +4,23 @@
 
 本文档描述 Django HR 系统的 RESTful API 接口规范。所有 API 均以 `/api/` 为前缀。
 
-**Base URL**: `http://localhost:8000/api/`
+**本地开发 Base URL**: `http://127.0.0.1:8000/api/`
+
+**Docker / Nginx 访问入口**:
+- Web: `http://localhost:3000`
+- Mobile: `http://localhost:3001`
+- API: `http://localhost:8000/api/`
+
+**交互式接口文档**:
+- Swagger UI: `/api/docs/`
+- OpenAPI Schema: `/api/schema/`
+- ReDoc: `/api/redoc/`
 
 ---
 
 ## 🔐 认证 (Authentication)
 
-系统使用 **JWT (JSON Web Token)** 进行身份认证。
+系统使用 **SimpleJWT + JWT (JSON Web Token)** 进行身份认证。
 
 ### 登录获取 Token
 
@@ -45,6 +55,8 @@ POST /api/auth/token/
 ```
 
 > 💡 支持用户名或手机号登录
+
+> 💡 管理后台与接口文档默认都运行在同一个 Django 服务中，无需单独启动文档服务。
 
 ### 刷新 Token
 

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { canAccessRoute, Permissions } from '../utils/permissions';
+import { clearCache } from '../utils/api';
 
 // 模块化页面导入
 const Dashboard = () => import('../pages/dashboard/index.vue');
@@ -57,12 +58,24 @@ const SUBMENU_PRELOADERS = {
   resignation: [ResignationProgress, ResignationApply, ResignationApproval],
 };
 
-export function preloadSubmenu(name) {
-  const loaders = SUBMENU_PRELOADERS[name];
-  if (!loaders || loaders.length === 0) return Promise.resolve();
+const COMMON_ROUTE_PRELOADERS = {
+  dashboard: [Dashboard, Account],
+  employees: [Employees, EmployeeList, EmployeeOnboarding],
+  attendance: [AttendanceRecords, AttendanceManage, AttendanceApproval, AttendanceLocations, AttendanceAlerts],
+  leaves: [LeaveApply, LeaveApproval, BusinessTrip],
+  salaries: [Salaries, SalaryRecords, TravelExpense, ExpenseApproval],
+  reports: [Reports, BIReports],
+  resignation: [ResignationProgress, ResignationApply, ResignationApproval],
+  organization: [Departments, Positions, Documents],
+  system: [System, RolePermission, Users],
+};
+
+function preloadLoaders(loaders = []) {
+  const uniqueLoaders = Array.from(new Set(loaders.filter(Boolean)));
+  if (uniqueLoaders.length === 0) return Promise.resolve();
 
   return Promise.allSettled(
-    loaders.map((loader) => {
+    uniqueLoaders.map((loader) => {
       try {
         return loader();
       } catch (e) {
@@ -70,6 +83,16 @@ export function preloadSubmenu(name) {
       }
     })
   ).then(() => undefined);
+}
+
+export function preloadSubmenu(name) {
+  const loaders = SUBMENU_PRELOADERS[name];
+  return preloadLoaders(loaders);
+}
+
+export function preloadCommonRoutes(groupNames = []) {
+  const loaders = groupNames.flatMap((name) => COMMON_ROUTE_PRELOADERS[name] || []);
+  return preloadLoaders(loaders);
 }
 
 const router = createRouter({
@@ -189,6 +212,10 @@ router.beforeEach(async (to, from, next) => {
   }
 
   next();
+});
+
+router.afterEach(() => {
+  clearCache();
 });
 
 export default router;
