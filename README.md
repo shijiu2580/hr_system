@@ -552,6 +552,6 @@ certbot --nginx -d your-domain.com -d m.your-domain.com -d api.your-domain.com
 
 **如果这个项目对你有帮助，请给个 ⭐ Star 支持一下！**
 
-Made with ❤️ by [Your Name]
+Maintained by HR System Contributors
 
 </div>
